@@ -19,7 +19,7 @@ impl OpenGlApi {
                 "Cannot load openGL library",
             )));
         }
-        gl::load_with(|symbol| gl_loader::get_proc_address(symbol) as *const _);
+        gl::load_with(|symbol| gl_loader::get_proc_address(symbol).cast());
         Ok(())
     }
 }
@@ -36,5 +36,18 @@ impl GraphicApi for OpenGlApi {
             );
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+
+    #[test]
+    #[serial]
+    fn test_create_opengl_api() {
+        let result = create_opengl_api();
+        assert!(result.is_ok());
     }
 }

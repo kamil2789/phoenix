@@ -1,9 +1,9 @@
 use std::ffi::{c_char, c_int, c_uchar, c_void};
 
-pub static GLFW_CONTEXT_VERSION_MAJOR: c_int = 0x00022002;
-pub static GLFW_CONTEXT_VERSION_MINOR: c_int = 0x00022003;
-pub static GLFW_OPENGL_PROFILE: c_int = 0x00022008;
-pub static GLFW_OPENGL_CORE_PROFILE: c_int = 0x00032001;
+pub static GLFW_CONTEXT_VERSION_MAJOR: c_int = 0x0002_2002;
+pub static GLFW_CONTEXT_VERSION_MINOR: c_int = 0x0002_2003;
+pub static GLFW_OPENGL_PROFILE: c_int = 0x0002_2008;
+pub static GLFW_OPENGL_CORE_PROFILE: c_int = 0x0003_2001;
 
 pub static GLFW_TRUE: c_int = 1;
 pub static GLFW_FALSE: c_int = 0;

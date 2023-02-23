@@ -1,32 +1,31 @@
+mod glfw_lib_config;
 mod glfw_window;
 
-use crate::window::glfw_window::create_glfw_lib_config;
+use crate::window::glfw_lib_config::create_lib;
 
 use std::fmt::Display;
 use std::rc::Rc;
 
 #[derive(Debug)]
-pub enum WindowError {
+pub enum Error {
     WinLibraryInitError(String),
     CreateWindowError(String),
 }
 
-pub enum WindowLibrary {
+pub enum Library {
     GLFW,
 }
 
 pub trait WinLibConfig {
-    fn create_window(
-        &self,
-        resolution: Resolution,
-        name: &str,
-    ) -> Result<Rc<dyn Window>, WindowError>;
+    /// # Errors
+    fn create_window(&self, resolution: Resolution, name: &str) -> Result<Rc<dyn Window>, Error>;
 }
 
 pub trait Window {
     fn is_running(&self) -> bool;
     fn set_current(&self);
     fn swap_buffers(&self);
+    fn set_close(&self);
 }
 
 pub struct Resolution {
@@ -34,22 +33,22 @@ pub struct Resolution {
     pub height: u16,
 }
 
-pub fn create_window_lib_config(
-    window_type: WindowLibrary,
-) -> Result<Rc<dyn WinLibConfig>, WindowError> {
+/// # Errors
+pub fn create_window_lib_config(window_type: &Library) -> Result<Rc<dyn WinLibConfig>, Error> {
     match window_type {
-        WindowLibrary::GLFW => {
-            let result = create_glfw_lib_config()?;
+        Library::GLFW => {
+            let result = create_lib()?;
             Ok(Rc::new(result))
         }
     }
 }
 
-impl Display for WindowError {
+impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WindowError::WinLibraryInitError(message) => write!(f, "{message}"),
-            WindowError::CreateWindowError(message) => write!(f, "{message}"),
+            Error::WinLibraryInitError(message) | Error::CreateWindowError(message) => {
+                write!(f, "{message}")
+            }
         }
     }
 }
@@ -57,10 +56,11 @@ impl Display for WindowError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn test_create_window_lib_config() {
-        let result = create_window_lib_config(WindowLibrary::GLFW);
-        assert!(create_window_lib_config(WindowLibrary::GLFW).is_ok());
+        assert!(create_window_lib_config(&Library::GLFW).is_ok());
     }
 }

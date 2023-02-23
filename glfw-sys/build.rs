@@ -1,5 +1,3 @@
-use cmake;
-
 fn main() {
     let dst = cmake::Config::new("glfw").profile("Release").build();
     println!(
