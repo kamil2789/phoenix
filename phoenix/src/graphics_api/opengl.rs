@@ -1,6 +1,9 @@
+mod shaders;
+
 use crate::color::RGBA;
 use crate::graphics_api::GraphicApi;
 use crate::graphics_api::GraphicApiError;
+use crate::graphics_api::{ShaderError, ShaderID};
 
 use gl;
 
@@ -37,6 +40,18 @@ impl GraphicApi for OpenGlApi {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
     }
+
+    fn delete_shader(&self, id: u32) {
+        shaders::delete(id);
+    }
+
+    fn compile_shader(
+        &self,
+        vertex_src: &str,
+        fragment_src: &str,
+    ) -> Result<ShaderID, ShaderError> {
+        shaders::compile(vertex_src, fragment_src)
+    }
 }
 
 #[cfg(test)]
@@ -44,10 +59,12 @@ mod tests {
     use super::*;
     use serial_test::serial;
 
+
     #[test]
     #[serial]
     fn test_create_opengl_api() {
         let result = create_opengl_api();
         assert!(result.is_ok());
     }
+
 }
