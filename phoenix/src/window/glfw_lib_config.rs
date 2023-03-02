@@ -49,6 +49,19 @@ impl WinLibConfig for GlfwLibConfig {
             Ok(Rc::new(result))
         }
     }
+
+    fn create_default_window(&self) -> Result<Rc<dyn Window>, Error> {
+        unsafe {
+            let window_name = "Default Window";
+            let resolution = Resolution {
+                width: 800,
+                height: 600,
+            };
+            let window = create_raw_window(&resolution, window_name)?;
+            let result = GlfwWindow::new(window_name.to_string(), resolution, window);
+            Ok(Rc::new(result))
+        }
+    }
 }
 
 impl Drop for GlfwLibConfig {
@@ -103,6 +116,17 @@ mod tests {
                 },
                 "Hello window",
             );
+            assert!(window.is_ok());
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn test_create_default_window() {
+        if let Ok(config) = create_lib() {
+            let window = config.create_default_window();
             assert!(window.is_ok());
         } else {
             assert!(false);

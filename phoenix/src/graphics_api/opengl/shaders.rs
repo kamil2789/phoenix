@@ -83,29 +83,32 @@ unsafe fn check_link_status(shader_program_id: u32) -> Result<(), ShaderError> {
 mod tests {
     use super::compile;
     use crate::graphics_api::create_opengl_api;
+    use crate::window::{create_window_lib_config, Library};
     use serial_test::serial;
 
     #[test]
     #[serial]
-    #[ignore]
     fn test_compile_shaders() {
         let vertex_shader_src: &str = r#"
-    #version 330 core
-    layout (location = 0) in vec3 aPos;
-    void main() {
-       gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-    }
-    "#;
+            #version 330 core
+            layout (location = 0) in vec3 aPos;
+            void main() {
+                gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+            }
+            "#;
 
         let fragment_shader_src: &str = r#"
-    #version 330 core
-    out vec4 FragColor;
-    void main() {
-       FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-    }
-    "#;
+            #version 330 core
+            out vec4 FragColor;
+            void main() {
+                FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+            }
+            "#;
 
-        let _graphic_api = create_opengl_api().unwrap();
+        let config = create_window_lib_config(&Library::GLFW).unwrap();
+        let window = config.create_default_window().unwrap();
+
+        let _ = create_opengl_api(&window);
         let result = compile(vertex_shader_src, fragment_shader_src);
         assert!(result.is_ok());
     }

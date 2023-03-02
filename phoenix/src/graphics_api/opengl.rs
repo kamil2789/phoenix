@@ -4,12 +4,15 @@ use crate::color::RGBA;
 use crate::graphics_api::GraphicApi;
 use crate::graphics_api::GraphicApiError;
 use crate::graphics_api::{ShaderError, ShaderID};
+use crate::window::Window;
 
 use gl;
+use std::rc::Rc;
 
 pub struct OpenGlApi {}
 
-pub fn create_opengl_api() -> Result<OpenGlApi, GraphicApiError> {
+pub fn create_opengl_api(window: &Rc<dyn Window>) -> Result<OpenGlApi, GraphicApiError> {
+    window.set_current();
     let result = OpenGlApi {};
     OpenGlApi::init()?;
     Ok(result)
@@ -22,8 +25,16 @@ impl OpenGlApi {
                 "Cannot load openGL library",
             )));
         }
+
         gl::load_with(|symbol| gl_loader::get_proc_address(symbol).cast());
-        Ok(())
+
+        if !gl::CreateProgram::is_loaded() || !gl::ClearColor::is_loaded() {
+            Err(GraphicApiError::InitApiError(String::from(
+                "Cannot load pointers to openGL functions.",
+            )))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -54,17 +65,25 @@ impl GraphicApi for OpenGlApi {
     }
 }
 
+impl Drop for OpenGlApi {
+    fn drop(&mut self) {
+        gl_loader::end_gl();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::window::{create_window_lib_config, Library};
     use serial_test::serial;
-
 
     #[test]
     #[serial]
     fn test_create_opengl_api() {
-        let result = create_opengl_api();
+        let config = create_window_lib_config(&Library::GLFW).unwrap();
+        let window = config.create_default_window().unwrap();
+
+        let result = create_opengl_api(&window);
         assert!(result.is_ok());
     }
-
 }

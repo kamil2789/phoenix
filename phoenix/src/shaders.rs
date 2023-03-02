@@ -44,13 +44,46 @@ impl Drop for ShaderManager {
 mod tests {
     use super::*;
     use crate::graphics_api::{create_graphic_api, GraphicApiType};
+    use crate::window::{create_window_lib_config, Library};
+    use serial_test::serial;
 
     #[test]
-    #[ignore]
-    fn test_shader_manager_compile_shader() {
-        let graphic_api = create_graphic_api(&GraphicApiType::OpenGL).unwrap();
+    #[serial]
+    fn test_shader_manager_compile_shader_error() {
+        let config = create_window_lib_config(&Library::GLFW).unwrap();
+        let window = config.create_default_window().unwrap();
+
+        let graphic_api = create_graphic_api(&GraphicApiType::OpenGL, &window).unwrap();
         let mut manager = ShaderManager::new(graphic_api);
         let result = manager.compile_shader(" ", " ");
         assert!(result.is_err());
+    }
+
+    #[test]
+    #[serial]
+    fn test_shader_manager_compile_shader_ok() {
+        let vertex_shader_src: &str = r#"
+            #version 330 core
+            layout (location = 0) in vec3 aPos;
+            void main() {
+                gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+            }
+            "#;
+
+        let fragment_shader_src: &str = r#"
+            #version 330 core
+            out vec4 FragColor;
+            void main() {
+                FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+            }
+            "#;
+
+        let config = create_window_lib_config(&Library::GLFW).unwrap();
+        let window = config.create_default_window().unwrap();
+
+        let graphic_api = create_graphic_api(&GraphicApiType::OpenGL, &window).unwrap();
+        let mut manager = ShaderManager::new(graphic_api);
+        let result = manager.compile_shader(vertex_shader_src, fragment_shader_src);
+        assert!(result.is_ok());
     }
 }

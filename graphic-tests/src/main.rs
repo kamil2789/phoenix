@@ -1,4 +1,5 @@
 use phoenix::graphics_api::{create_graphic_api, GraphicApiType};
+use phoenix::shaders::ShaderManager;
 use phoenix::window::create_window_lib_config;
 use phoenix::window::{Library, Resolution};
 
@@ -16,9 +17,15 @@ fn main() {
         )
         .unwrap();
 
-    let graphic_api = create_graphic_api(&GraphicApiType::OpenGL).unwrap();
+    let graphic_api = create_graphic_api(&GraphicApiType::OpenGL, &window).unwrap();
 
-    window.set_current();
+/* 
+    let mut shader_manager = ShaderManager::new(graphic_api.clone());
+    if let Err(_val) = shader_manager.compile_shader(" ", " ") {
+        println!("DEBUG");
+    }
+*/
+
     while window.is_running() {
         graphic_api.draw_background(&RGBA::from_hex(0xff_00_00_00));
         window.swap_buffers();

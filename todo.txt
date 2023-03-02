@@ -1,1 +1,3 @@
 Find in the future a better place for poll events;
+
+POPRAWIĆ TESTY I PRZENIEŚĆ MAKE_CURRENT_CONTEXT WIN DO FUNKCJI TWORZACEJ BEZPOSREDNIO

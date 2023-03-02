@@ -19,6 +19,8 @@ pub enum Library {
 pub trait WinLibConfig {
     /// # Errors
     fn create_window(&self, resolution: Resolution, name: &str) -> Result<Rc<dyn Window>, Error>;
+    /// # Errors
+    fn create_default_window(&self) -> Result<Rc<dyn Window>, Error>;
 }
 
 pub trait Window {

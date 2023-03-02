@@ -2,6 +2,7 @@ mod opengl;
 
 use crate::color::RGBA;
 use crate::graphics_api::opengl::create_opengl_api;
+use crate::window::Window;
 
 use std::rc::Rc;
 
@@ -34,10 +35,11 @@ pub trait GraphicApi {
 /// # Errors
 pub fn create_graphic_api(
     graphic_api_type: &GraphicApiType,
+    window: &Rc<dyn Window>,
 ) -> Result<Rc<dyn GraphicApi>, GraphicApiError> {
     match graphic_api_type {
         GraphicApiType::OpenGL => {
-            let result = create_opengl_api()?;
+            let result = create_opengl_api(window)?;
             Ok(Rc::new(result))
         }
         GraphicApiType::Vulkan => unimplemented!(),
