@@ -26,10 +26,11 @@ pub enum GraphicApiError {
 
 pub trait GraphicApi {
     fn draw_background(&self, color: &RGBA);
-    fn delete_shader(&self, id: u32);
+    fn delete_shader(&self, id: ShaderID);
     /// # Errors
     fn compile_shader(&self, vertex_src: &str, fragment_src: &str)
         -> Result<ShaderID, ShaderError>;
+    fn use_shader(&self, id: ShaderID);
 }
 
 /// # Errors

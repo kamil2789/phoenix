@@ -63,6 +63,12 @@ impl GraphicApi for OpenGlApi {
     ) -> Result<ShaderID, ShaderError> {
         shaders::compile(vertex_src, fragment_src)
     }
+
+    fn use_shader(&self, id: u32) {
+        unsafe {
+            gl::UseProgram(id);
+        }
+    }
 }
 
 impl Drop for OpenGlApi {
