@@ -1,5 +1,5 @@
 use crate::window::glfw_window::GlfwWindow;
-use crate::window::Error;
+use crate::window::{Result, WindowError};
 use crate::window::Resolution;
 use crate::window::WinLibConfig;
 use crate::window::Window;
@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 pub struct GlfwLibConfig {}
 
-pub fn create_lib() -> Result<GlfwLibConfig, Error> {
+pub fn create_lib() -> Result<GlfwLibConfig> {
     let result = GlfwLibConfig {};
     unsafe {
         GlfwLibConfig::init_lib()?;
@@ -21,11 +21,11 @@ pub fn create_lib() -> Result<GlfwLibConfig, Error> {
 }
 
 impl GlfwLibConfig {
-    unsafe fn init_lib() -> Result<(), Error> {
+    unsafe fn init_lib() -> Result<()> {
         if glfw_bindings::glfwInit() == glfw_bindings::GLFW_TRUE {
             Ok(())
         } else {
-            Err(Error::WinLibraryInitError(String::from(
+            Err(WindowError::WinLibraryInitError(String::from(
                 "Initialization of glfw failed",
             )))
         }
@@ -42,7 +42,7 @@ impl GlfwLibConfig {
 }
 
 impl WinLibConfig for GlfwLibConfig {
-    fn create_window(&self, resolution: Resolution, name: &str) -> Result<Rc<dyn Window>, Error> {
+    fn create_window(&self, resolution: Resolution, name: &str) -> Result<Rc<dyn Window>> {
         unsafe {
             let window = create_raw_window(&resolution, name)?;
             let result = GlfwWindow::new(name.to_string(), resolution, window);
@@ -50,7 +50,7 @@ impl WinLibConfig for GlfwLibConfig {
         }
     }
 
-    fn create_default_window(&self) -> Result<Rc<dyn Window>, Error> {
+    fn create_default_window(&self) -> Result<Rc<dyn Window>> {
         unsafe {
             let window_name = "Default Window";
             let resolution = Resolution {
@@ -75,7 +75,7 @@ impl Drop for GlfwLibConfig {
 unsafe fn create_raw_window(
     resolution: &Resolution,
     name: &str,
-) -> Result<*mut glfw_bindings::GLFWwindow, Error> {
+) -> Result<*mut glfw_bindings::GLFWwindow> {
     let name_cstr = CString::new(name).expect("CString::new failed");
     let result = glfw_bindings::glfwCreateWindow(
         resolution.width.into(),
@@ -86,7 +86,7 @@ unsafe fn create_raw_window(
     );
 
     if result.is_null() {
-        Err(Error::CreateWindowError(String::from(
+        Err(WindowError::CreateWindowError(String::from(
             "Error during function call glfwCreateWindow",
         )))
     } else {
