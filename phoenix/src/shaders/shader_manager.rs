@@ -1,5 +1,5 @@
 use crate::graphics_api::GraphicApi;
-use crate::graphics_api::ShaderError;
+use crate::graphics_api::GraphicApiError;
 use crate::graphics_api::ShaderID;
 use std::rc::Rc;
 
@@ -21,7 +21,7 @@ impl ShaderManager {
         &mut self,
         vertex_src: &str,
         fragment_src: &str,
-    ) -> Result<ShaderID, ShaderError> {
+    ) -> Result<ShaderID, GraphicApiError> {
         let id = self.graphic_api.compile_shader(vertex_src, fragment_src)?;
         self.shader_programs.push(id);
         Ok(id)

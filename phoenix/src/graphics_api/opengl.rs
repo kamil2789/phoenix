@@ -1,11 +1,11 @@
 mod shaders;
+mod triangle;
+mod rendering;
 
 use crate::color::RGBA;
 use crate::graphics_api::GraphicApi;
-use crate::graphics_api::GraphicApiError;
-use crate::graphics_api::{ShaderError, ShaderID};
-use crate::graphics_api::PolygonError;
-use crate::graphics_api::TriangleApi;
+use crate::graphics_api::{Result, GraphicApiError};
+use crate::graphics_api::{ShaderID, TriangleApi};
 use crate::polygons::Triangle;
 use crate::window::Window;
 
@@ -14,21 +14,15 @@ use std::rc::Rc;
 
 pub struct OpenGlApi {}
 
-pub fn create_opengl_api(window: &Rc<dyn Window>) -> Result<OpenGlApi, GraphicApiError> {
+pub fn create_opengl_api(window: &Rc<dyn Window>) -> Result<OpenGlApi> {
     window.set_current();
     let result = OpenGlApi {};
     OpenGlApi::init()?;
     Ok(result)
 }
 
-struct OpenGlTriangle {
-    vao: u32,
-    vbo: u32,
-    shader_program_id: u32
-}
-
 impl OpenGlApi {
-    fn init() -> Result<(), GraphicApiError> {
+    fn init() -> Result<()> {
         if gl_loader::init_gl() == 0 {
             return Err(GraphicApiError::InitApiError(String::from(
                 "Cannot load openGL library",
@@ -49,16 +43,7 @@ impl OpenGlApi {
 
 impl GraphicApi for OpenGlApi {
     fn draw_background(&self, color: &RGBA) {
-        let normalized_color = color.get_as_normalized_f32();
-        unsafe {
-            gl::ClearColor(
-                normalized_color[0],
-                normalized_color[1],
-                normalized_color[2],
-                normalized_color[3],
-            );
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        }
+        rendering::draw_background(color);
     }
 
     fn delete_shader(&self, id: u32) {
@@ -69,57 +54,16 @@ impl GraphicApi for OpenGlApi {
         &self,
         vertex_src: &str,
         fragment_src: &str,
-    ) -> Result<ShaderID, ShaderError> {
+    ) -> Result<ShaderID> {
         shaders::compile(vertex_src, fragment_src)
     }
 
     fn use_shader(&self, id: u32) {
-        unsafe {
-            gl::UseProgram(id);
-        }
+        shaders::use_shader(id);
     }
 
-    fn create_triangle(&self, triangle: &Triangle) -> Result<Rc<dyn TriangleApi>, PolygonError> {
+    fn create_triangle(&self, triangle: &Triangle) -> Result<Rc<dyn TriangleApi>> {
         todo!()
-    }
-}
-
-impl OpenGlTriangle {
-    pub fn new() -> Self {
-        OpenGlTriangle{vao: 0, vbo: 0, shader_program_id: 0}
-    }
-
-    fn generate_buffers(&mut self) {
-        unsafe {
-            gl::GenVertexArrays(1, &mut self.vao);
-            gl::GenBuffers(1, &mut self.vbo);
-        }
-    }
-
-    fn bind(&self) {
-        unsafe {
-            gl::BindVertexArray(self.vao);
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
-        }
-    }
-}
-
-impl TriangleApi for OpenGlTriangle {
-    fn init(&self) -> Result<(), PolygonError> {
-        //self.generate_buffers();
-        self.bind();
-        //self.init_buffer(data)?;
-        todo!()
-    }
-
-    fn draw(&self) {
-        todo!()
-    }
-}
-
-impl Drop for OpenGlTriangle {
-    fn drop(&mut self) {
-        
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::graphics_api::ShaderError;
+use crate::graphics_api::{Result, GraphicApiError};
 
 use std::ffi::CString;
 use std::ptr;
@@ -9,7 +9,13 @@ pub fn delete(id: u32) {
     }
 }
 
-pub fn compile(vertex_src: &str, fragment_src: &str) -> Result<u32, ShaderError> {
+pub fn use_shader(id: u32) {
+    unsafe {
+        gl::UseProgram(id);
+    }
+}
+
+pub fn compile(vertex_src: &str, fragment_src: &str) -> Result<u32> {
     unsafe {
         let shader_program_id = gl::CreateProgram();
         let vertex_shader_id = compile_shader(vertex_src, gl::VERTEX_SHADER)?;
@@ -27,7 +33,7 @@ pub fn compile(vertex_src: &str, fragment_src: &str) -> Result<u32, ShaderError>
     }
 }
 
-unsafe fn compile_shader(src: &str, shader_type: u32) -> Result<u32, ShaderError> {
+unsafe fn compile_shader(src: &str, shader_type: u32) -> Result<u32> {
     let shader_id = gl::CreateShader(shader_type);
     let c_str_vert = CString::new(src.as_bytes()).unwrap();
     gl::ShaderSource(shader_id, 1, &c_str_vert.as_ptr(), ptr::null());
@@ -37,7 +43,7 @@ unsafe fn compile_shader(src: &str, shader_type: u32) -> Result<u32, ShaderError
     Ok(shader_id)
 }
 
-unsafe fn check_compile_status(shader_id: u32) -> Result<(), ShaderError> {
+unsafe fn check_compile_status(shader_id: u32) -> Result<()> {
     let mut status = i32::from(gl::TRUE);
     let info_length: usize = 512;
     let mut info_log: Vec<u8> = Vec::with_capacity(info_length - 1);
@@ -52,13 +58,13 @@ unsafe fn check_compile_status(shader_id: u32) -> Result<(), ShaderError> {
             info_log.as_mut_ptr().cast::<i8>(),
         );
 
-        Err(ShaderError::CompileError(
+        Err(GraphicApiError::ShaderCompileError(
             std::str::from_utf8(&info_log).unwrap().to_string(),
         ))
     }
 }
 
-unsafe fn check_link_status(shader_program_id: u32) -> Result<(), ShaderError> {
+unsafe fn check_link_status(shader_program_id: u32) -> Result<()> {
     let mut status = i32::from(gl::FALSE);
     let info_length: usize = 512;
     let mut info_log: Vec<u8> = Vec::with_capacity(info_length - 1);
@@ -73,7 +79,7 @@ unsafe fn check_link_status(shader_program_id: u32) -> Result<(), ShaderError> {
             info_log.as_mut_ptr().cast::<i8>(),
         );
 
-        Err(ShaderError::LinkError(
+        Err(GraphicApiError::ShaderLinkError(
             std::str::from_utf8(&info_log).unwrap().to_string(),
         ))
     }
