@@ -4,6 +4,9 @@ use crate::color::RGBA;
 use crate::graphics_api::GraphicApi;
 use crate::graphics_api::GraphicApiError;
 use crate::graphics_api::{ShaderError, ShaderID};
+use crate::graphics_api::PolygonError;
+use crate::graphics_api::TriangleApi;
+use crate::polygons::Triangle;
 use crate::window::Window;
 
 use gl;
@@ -16,6 +19,12 @@ pub fn create_opengl_api(window: &Rc<dyn Window>) -> Result<OpenGlApi, GraphicAp
     let result = OpenGlApi {};
     OpenGlApi::init()?;
     Ok(result)
+}
+
+struct OpenGlTriangle {
+    vao: u32,
+    vbo: u32,
+    shader_program_id: u32
 }
 
 impl OpenGlApi {
@@ -68,6 +77,49 @@ impl GraphicApi for OpenGlApi {
         unsafe {
             gl::UseProgram(id);
         }
+    }
+
+    fn create_triangle(&self, triangle: &Triangle) -> Result<Rc<dyn TriangleApi>, PolygonError> {
+        todo!()
+    }
+}
+
+impl OpenGlTriangle {
+    pub fn new() -> Self {
+        OpenGlTriangle{vao: 0, vbo: 0, shader_program_id: 0}
+    }
+
+    fn generate_buffers(&mut self) {
+        unsafe {
+            gl::GenVertexArrays(1, &mut self.vao);
+            gl::GenBuffers(1, &mut self.vbo);
+        }
+    }
+
+    fn bind(&self) {
+        unsafe {
+            gl::BindVertexArray(self.vao);
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+        }
+    }
+}
+
+impl TriangleApi for OpenGlTriangle {
+    fn init(&self) -> Result<(), PolygonError> {
+        //self.generate_buffers();
+        self.bind();
+        //self.init_buffer(data)?;
+        todo!()
+    }
+
+    fn draw(&self) {
+        todo!()
+    }
+}
+
+impl Drop for OpenGlTriangle {
+    fn drop(&mut self) {
+        
     }
 }
 

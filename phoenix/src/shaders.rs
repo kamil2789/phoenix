@@ -1,3 +1,5 @@
+pub mod utils;
+
 use crate::graphics_api::GraphicApi;
 use crate::graphics_api::ShaderError;
 use crate::graphics_api::ShaderID;
@@ -102,7 +104,9 @@ mod tests {
 
         let graphic_api = create_graphic_api(&GraphicApiType::OpenGL, &window).unwrap();
         let mut manager = ShaderManager::new(graphic_api);
-        let result = manager.compile_shader(VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC).unwrap();
+        let result = manager
+            .compile_shader(VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC)
+            .unwrap();
         assert_eq!(1, manager.get_shaders_num());
 
         manager.remove_shader(result);

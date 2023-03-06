@@ -3,6 +3,7 @@ mod opengl;
 use crate::color::RGBA;
 use crate::graphics_api::opengl::create_opengl_api;
 use crate::window::Window;
+use crate::polygons::Triangle;
 
 use std::rc::Rc;
 
@@ -12,6 +13,11 @@ pub type ShaderID = u32;
 pub enum ShaderError {
     CompileError(String),
     LinkError(String),
+}
+
+#[derive(Debug)]
+pub enum PolygonError {
+
 }
 
 pub enum GraphicApiType {
@@ -31,6 +37,12 @@ pub trait GraphicApi {
     fn compile_shader(&self, vertex_src: &str, fragment_src: &str)
         -> Result<ShaderID, ShaderError>;
     fn use_shader(&self, id: ShaderID);
+    fn create_triangle(&self, triangle: &Triangle) -> Result<Rc<dyn TriangleApi>, PolygonError>;
+}
+
+pub trait TriangleApi: Drop {
+    fn init(&self) -> Result<(), PolygonError>;
+    fn draw(&self);
 }
 
 /// # Errors

@@ -71,6 +71,12 @@ impl RGBA {
     }
 }
 
+impl Default for RGBA {
+    fn default() -> Self {
+        RGBA::from_hex(0x00_00_00_ff)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -84,6 +90,12 @@ mod tests {
     #[test]
     fn test_new_color_empty() {
         let color = RGBA::empty();
+        assert_eq!((0, 0, 0, 1_f32), color.get_rgba());
+    }
+
+    #[test]
+    fn test_new_color_default() {
+        let color = RGBA::default();
         assert_eq!((0, 0, 0, 1_f32), color.get_rgba());
     }
 
