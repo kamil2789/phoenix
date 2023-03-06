@@ -9,6 +9,7 @@ edition = "2021"
 serial_test = "1.0.0"
 
 [dependencies]
+thiserror = "1.0"
 glfw-sys = { path = "../glfw-sys" }
 gl = "0.14.0"
 gl_loader = "0.1.2"

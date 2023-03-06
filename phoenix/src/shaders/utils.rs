@@ -3,6 +3,15 @@ use std::fs::OpenOptions;
 use std::io::Read;
 use std::path::Path;
 
+use thiserror::Error;
+pub type Result<T> = std::result::Result<T, FileReaderError>;
+
+#[derive(Error, Debug)]
+pub enum FileReaderError {
+    #[error("File could not be opened, path: {0}")]
+    SourceNotFound(String)
+}
+
 #[cfg(windows)]
 static DELIMETER: char = '\\';
 
@@ -24,7 +33,7 @@ pub fn get_current_dir_name() -> String {
 /// # Panics
 ///
 /// Will panic if file has an invalid format
-pub fn read_src_from_file(path: &Path) -> Result<String, String> {
+pub fn read_src_from_file(path: &Path) -> Result<String> {
     let mut result = String::new();
 
     if path.is_file() {
@@ -35,10 +44,7 @@ pub fn read_src_from_file(path: &Path) -> Result<String, String> {
         file.read_to_string(&mut result).unwrap();
         Ok(result)
     } else {
-        Err(format!(
-            "File could not be opened, path: {}",
-            path.to_str().unwrap()
-        ))
+        Err(FileReaderError::SourceNotFound(String::from(path.to_str().unwrap())))
     }
 }
 

@@ -12,7 +12,7 @@ pub type ShaderID = u32;
 #[derive(Debug)]
 pub enum ShaderError {
     CompileError(String),
-    LinkError(String),
+    LinkError(String)
 }
 
 #[derive(Debug)]

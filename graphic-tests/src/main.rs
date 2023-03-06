@@ -1,5 +1,5 @@
 use phoenix::graphics_api::{create_graphic_api, GraphicApiType};
-use phoenix::shaders::ShaderManager;
+use phoenix::shaders::shader_manager::ShaderManager;
 use phoenix::window::create_window_lib_config;
 use phoenix::window::{Library, Resolution};
 use phoenix::shaders::utils::read_src_from_file;
