@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "phoenix",
+    "graphic-tests"
+]
