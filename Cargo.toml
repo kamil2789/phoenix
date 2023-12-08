@@ -2,5 +2,6 @@
 
 members = [
     "phoenix",
-    "graphic-tests"
+    "graphic-tests",
+    'glfw-sys'
 ]
