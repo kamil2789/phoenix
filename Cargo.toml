@@ -3,6 +3,6 @@
 members = [
     "phoenix",
     "graphic-tests",
-    'glfw-sys'
-]
+    "glfw-sys",
+    "prototyping"]
 resolver="2"
