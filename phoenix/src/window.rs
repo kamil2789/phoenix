@@ -1,19 +1,34 @@
 use glfw_sys::glfw_bindings;
-use thiserror::Error;
+use std::ffi::CString;
+use std::ffi::NulError;
 
 pub type Result<T> = std::result::Result<T, WinError>;
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum WinError {
     #[error("{0}")]
     WinLibraryInitError(String),
     #[error("{0}")]
     CreateWinError(String),
+    #[error("{0}")]
+    CStringError(#[from] NulError),
 }
+
+#[derive(Clone)]
+pub struct Resolution {
+    pub width: u16,
+    pub height: u16,
+}
+
 pub struct GlfwConfig {}
 
-impl GlfwConfig {
+pub struct Window {
+    window: *mut glfw_bindings::GLFWwindow,
+    name: String,
+    resolution: Resolution,
+}
 
+impl GlfwConfig {
     /// # Errors
     ///
     /// Will return `Err` if glfw library does not initialize properly.
@@ -21,7 +36,43 @@ impl GlfwConfig {
     pub fn create() -> Result<GlfwConfig> {
         GlfwConfig::init()?;
         GlfwConfig::init_hints();
-        Ok(GlfwConfig{})
+        Ok(GlfwConfig {})
+    }
+
+    /// # Errors
+    ///
+    /// Will return `Err` in the following cases:
+    /// GLFW library does not create a window properly.
+    /// Height or width in resolution is zero.
+    /// Invalid `CString` format, see `CString::new`.
+    pub fn create_window(&self, name: &str, resolution: Resolution) -> Result<Window> {
+        let name_cstr = CString::new(name)?;
+        if resolution.height == 0 || resolution.width == 0 {
+            return Err(WinError::CreateWinError(String::from(
+                "No resolution dimension can be zero",
+            )));
+        }
+
+        let window = unsafe {
+            glfw_bindings::glfwCreateWindow(
+                resolution.width.into(),
+                resolution.height.into(),
+                name_cstr.as_ptr(),
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+            )
+        };
+        if window.is_null() {
+            return Err(WinError::CreateWinError(String::from(
+                "Error during function call glfwCreateWindow",
+            )));
+        }
+
+        Ok(Window {
+            window,
+            name: name.to_string(),
+            resolution,
+        })
     }
 
     fn init() -> Result<()> {
@@ -54,6 +105,28 @@ impl Drop for GlfwConfig {
     }
 }
 
+impl Window {
+    #[must_use]
+    pub fn is_running(&self) -> bool {
+        unsafe { glfw_bindings::glfwWindowShouldClose(self.window) == 0 }
+    }
+
+    pub fn set_current(&self) {
+        unsafe {
+            glfw_bindings::glfwMakeContextCurrent(self.window);
+            glfw_bindings::glfwSetFramebufferSizeCallback(self.window, std::ptr::null_mut());
+        }
+    }
+}
+
+impl Drop for Window {
+    fn drop(&mut self) {
+        unsafe {
+            glfw_bindings::glfwDestroyWindow(self.window);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -68,9 +141,58 @@ mod tests {
     #[test]
     #[serial]
     fn test_create_many_glfw_config_no_panic() {
-        let _first = GlfwConfig{};
-        let _second = GlfwConfig::create();
-        let _third = GlfwConfig::create();
+        let first = GlfwConfig::create();
+        assert!(first.is_ok());
+        let second = GlfwConfig::create();
+        assert!(second.is_ok());
+    }
+
+    #[test]
+    #[serial]
+    fn test_run_window_glfw() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 800,
+            height: 600,
+        };
+        let window = config.create_window("test_win_opengl", resolution).unwrap();
+        window.set_current();
+        assert!(window.is_running());
+    }
+
+    #[test]
+    #[serial]
+    fn test_window_create_error_glfw_not_initialized() {
+        let config = GlfwConfig{} ; //library not initialized
+        let resolution = Resolution {
+            width: 800,
+            height: 600,
+        };
+        let window = config.create_window("test_win_opengl", resolution);
+        assert!(window.is_err());
+    }
+
+    #[test]
+    #[serial]
+    fn test_window_create_error_invalid_name() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 800,
+            height: 600,
+        };
+        let window = config.create_window("test_w\0in_opengl", resolution);
+        assert!(window.is_err());
+    }
+
+    #[test]
+    #[serial]
+    fn test_window_create_error_zero_resolution() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 0,
+            height: 0,
+        };
+        let window = config.create_window("test_win_opengl", resolution);
+        assert!(window.is_err());
     }
 }
-
