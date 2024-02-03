@@ -1,4 +1,6 @@
+use gl;
 use glfw_sys::glfw_bindings;
+use std::ffi::c_void;
 use std::ffi::CString;
 use std::ffi::NulError;
 
@@ -12,6 +14,8 @@ pub enum WinError {
     CreateWinError(String),
     #[error("{0}")]
     CStringError(#[from] NulError),
+    #[error("{0}")]
+    RuntimeError(String),
 }
 
 #[derive(Clone)]
@@ -111,11 +115,42 @@ impl Window {
         unsafe { glfw_bindings::glfwWindowShouldClose(self.window) == 0 }
     }
 
-    pub fn set_current(&self) {
+    /// # Errors
+    ///
+    /// Possibly internal error of `gl::load_with`.
+    pub fn set_current(&self) -> Result<()> {
         unsafe {
             glfw_bindings::glfwMakeContextCurrent(self.window);
             glfw_bindings::glfwSetFramebufferSizeCallback(self.window, std::ptr::null_mut());
         }
+        Window::load_gl_functions()?;
+        Ok(())
+    }
+
+    pub fn swap_buffers(&self) {
+        unsafe {
+            glfw_bindings::glfwSwapBuffers(self.window);
+        }
+    }
+
+    fn load_gl_functions() -> Result<()> {
+        gl::load_with(Window::get_proc_address);
+        if gl::DrawBuffer::is_loaded()
+            && gl::GenTextures::is_loaded()
+            && gl::GetVertexArrayIndexediv::is_loaded()
+        {
+            Ok(())
+        } else {
+            Err(WinError::RuntimeError(String::from(
+                "GL functions were not loaded correctly",
+            )))
+        }
+    }
+
+    fn get_proc_address(func: &str) -> *const c_void {
+        let c_style_name = CString::new(func.as_bytes()).unwrap();
+        let ptr = c_style_name.as_ptr().cast::<u8>();
+        unsafe { glfw_bindings::glfwGetProcAddress(ptr) }
     }
 }
 
@@ -149,21 +184,22 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_run_window_glfw() {
+    fn test_run_window_glfw_swap_bufers() {
         let config = GlfwConfig::create().unwrap();
         let resolution = Resolution {
             width: 800,
             height: 600,
         };
         let window = config.create_window("test_win_opengl", resolution).unwrap();
-        window.set_current();
+        window.set_current().unwrap();
+        window.swap_buffers();
         assert!(window.is_running());
     }
 
     #[test]
     #[serial]
     fn test_window_create_error_glfw_not_initialized() {
-        let config = GlfwConfig{} ; //library not initialized
+        let config = GlfwConfig {}; //library not initialized
         let resolution = Resolution {
             width: 800,
             height: 600,
