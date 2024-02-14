@@ -133,10 +133,12 @@ impl Window {
         }
     }
 
+    #[must_use]
     pub fn get_resolution(&self) -> Resolution {
         self.resolution.clone()
     }
 
+    #[must_use]
     pub fn get_name(&self) -> &str {
         &self.name
     }

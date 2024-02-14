@@ -1,111 +1,178 @@
-use std::fs::OpenOptions;
-use std::io::Read;
-use std::path::Path;
-use thiserror::Error;
+use super::shader::ShaderSrc;
+use super::Error;
+use super::Result;
+use std::ffi::CString;
+use std::ptr;
 
-pub type Result<T> = std::result::Result<T, Error>;
-
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("File could not be opened, path: {0}")]
-    SourceFileError(String),
-    #[error("Error when loading data from a file ")]
-    ReadFileError(#[from] std::io::Error)
+pub struct ShaderProgram {
+    id: u32,
 }
 
-pub struct Shader {
-    vertex_shader: String,
-    fragment_shader: String,
-}
-
-fn read_src_from_file(path: &Path) -> Result<String> {
-    let mut result = String::new();
-
-    if path.is_file() {
-        if let Ok(mut file) = OpenOptions::new().read(true).open(path.to_str().unwrap_or("")) {
-            file.read_to_string(&mut result)?;
-            Ok(result)
-        } else {
-            Err(Error::SourceFileError(format!("File could not be read, path: {}", path.to_str().unwrap_or(""))))
-        }
-    } else {
-        Err(Error::SourceFileError(format!("File could not be opened, path: {}", path.to_str().unwrap_or(""))))
-    }
-}
-
-impl Shader {
-    #[must_use]
-    pub fn new(vertex: &str, fragment: &str) -> Self {
-        Shader {
-            vertex_shader: vertex.to_string(),
-            fragment_shader: fragment.to_string(),
-        }
-    }
-
+impl ShaderProgram {
     /// # Errors
     ///
-    /// Will return `Err` if `filename` does not exist or the user does not have
-    /// permission to read it.
-    pub fn new_from_file(vertex: &Path, fragment: &Path) -> Result<Self> {
-        let vertex_shader = read_src_from_file(vertex)?;
-        let fragment_shader = read_src_from_file(fragment)?;
-        Ok(Shader {
-            vertex_shader,
-            fragment_shader,
+    /// Will return `Err` when the shader fails in the compilation or linking phase.
+    /// The correct vertex and fragment shader should be given to this func.
+    pub fn new_compile(shader_src: &ShaderSrc) -> Result<ShaderProgram> {
+        let vertex_shader_id =
+            ShaderProgram::compile_shader(shader_src.get_vertex_shader(), gl::VERTEX_SHADER)?;
+        let fragment_shader_id =
+            ShaderProgram::compile_shader(shader_src.get_fragment_shader(), gl::FRAGMENT_SHADER)?;
+        let shader_program_id = ShaderProgram::create_program();
+        ShaderProgram::link_program(shader_program_id, vertex_shader_id, fragment_shader_id)?;
+        ShaderProgram::delete_shader(vertex_shader_id);
+        ShaderProgram::delete_shader(fragment_shader_id);
+        Ok(ShaderProgram {
+            id: shader_program_id,
         })
     }
 
-    #[must_use]
-    pub fn get_vertex_shader(&self) -> &str {
-        &self.vertex_shader
+    fn create_program() -> u32 {
+        unsafe { gl::CreateProgram() }
     }
 
-    #[must_use]
-    pub fn get_fragment_shader(&self) -> &str {
-        &self.fragment_shader
+    fn compile_shader(shader_src: &str, shader_type: u32) -> Result<u32> {
+        unsafe {
+            let shader = gl::CreateShader(shader_type);
+            let c_str_vert = CString::new(shader_src.as_bytes()).unwrap();
+            gl::ShaderSource(shader, 1, &c_str_vert.as_ptr(), ptr::null());
+            gl::CompileShader(shader);
+
+            ShaderProgram::check_compile_status(shader)
+        }
+    }
+
+    fn link_program(shader_id: u32, vertex_id: u32, fragment_id: u32) -> Result<()> {
+        unsafe {
+            gl::AttachShader(shader_id, vertex_id);
+            gl::AttachShader(shader_id, fragment_id);
+            gl::LinkProgram(shader_id);
+            ShaderProgram::check_link_status(shader_id)
+        }
+    }
+
+    fn check_compile_status(shader_id: u32) -> Result<u32> {
+        let mut status = i32::from(gl::TRUE);
+        let info_length: usize = 512;
+        let mut info_log: Vec<u8> = Vec::with_capacity(info_length - 1);
+        unsafe { gl::GetShaderiv(shader_id, gl::COMPILE_STATUS, &mut status) };
+        if status == i32::from(gl::TRUE) {
+            Ok(shader_id)
+        } else {
+            unsafe {
+                gl::GetShaderInfoLog(
+                    shader_id,
+                    info_length.try_into().unwrap(),
+                    ptr::null_mut(),
+                    info_log.as_mut_ptr().cast::<i8>(),
+                );
+            };
+            Err(Error::CompilationError(String::from(
+                std::str::from_utf8(&info_log).unwrap(),
+            )))
+        }
+    }
+
+    fn check_link_status(shader_id: u32) -> Result<()> {
+        let mut status = i32::from(gl::TRUE);
+        let info_length: usize = 512;
+        let mut info_log: Vec<u8> = Vec::with_capacity(info_length - 1);
+        unsafe { gl::GetProgramiv(shader_id, gl::LINK_STATUS, &mut status) };
+        if status == i32::from(gl::TRUE) {
+            Ok(())
+        } else {
+            unsafe {
+                gl::GetProgramInfoLog(
+                    shader_id,
+                    info_length.try_into().unwrap(),
+                    ptr::null_mut(),
+                    info_log.as_mut_ptr().cast::<i8>(),
+                );
+            };
+            Err(Error::LinkError(String::from(
+                std::str::from_utf8(&info_log).unwrap(),
+            )))
+        }
+    }
+
+    fn delete_shader(shader_id: u32) {
+        unsafe {
+            gl::DeleteShader(shader_id);
+        }
+    }
+}
+
+impl Drop for ShaderProgram {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteProgram(self.id);
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::fs;
-    use std::io::Write;
+    use super::ShaderProgram;
+    use crate::shaders::shader_program::ShaderSrc;
+    use crate::window::GlfwConfig;
+    use crate::window::Resolution;
+    use crate::window::Window;
+    use serial_test::serial;
 
-    fn create_file(src: &str, file_name: &str) {
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(file_name)
+    const VERTEX_SHADER_SRC: &str = r#"
+        #version 330 core
+        layout (location = 0) in vec3 aPos;
+        void main() {
+            gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+        }
+    "#;
+
+    const FRAGMENT_SHADER_SRC: &str = r#"
+        #version 330 core
+        out vec4 FragColor;
+        void main() {
+            FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+        }
+    "#;
+
+    fn set_glfw_window() -> (GlfwConfig, Window) {
+        let config = GlfwConfig::create().unwrap();
+        let window = config
+            .create_window(
+                "Learn OpenGL",
+                Resolution {
+                    width: 800,
+                    height: 600,
+                },
+            )
             .unwrap();
-        let write_result = writeln!(file, "{}", src);
-        assert!(write_result.is_ok());
+
+        window.set_current().unwrap();
+        (config, window)
     }
 
     #[test]
-    fn test_shader_new_from_non_existing_files_get_error() {
-        let shader =
-            Shader::new_from_file(Path::new("/nonExistedPath"), Path::new("/nonExistedPath"));
-        assert!(shader.is_err());
+    #[serial]
+    fn test_compile_shader_no_error() {
+        let (_config, _window) = set_glfw_window();
+
+        let shader_src = ShaderSrc::new(VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC);
+        let shader_program = ShaderProgram::new_compile(&shader_src);
+        assert!(shader_program.is_ok());
     }
 
     #[test]
-    fn test_shader_new_from_file() {
-        let vertex_src = "vertex shader source code";
-        let fragment_src = "fragment shader source code";
-        let vertex_file = "vertex_shader.frag";
-        let fragment_file = "fragment_shader.frag";
+    #[serial]
+    fn test_compile_shader_invalid_shaders_src_get_err() {
+        let (_config, _window) = set_glfw_window();
 
-        create_file(vertex_src, vertex_file);
-        create_file(fragment_src, fragment_file);
+        let mut shader_program = ShaderProgram::new_compile(&ShaderSrc::new(VERTEX_SHADER_SRC, "Invalidd data"));
+        assert!(shader_program.is_err());
 
-        let shader =
-            Shader::new_from_file(Path::new(vertex_file), Path::new(fragment_file)).unwrap();
+        shader_program = ShaderProgram::new_compile(&ShaderSrc::new("Invalidd data", FRAGMENT_SHADER_SRC));
+        assert!(shader_program.is_err());
 
-        assert_eq!(shader.get_vertex_shader().trim(), vertex_src);
-        assert_eq!(shader.get_fragment_shader().trim(), fragment_src);
-
-        assert!(fs::remove_file(vertex_file).is_ok());
-        assert!(fs::remove_file(fragment_file).is_ok());
+        shader_program = ShaderProgram::new_compile(&ShaderSrc::new("", ""));
+        assert!(shader_program.is_err());
     }
 }
