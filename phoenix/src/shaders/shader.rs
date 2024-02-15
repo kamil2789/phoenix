@@ -9,7 +9,7 @@ pub struct ShaderSrc {
     fragment_shader: String,
 }
 
-fn read_src_from_file(path: &Path) -> Result<String> {
+pub fn read_src_from_file(path: &Path) -> Result<String> {
     let mut result = String::new();
 
     if path.is_file() {

@@ -26,6 +26,10 @@ impl ShaderProgram {
             id: shader_program_id,
         })
     }
+    
+    pub fn get_id(&self) -> u32 {
+        self.id
+    }
 
     fn create_program() -> u32 {
         unsafe { gl::CreateProgram() }
