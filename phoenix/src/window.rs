@@ -18,7 +18,7 @@ pub enum WinError {
     RuntimeError(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Resolution {
     pub width: u16,
     pub height: u16,
@@ -133,6 +133,16 @@ impl Window {
         }
     }
 
+    #[must_use]
+    pub fn get_resolution(&self) -> Resolution {
+        self.resolution.clone()
+    }
+
+    #[must_use]
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
     fn load_gl_functions() -> Result<()> {
         gl::load_with(Window::get_proc_address);
         if gl::DrawBuffer::is_loaded()
@@ -180,6 +190,20 @@ mod tests {
         assert!(first.is_ok());
         let second = GlfwConfig::create();
         assert!(second.is_ok());
+    }
+
+    #[test]
+    #[serial]
+    fn test_run_window_glfw() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 800,
+            height: 600,
+        };
+        let res_clone = resolution.clone();
+        let window = config.create_window("test_win_opengl", resolution).unwrap();
+        assert_eq!(window.get_resolution(), res_clone);
+        assert_eq!(window.get_name(), "test_win_opengl");
     }
 
     #[test]
