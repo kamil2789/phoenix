@@ -1,5 +1,5 @@
-pub mod shader;
 pub mod shader_program;
+pub mod shader_source;
 
 use thiserror::Error;
 

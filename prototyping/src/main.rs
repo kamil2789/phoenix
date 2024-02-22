@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use glfw_sys::glfw_bindings;
-use phoenix::{geometry::triangle::Triangle, render::init_triangle, shaders::{shader::{read_src_from_file, ShaderSrc}, shader_program::ShaderProgram}, window::{GlfwConfig, Resolution}};
+use phoenix::{components::geometry::triangle::Triangle, render::init_triangle, components::shaders::{shader_source::{read_src_from_file, ShaderSrc}, shader_program::ShaderProgram}, window::{GlfwConfig, Resolution}};
 
 fn main() {
     let config = GlfwConfig::create().unwrap();
@@ -26,8 +26,8 @@ fn main() {
     let mut triangle = Triangle::new(vertices);
     triangle = init_triangle(triangle);
 
-    let src = read_src_from_file(Path::new("./phoenix/src/shaders/vertex/basic.vert")).unwrap();
-    let src2 = read_src_from_file(Path::new("./phoenix/src/shaders/fragment/basic.frag")).unwrap();
+    let src = read_src_from_file(Path::new("./phoenix/src/components/shaders/vertex/basic.vert")).unwrap();
+    let src2 = read_src_from_file(Path::new("./phoenix/src/components/shaders/fragment/basic.frag")).unwrap();
     let shader_source = ShaderSrc::new(&src, &src2);
     let shader_program = ShaderProgram::new_compile(&shader_source).unwrap();
     while window.is_running() {

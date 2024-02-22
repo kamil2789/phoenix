@@ -1,4 +1,4 @@
-use super::shader::ShaderSrc;
+use super::shader_source::ShaderSrc;
 use super::Error;
 use super::Result;
 use std::ffi::CString;
@@ -117,7 +117,7 @@ impl Drop for ShaderProgram {
 #[cfg(test)]
 mod tests {
     use super::ShaderProgram;
-    use crate::shaders::shader_program::ShaderSrc;
+    use crate::components::shaders::shader_program::ShaderSrc;
     use crate::window::GlfwConfig;
     use crate::window::Resolution;
     use crate::window::Window;

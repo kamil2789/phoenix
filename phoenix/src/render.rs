@@ -1,6 +1,6 @@
 use std::ptr;
 
-use crate::geometry::{basic::Buffers, triangle::Triangle};
+use crate::components::geometry::{basic::Buffers, triangle::Triangle};
 
 //RESULT TYPE SHOULD BE RESULT<T, ERR> - CHECK FOR ERR CASE
 pub fn init_triangle(mut triangle: Triangle) -> Triangle {
