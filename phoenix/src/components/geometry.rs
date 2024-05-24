@@ -5,5 +5,5 @@ pub struct Point {
 }
 
 pub struct Triangle {
-    vertices: [f32; 9]
+    vertices: [f32; 9],
 }

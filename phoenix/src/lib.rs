@@ -1,3 +1,3 @@
-pub mod window;
-pub mod render;
 pub mod components;
+pub mod renderer;
+pub mod window;
