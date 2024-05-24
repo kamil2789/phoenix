@@ -1,7 +1,7 @@
 pub mod opengl;
 pub mod vulkan;
 
-use crate::components::{geometry::{Triangle}, shaders::shader_program::ShaderProgram};
+use crate::components::{geometry::Triangle, shaders::shader_program::ShaderProgram};
 use thiserror::Error;
 
 pub type ID = u32;

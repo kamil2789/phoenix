@@ -4,7 +4,6 @@ pub mod color;
 pub mod geometry;
 pub mod shaders;
 
-
 pub enum Component {
     Color(RGBA),
     Geometry(Triangle),
