@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "phoenix",
+    "graphic-tests",
+]
+resolver="2"
