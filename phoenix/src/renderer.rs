@@ -1,7 +1,7 @@
 pub mod opengl;
 pub mod vulkan;
 
-use crate::components::shaders::shader_program::ShaderProgram;
+use crate::components::{geometry::{Shape, Triangle}, shaders::shader_program::ShaderProgram};
 use thiserror::Error;
 
 pub type ID = u32;
@@ -17,7 +17,7 @@ pub enum Error {
 
 pub trait Render {
     fn compile_shader_program(&mut self, shader_program: &ShaderProgram) -> Result<ID>;
-    //fn init_triangle(triangle: &mut Triangle) -> Result<>;
+    //fn init_triangle(triangle: &mut Triangle) -> Result<Box<dyn Shape>>;
     //fn draw_triangle(triangle: &Triangle) -> Result<>;
     //fn remove_triangle(triangle: &mut Triangle);
 }

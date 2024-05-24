@@ -1,3 +1,4 @@
+use glfw_sys::glfw_bindings;
 use phoenix::window::{GlfwConfig, Resolution};
 
 fn main() {
@@ -12,5 +13,24 @@ fn main() {
             },
         )
         .unwrap();
-    window.set_current();
+
+    window.set_current().unwrap();
+
+    while window.is_running() {
+        unsafe {
+            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+
+            // gl::UseProgram(shader_program.get_id());
+            // gl::BindVertexArray(triangle.get_vao());
+            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+        }
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        // -------------------------------------------------------------------------------
+        window.swap_buffers();
+        unsafe {
+            glfw_bindings::glfwPollEvents();
+        }
+    }
 }

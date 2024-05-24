@@ -10,8 +10,4 @@ pub enum Error {
     SourceFileError(String),
     #[error("Error when loading data from a file ")]
     ReadFileError(#[from] std::io::Error),
-    #[error("Shader compilation error {0}")]
-    CompilationError(String),
-    #[error("Shader linking program error {0}")]
-    LinkError(String),
 }
