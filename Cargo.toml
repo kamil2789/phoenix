@@ -3,6 +3,7 @@
 members = [
     "glfw-sys",
     "graphic-tests",
-    "phoenix"
+    "phoenix",
+    "prototyping"
 ]
 resolver="2"

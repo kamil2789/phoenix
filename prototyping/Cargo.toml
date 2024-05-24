@@ -1,12 +1,9 @@
 [package]
-name = "phoenix"
+name = "prototyping"
 version = "0.1.0"
 edition = "2021"
 
-[dev-dependencies]
-serial_test = "3.1.1"
-
 [dependencies]
 glfw-sys = { path = "../glfw-sys" }
-thiserror = "1.0.61"
+phoenix = { path = "../phoenix" }
 gl = "0.14.0"
