@@ -1,7 +1,8 @@
 [workspace]
 
 members = [
-    "phoenix",
+    "glfw-sys",
     "graphic-tests",
+    "phoenix"
 ]
 resolver="2"
