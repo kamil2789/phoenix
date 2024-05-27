@@ -1,7 +1,12 @@
+use self::geometry_rendering::init_triangle;
+
 use super::{Render, ID};
+use crate::components::geometry::{Shape, ShapeType};
 use crate::components::shaders::shader_program::ShaderProgram;
 use crate::renderer::opengl::shader_compiler::compile;
 use crate::renderer::Result;
+
+mod geometry_rendering;
 mod shader_compiler;
 
 struct OpenGL {
@@ -17,6 +22,14 @@ impl Render for OpenGL {
         self.shaders_id.push(shader_program_id);
         Ok(shader_program_id)
     }
+    /*
+    fn init_shape(&mut self, shape: impl Shape) -> Result<ID> {
+        match shape.get_type() {
+            ShapeType::Triangle => init_triangle(vertices, color),
+            _ => todo!(),
+        }
+    }
+    */
 }
 
 impl Drop for OpenGL {

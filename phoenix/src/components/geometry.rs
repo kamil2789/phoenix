@@ -1,3 +1,12 @@
+pub trait Shape {
+    fn get_vertices(&self) -> &[f32];
+    fn get_type(&self) -> ShapeType;
+}
+
+pub enum ShapeType {
+    Triangle,
+}
+
 pub struct Point {
     pub x: f32,
     pub y: f32,
