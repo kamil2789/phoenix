@@ -1,9 +1,5 @@
+use super::Buffers;
 use std::ptr;
-
-struct Buffers {
-    pub vertex_array_object: u32,
-    pub vertex_buffer_object: u32,
-}
 
 //RESULT TYPE SHOULD BE RESULT<T, ERR> - CHECK FOR ERR CASE
 #[must_use]
@@ -12,17 +8,8 @@ pub fn init_triangle(vertices: &[f32]) -> Buffers {
     bind_buffers(&buffers);
     send_data_to_cpu_buffer(vertices);
     set_vertex_attribute_pointer();
-    unbind_bufferst();
+    unbind_buffers();
     buffers
-}
-
-impl Buffers {
-    fn new(vertex_array_object: u32, vertex_buffer_object: u32) -> Buffers {
-        Buffers {
-            vertex_array_object,
-            vertex_buffer_object,
-        }
-    }
 }
 
 fn generate_buffers() -> Buffers {
@@ -69,7 +56,7 @@ fn set_vertex_attribute_pointer() {
     }
 }
 
-fn unbind_bufferst() {
+fn unbind_buffers() {
     unsafe {
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);

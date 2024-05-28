@@ -127,9 +127,19 @@ impl Window {
         Ok(())
     }
 
+    pub fn is_current(&self) -> bool {
+        unsafe { glfw_bindings::glfwGetCurrentContext() == self.window }
+    }
+
     pub fn swap_buffers(&self) {
         unsafe {
             glfw_bindings::glfwSwapBuffers(self.window);
+        }
+    }
+
+    pub fn poll_events() {
+        unsafe {
+            glfw_bindings::glfwPollEvents();
         }
     }
 

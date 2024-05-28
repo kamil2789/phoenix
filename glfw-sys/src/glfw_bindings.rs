@@ -23,6 +23,7 @@ extern "C" {
         share: *mut GLFWwindow,
     ) -> *mut GLFWwindow;
     pub fn glfwMakeContextCurrent(window: *mut GLFWwindow);
+    pub fn glfwGetCurrentContext() -> *mut GLFWwindow;
     pub fn glfwSetFramebufferSizeCallback(
         window: *mut GLFWwindow,
         cbfun: *mut GLFWframebuffersizefun,

@@ -1,4 +1,4 @@
-use self::{color::RGBA, geometry::Triangle, shaders::shader_program::ShaderProgram};
+use self::{color::RGBA, geometry::Shape, shaders::shader_program::ShaderProgram};
 
 pub mod color;
 pub mod geometry;
@@ -6,7 +6,7 @@ pub mod shaders;
 
 pub enum Component {
     Color(RGBA),
-    Geometry(Triangle),
+    Geometry(Box<dyn Shape>),
     ShaderProgram(ShaderProgram),
 }
 

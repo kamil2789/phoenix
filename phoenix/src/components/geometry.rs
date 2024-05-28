@@ -22,3 +22,13 @@ impl Triangle {
         Self { vertices }
     }
 }
+
+impl Shape for Triangle {
+    fn get_vertices(&self) -> &[f32] {
+        &self.vertices
+    }
+
+    fn get_type(&self) -> ShapeType {
+        ShapeType::Triangle
+    }
+}

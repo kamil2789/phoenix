@@ -1,7 +1,10 @@
 pub mod opengl;
 pub mod vulkan;
 
-use crate::components::{geometry::Shape, shaders::shader_program::ShaderProgram};
+use crate::{
+    components::{color::RGBA, geometry::Shape, shaders::shader_program::ShaderProgram},
+    managers::entity::RefEntity,
+};
 use thiserror::Error;
 
 pub type ID = u32;
@@ -17,7 +20,9 @@ pub enum Error {
 
 pub trait Render {
     fn compile_shader_program(&mut self, shader_program: &ShaderProgram) -> Result<ID>;
-    //fn init_shape(&mut self, shape: impl Shape) -> Result<ID>;
+    fn set_background_color(&self, color: &RGBA);
+    fn init_entity(&mut self, entity: RefEntity) -> Result<ID>;
+    fn draw_entity(&self, entity_id: ID);
     //fn init_triangle(triangle: &mut Triangle) -> Result<Box<dyn Shape>>;
     //fn draw_triangle(triangle: &Triangle) -> Result<>;
     //fn remove_triangle(triangle: &mut Triangle);
