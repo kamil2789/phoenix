@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use super::{Render, ID};
 use crate::components::color::RGBA;
-use crate::components::geometry::{Shape, ShapeType};
+use crate::components::geometry::ShapeType;
 use crate::components::shaders::shader_program::ShaderProgram;
-use crate::managers::entity::RefEntity;
+use crate::managers::entity::ComponentRefs;
 use crate::renderer::Result;
 
 mod geometry_rendering;
@@ -13,6 +13,7 @@ mod shader_compiler;
 pub type ShaderID = u32;
 pub type BufferID = u32;
 
+#[derive(Default)]
 pub struct OpenGL {
     shaders_id: HashMap<BufferID, ShaderID>,
     buffers: HashMap<BufferID, Buffers>,
@@ -21,15 +22,6 @@ pub struct OpenGL {
 struct Buffers {
     pub vertex_array_object: u32,
     pub vertex_buffer_object: u32,
-}
-
-impl OpenGL {
-    pub fn new() -> Self {
-        OpenGL {
-            shaders_id: HashMap::new(),
-            buffers: HashMap::new(),
-        }
-    }
 }
 
 impl Buffers {
@@ -58,7 +50,7 @@ impl Render for OpenGL {
         }
     }
 
-    fn init_entity(&mut self, entity: RefEntity) -> Result<ID> {
+    fn init_entity(&mut self, entity: ComponentRefs) -> Result<ID> {
         if self.buffers.contains_key(&entity.entity_id) {
             return Ok(entity.entity_id);
         }
@@ -67,7 +59,7 @@ impl Render for OpenGL {
         if let Some(value) = entity.shape {
             match value.get_type() {
                 ShapeType::Triangle => {
-                    let buffers = geometry_rendering::init_triangle(&value.get_vertices());
+                    let buffers = geometry_rendering::init_triangle(value.get_vertices());
                     self.buffers.insert(entity.entity_id, buffers);
                 }
             }
@@ -100,6 +92,6 @@ impl Drop for OpenGL {
     fn drop(&mut self) {
         self.shaders_id.iter().for_each(|(_, id)| unsafe {
             gl::DeleteProgram(*id);
-        })
+        });
     }
 }

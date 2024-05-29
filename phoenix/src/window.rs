@@ -127,6 +127,7 @@ impl Window {
         Ok(())
     }
 
+    #[must_use]
     pub fn is_current(&self) -> bool {
         unsafe { glfw_bindings::glfwGetCurrentContext() == self.window }
     }

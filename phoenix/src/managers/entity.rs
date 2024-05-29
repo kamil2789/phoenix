@@ -5,29 +5,31 @@ use crate::components::{
 };
 pub type ID = u32;
 
+#[derive(Default)]
 pub struct Entity {
     components: Vec<Component>,
 }
 
-pub struct EntityManager {
+#[derive(Default)]
+pub struct Manager {
     colors: HashMap<ID, RGBA>,
-    shapes: HashMap<ID, Box<dyn Shape>>,
     shader_programs: HashMap<ID, ShaderProgram>,
+    shapes: HashMap<ID, Box<dyn Shape>>,
     entity_nums: u32,
 }
 
-pub struct RefEntity<'a> {
+pub struct ComponentRefs<'a> {
     pub entity_id: ID,
     pub color: Option<&'a RGBA>,
-    pub shape: Option<&'a Box<dyn Shape>>,
+    pub shape: Option<&'a dyn Shape>,
     pub shader_program: Option<&'a ShaderProgram>,
 }
 
-impl<'a> RefEntity<'a> {
+impl<'a> ComponentRefs<'a> {
     fn new(
         entity_id: ID,
         color: Option<&'a RGBA>,
-        shape: Option<&'a Box<dyn Shape>>,
+        shape: Option<&'a dyn Shape>,
         shader_program: Option<&'a ShaderProgram>,
     ) -> Self {
         Self {
@@ -40,26 +42,14 @@ impl<'a> RefEntity<'a> {
 }
 
 impl Entity {
-    pub fn new() -> Self {
-        Self { components: vec![] }
-    }
-
     pub fn add_component(&mut self, component: Component) {
         self.components.push(component);
     }
 }
 
-impl EntityManager {
-    pub fn new() -> Self {
-        Self {
-            colors: HashMap::new(),
-            shapes: HashMap::new(),
-            shader_programs: HashMap::new(),
-            entity_nums: 1,
-        }
-    }
-
+impl Manager {
     pub fn add_entity(&mut self, entity: Entity) {
+        self.entity_nums += 1;
         for component in entity.components {
             match component {
                 Component::Color(color) => {
@@ -74,7 +64,6 @@ impl EntityManager {
                 }
             }
         }
-        self.entity_nums += 1;
     }
 
     pub fn remove_entity(&mut self, id: ID) {
@@ -83,15 +72,21 @@ impl EntityManager {
         self.shader_programs.remove(&id);
     }
 
+    #[must_use]
     pub fn get_keys(&self) -> Vec<ID> {
-        self.shapes.keys().cloned().collect()
+        self.shapes.keys().copied().collect()
     }
 
-    pub fn as_ref_entity(&self, key: ID) -> RefEntity {
-        RefEntity::new(
+    #[must_use]
+    pub fn as_ref_entity(&self, key: ID) -> ComponentRefs {
+        let mut shape = None;
+        if let Some(value) = self.shapes.get(&key) {
+            shape = Some(value.as_ref());
+        }
+        ComponentRefs::new(
             key,
             self.colors.get(&key),
-            self.shapes.get(&key),
+            shape,
             self.shader_programs.get(&key),
         )
     }
@@ -104,17 +99,17 @@ mod tests {
 
     #[test]
     fn test_new_scene_manager() {
-        let scene_manager = EntityManager::new();
+        let scene_manager = Manager::default();
 
         assert_eq!(scene_manager.colors.len(), 0);
         assert_eq!(scene_manager.shapes.len(), 0);
         assert_eq!(scene_manager.shader_programs.len(), 0);
-        assert_eq!(scene_manager.entity_nums, 1);
+        assert_eq!(scene_manager.entity_nums, 0);
     }
 
     #[test]
     fn test_add_entity() {
-        let mut scene_manager = EntityManager::new();
+        let mut scene_manager = Manager::default();
         let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
 
         let entity = Entity {
@@ -130,12 +125,12 @@ mod tests {
         assert_eq!(scene_manager.colors.len(), 1);
         assert_eq!(scene_manager.shapes.len(), 1);
         assert_eq!(scene_manager.shader_programs.len(), 1);
-        assert_eq!(scene_manager.entity_nums, 2);
+        assert_eq!(scene_manager.entity_nums, 1);
     }
 
     #[test]
     fn test_remove_entity() {
-        let mut scene_manager = EntityManager::new();
+        let mut scene_manager = Manager::default();
         let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
 
         let entity = Entity {

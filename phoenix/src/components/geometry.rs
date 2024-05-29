@@ -18,6 +18,7 @@ pub struct Triangle {
 }
 
 impl Triangle {
+    #[must_use]
     pub fn new(vertices: [f32; 9]) -> Self {
         Self { vertices }
     }

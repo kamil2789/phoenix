@@ -2,10 +2,6 @@ use crate::renderer::{Error, Result, ID};
 use std::ffi::CString;
 use std::ptr;
 
-/// # Errors
-///
-/// Will return `Err` when the shader fails in the compilation or linking phase.
-/// The correct vertex and fragment shader should be given to this func.
 pub fn compile(vertex_src: &str, fragment_src: &str) -> Result<ID> {
     let vertex_shader_id = compile_shader(vertex_src, gl::VERTEX_SHADER)?;
     let fragment_shader_id = compile_shader(fragment_src, gl::FRAGMENT_SHADER)?;

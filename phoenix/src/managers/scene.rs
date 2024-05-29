@@ -1,34 +1,37 @@
-use super::entity::{Entity, EntityManager};
+use super::entity::{Entity, Manager};
 use crate::components::color::RGBA;
-use crate::components::Component;
 use crate::renderer::Render;
 use crate::window::{WinError, Window};
 
-pub type Result<T> = std::result::Result<T, SceneError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(thiserror::Error, Debug)]
-pub enum SceneError {
+pub enum Error {
     #[error("Window error: {0}")]
     WinError(#[from] WinError),
 }
 
 pub struct Scene {
-    entity_manager: EntityManager,
+    entity_manager: Manager,
     window: Window,
     renderer: Box<dyn Render>,
     background_color: RGBA,
 }
 
 impl Scene {
+    #[must_use]
     pub fn new(window: Window, renderer: Box<dyn Render>) -> Self {
         Scene {
-            entity_manager: EntityManager::new(),
+            entity_manager: Manager::default(),
             window,
             renderer,
             background_color: RGBA::default(),
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns Err when the window fails to set itself as the current window.
     pub fn start(&mut self) -> Result<()> {
         if !self.window.is_current() {
             self.window.set_current()?;
@@ -55,7 +58,7 @@ impl Scene {
     }
 
     pub fn set_background_color(&mut self, color: RGBA) {
-        self.background_color = color
+        self.background_color = color;
     }
 
     pub fn add_entity(&mut self, entity: Entity) {

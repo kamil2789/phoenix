@@ -2,8 +2,8 @@ pub mod opengl;
 pub mod vulkan;
 
 use crate::{
-    components::{color::RGBA, geometry::Shape, shaders::shader_program::ShaderProgram},
-    managers::entity::RefEntity,
+    components::{color::RGBA, shaders::shader_program::ShaderProgram},
+    managers::entity::ComponentRefs,
 };
 use thiserror::Error;
 
@@ -19,11 +19,15 @@ pub enum Error {
 }
 
 pub trait Render {
+    /// # Errors
+    ///
+    /// Will return `Err` when the shader fails in the compilation or linking phase.
+    /// The correct vertex and fragment shader should be given to this func.
     fn compile_shader_program(&mut self, shader_program: &ShaderProgram) -> Result<ID>;
     fn set_background_color(&self, color: &RGBA);
-    fn init_entity(&mut self, entity: RefEntity) -> Result<ID>;
+    /// # Errors
+    ///
+    /// Will return `Err` when shader compilation failed.
+    fn init_entity(&mut self, entity: ComponentRefs) -> Result<ID>;
     fn draw_entity(&self, entity_id: ID);
-    //fn init_triangle(triangle: &mut Triangle) -> Result<Box<dyn Shape>>;
-    //fn draw_triangle(triangle: &Triangle) -> Result<>;
-    //fn remove_triangle(triangle: &mut Triangle);
 }

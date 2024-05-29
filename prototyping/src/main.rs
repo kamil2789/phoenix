@@ -1,6 +1,3 @@
-use std::path::Path;
-
-use glfw_sys::glfw_bindings;
 use phoenix::{
     components::{
         color::RGBA,
@@ -12,6 +9,7 @@ use phoenix::{
     renderer::opengl::OpenGL,
     window::{GlfwConfig, Resolution},
 };
+use std::path::Path;
 
 fn main() {
     println!("Hello, world!");
@@ -28,7 +26,7 @@ fn main() {
 
     window.set_current().unwrap();
 
-    let render = Box::new(OpenGL::new());
+    let render = Box::<OpenGL>::default();
     let mut scene = Scene::new(window, render);
 
     //env preparation
@@ -50,12 +48,12 @@ fn main() {
     ];
 
     let triangle = Triangle::new(vertices);
-    let mut entity = Entity::new();
+    let mut entity = Entity::default();
     entity.add_component(Component::ShaderProgram(shader_program));
     entity.add_component(Component::Geometry(Box::new(triangle)));
 
     scene.add_entity(entity);
 
     scene.set_background_color(RGBA::from_hex(0x00_FF_00_FF));
-    scene.start();
+    scene.start().unwrap();
 }
