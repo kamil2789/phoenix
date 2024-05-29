@@ -3,14 +3,9 @@ pub trait Shape {
     fn get_type(&self) -> ShapeType;
 }
 
+#[derive(PartialEq, Debug)]
 pub enum ShapeType {
     Triangle,
-}
-
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
 }
 
 pub struct Triangle {
@@ -31,5 +26,19 @@ impl Shape for Triangle {
 
     fn get_type(&self) -> ShapeType {
         ShapeType::Triangle
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::components::geometry::{Triangle, Shape, ShapeType}; // Import the Shape trait and ShapeType enum.
+
+    #[test]
+    fn test_new_triangle() {
+        let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
+        let triangle = Triangle::new(vertices);
+
+        assert_eq!(triangle.get_vertices(), &vertices);
+        assert_eq!(triangle.get_type(), ShapeType::Triangle);
     }
 }

@@ -3,7 +3,7 @@ pub mod vulkan;
 
 use crate::{
     components::{color::RGBA, shaders::shader_program::ShaderProgram},
-    managers::entity::ComponentRefs,
+    managers::entity::View,
 };
 use thiserror::Error;
 
@@ -28,6 +28,6 @@ pub trait Render {
     /// # Errors
     ///
     /// Will return `Err` when shader compilation failed.
-    fn init_entity(&mut self, entity: ComponentRefs) -> Result<ID>;
+    fn init_entity(&mut self, entity: View) -> Result<ID>;
     fn draw_entity(&self, entity_id: ID);
 }

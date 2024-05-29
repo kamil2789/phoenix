@@ -18,14 +18,14 @@ pub struct Manager {
     entity_nums: u32,
 }
 
-pub struct ComponentRefs<'a> {
+pub struct View<'a> {
     pub entity_id: ID,
     pub color: Option<&'a RGBA>,
     pub shape: Option<&'a dyn Shape>,
     pub shader_program: Option<&'a ShaderProgram>,
 }
 
-impl<'a> ComponentRefs<'a> {
+impl<'a> View<'a> {
     fn new(
         entity_id: ID,
         color: Option<&'a RGBA>,
@@ -45,10 +45,18 @@ impl Entity {
     pub fn add_component(&mut self, component: Component) {
         self.components.push(component);
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.components.is_empty()
+    }
 }
 
 impl Manager {
     pub fn add_entity(&mut self, entity: Entity) {
+        if entity.is_empty() {
+            return;
+        }
+
         self.entity_nums += 1;
         for component in entity.components {
             match component {
@@ -78,12 +86,12 @@ impl Manager {
     }
 
     #[must_use]
-    pub fn as_ref_entity(&self, key: ID) -> ComponentRefs {
+    pub fn as_ref_entity(&self, key: ID) -> View {
         let mut shape = None;
         if let Some(value) = self.shapes.get(&key) {
             shape = Some(value.as_ref());
         }
-        ComponentRefs::new(
+        View::new(
             key,
             self.colors.get(&key),
             shape,

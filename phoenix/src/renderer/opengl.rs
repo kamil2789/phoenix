@@ -4,7 +4,7 @@ use super::{Render, ID};
 use crate::components::color::RGBA;
 use crate::components::geometry::ShapeType;
 use crate::components::shaders::shader_program::ShaderProgram;
-use crate::managers::entity::ComponentRefs;
+use crate::managers::entity::View;
 use crate::renderer::Result;
 
 mod geometry_rendering;
@@ -50,7 +50,7 @@ impl Render for OpenGL {
         }
     }
 
-    fn init_entity(&mut self, entity: ComponentRefs) -> Result<ID> {
+    fn init_entity(&mut self, entity: View) -> Result<ID> {
         if self.buffers.contains_key(&entity.entity_id) {
             return Ok(entity.entity_id);
         }
