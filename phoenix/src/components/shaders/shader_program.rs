@@ -4,6 +4,7 @@ use std::fs::OpenOptions;
 use std::io::Read;
 use std::path::Path;
 
+#[derive(Debug)]
 pub struct ShaderProgram {
     vertex_shader: String,
     fragment_shader: String,
@@ -15,24 +16,16 @@ pub struct ShaderProgram {
 pub fn read_src_from_file(path: &Path) -> Result<String> {
     let mut result = String::new();
 
-    if path.is_file() {
-        if let Ok(mut file) = OpenOptions::new()
-            .read(true)
-            .open(path.to_str().unwrap_or(""))
-        {
-            file.read_to_string(&mut result)?;
-            Ok(result)
-        } else {
-            Err(Error::SourceFileError(format!(
-                "File could not be read, path: {}",
-                path.to_str().unwrap_or("")
-            )))
-        }
+    if let Ok(mut file) = OpenOptions::new()
+        .read(true)
+        .open(path.to_str().unwrap_or(""))
+    {
+        file.read_to_string(&mut result)?;
+        Ok(result)
     } else {
-        Err(Error::SourceFileError(format!(
-            "File could not be opened, path: {}",
-            path.to_str().unwrap_or("")
-        )))
+        Err(Error::SourceFileError(
+            path.to_str().unwrap_or("").to_string(),
+        ))
     }
 }
 
@@ -92,6 +85,12 @@ mod tests {
             Path::new("/nonExistedPath"),
         );
         assert!(shader.is_err());
+
+        if let Err(error) = shader {
+            assert!(error
+                .to_string()
+                .contains("File could not be opened, path: /nonExistedPath"));
+        }
     }
 
     #[test]

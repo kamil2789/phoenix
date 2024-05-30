@@ -5,6 +5,9 @@ use crate::components::{
 };
 pub type ID = u32;
 
+///Only one component of specific type can be added to the entity.
+/// For example, only one color, one geometry, and one shader program.
+/// Second geometry, color, or shader program will overwrite the previous one.
 #[derive(Default)]
 pub struct Entity {
     components: Vec<Component>,
@@ -46,6 +49,7 @@ impl Entity {
         self.components.push(component);
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.components.is_empty()
     }

@@ -31,7 +31,7 @@ impl Shape for Triangle {
 
 #[cfg(test)]
 mod tests {
-    use crate::components::geometry::{Triangle, Shape, ShapeType}; // Import the Shape trait and ShapeType enum.
+    use crate::components::geometry::{Shape, ShapeType, Triangle}; // Import the Shape trait and ShapeType enum.
 
     #[test]
     fn test_new_triangle() {
