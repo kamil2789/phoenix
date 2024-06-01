@@ -32,6 +32,15 @@ pub struct Window {
     resolution: Resolution,
 }
 
+impl Default for Resolution {
+    fn default() -> Self {
+        Resolution {
+            width: 800,
+            height: 600,
+        }
+    }
+}
+
 impl GlfwConfig {
     /// # Errors
     ///
@@ -187,6 +196,13 @@ impl Drop for Window {
 mod tests {
     use super::*;
     use serial_test::serial;
+
+    #[test]
+    fn test_resolution_default() {
+        let resolution = Resolution::default();
+        assert_eq!(resolution.width, 800);
+        assert_eq!(resolution.height, 600);
+    }
 
     #[test]
     #[serial]

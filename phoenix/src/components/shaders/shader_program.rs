@@ -4,7 +4,7 @@ use std::fs::OpenOptions;
 use std::io::Read;
 use std::path::Path;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ShaderProgram {
     vertex_shader: String,
     fragment_shader: String,

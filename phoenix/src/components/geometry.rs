@@ -8,6 +8,7 @@ pub enum ShapeType {
     Triangle,
 }
 
+#[derive(Clone)]
 pub struct Triangle {
     vertices: [f32; 9],
 }

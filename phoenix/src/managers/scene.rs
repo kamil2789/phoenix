@@ -65,3 +65,54 @@ impl Scene {
         self.entity_manager.add_entity(entity);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[cfg(test)]
+    mod tests {
+        use serial_test::serial;
+
+        use crate::{
+            components::{color::RGBA, shaders::shader_program::ShaderProgram},
+            managers::{entity::View, scene::Scene},
+            renderer::{Error, Render},
+            window::{GlfwConfig, Resolution},
+        };
+
+        struct MockRenderer;
+
+        impl MockRenderer {
+            fn new() -> Self {
+                MockRenderer
+            }
+        }
+
+        impl Render for MockRenderer {
+            fn set_background_color(&self, _color: &RGBA) {}
+
+            fn init_entity(&mut self, _entity: View) -> Result<u32, Error> {
+                todo!()
+            }
+
+            fn draw_entity(&self, _id: u32) {}
+
+            fn compile_shader_program(
+                &mut self,
+                _shader_program: &ShaderProgram,
+            ) -> crate::renderer::Result<crate::renderer::ID> {
+                todo!()
+            }
+        }
+
+        #[test]
+        #[serial]
+        fn test_scene_new() {
+            let config = GlfwConfig::create().unwrap();
+            let window = config.create_window("Test", Resolution::default()).unwrap();
+            let renderer = Box::new(MockRenderer::new());
+            let scene = Scene::new(window, renderer);
+
+            assert_eq!(scene.background_color, RGBA::default());
+        }
+    }
+}
