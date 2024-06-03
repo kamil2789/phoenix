@@ -62,3 +62,24 @@ fn unbind_buffers() {
         gl::BindVertexArray(0);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::window::{GlfwConfig, Resolution};
+    use serial_test::serial;
+
+    #[test]
+    #[serial]
+    fn test_init_triangle() {
+        let config = GlfwConfig::create().unwrap();
+        let window = config
+            .create_window("test_win_opengl", Resolution::default())
+            .unwrap();
+        window.set_current().unwrap();
+
+        let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+        let buffers = super::init_triangle(&vertices);
+        assert_ne!(buffers.vertex_array_object, 0);
+        assert_ne!(buffers.vertex_buffer_object, 0);
+    }
+}

@@ -52,7 +52,7 @@ impl Render for OpenGL {
 
     fn init_entity(&mut self, entity: View) -> Result<ID> {
         if self.buffers.contains_key(&entity.entity_id) {
-            return Ok(entity.entity_id);
+            return Ok(entity.entity_id); //already initialized
         }
 
         //color not supported

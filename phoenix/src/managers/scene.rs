@@ -25,7 +25,7 @@ impl Scene {
             entity_manager: Manager::default(),
             window,
             renderer,
-            background_color: RGBA::default(),
+            background_color: RGBA::default()
         }
     }
 
@@ -114,5 +114,18 @@ mod tests {
 
             assert_eq!(scene.background_color, RGBA::default());
         }
+
+        /* NO TESTABLE, NEED TO WAIT FOR EVENTS MANAGER
+        #[test]
+        #[serial]
+        fn test_scene_start() {
+            let config = GlfwConfig::create().unwrap();
+            let window = config.create_window("Test", Resolution::default()).unwrap();
+            let renderer = Box::new(MockRenderer::new());
+            let mut scene = Scene::new(window, renderer);
+
+            scene.start().unwrap();
+        }
+        */
     }
 }
