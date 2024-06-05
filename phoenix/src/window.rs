@@ -1,5 +1,6 @@
 use gl;
 use glfw_sys::glfw_bindings;
+use std::ffi::c_int;
 use std::ffi::c_void;
 use std::ffi::CString;
 use std::ffi::NulError;
@@ -163,6 +164,14 @@ impl Window {
         &self.name
     }
 
+    #[must_use]
+    pub fn get_framebuffer_size(&self) -> (i32, i32) {
+        let mut width: c_int = 0;
+        let mut height: c_int = 0;
+        unsafe { glfw_bindings::glfwGetFramebufferSize(self.window, &mut width, &mut height) };
+        (width, height)
+    }
+
     fn load_gl_functions() -> Result<()> {
         gl::load_with(Window::get_proc_address);
         if gl::DrawBuffer::is_loaded()
@@ -281,5 +290,19 @@ mod tests {
         };
         let window = config.create_window("test_win_opengl", resolution);
         assert!(window.is_err());
+    }
+
+    #[test]
+    #[serial]
+    fn test_window_get_framebuffer_size() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 900,
+            height: 600,
+        };
+        let window = config.create_window("test_win_opengl", resolution).unwrap();
+        let (x, y) = window.get_framebuffer_size();
+        assert_eq!(x, 900);
+        assert_eq!(y, 600);
     }
 }

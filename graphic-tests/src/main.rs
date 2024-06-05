@@ -1,3 +1,10 @@
+use tests::run;
+
+mod image;
+mod tests;
+mod workspace;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Start graphic tests");
+    run();
 }

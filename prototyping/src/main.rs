@@ -9,20 +9,22 @@ use phoenix::{
     renderer::opengl::OpenGL,
     window::{GlfwConfig, Resolution},
 };
-use std::path::Path;
+use std::{path::Path, rc::Rc};
 
 fn main() {
     println!("Hello, world!");
     let config = GlfwConfig::create().unwrap();
-    let window = config
-        .create_window(
-            "OpenGL",
-            Resolution {
-                width: 800,
-                height: 600,
-            },
-        )
-        .unwrap();
+    let window = Rc::new(
+        config
+            .create_window(
+                "OpenGL",
+                Resolution {
+                    width: 800,
+                    height: 600,
+                },
+            )
+            .unwrap(),
+    );
 
     window.set_current().unwrap();
 

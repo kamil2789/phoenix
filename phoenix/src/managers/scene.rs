@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::entity::{Entity, Manager};
 use crate::components::color::RGBA;
 use crate::renderer::Render;
@@ -13,19 +15,19 @@ pub enum Error {
 
 pub struct Scene {
     entity_manager: Manager,
-    window: Window,
+    window: Rc<Window>,
     renderer: Box<dyn Render>,
     background_color: RGBA,
 }
 
 impl Scene {
     #[must_use]
-    pub fn new(window: Window, renderer: Box<dyn Render>) -> Self {
+    pub fn new(window: Rc<Window>, renderer: Box<dyn Render>) -> Self {
         Scene {
             entity_manager: Manager::default(),
             window,
             renderer,
-            background_color: RGBA::default()
+            background_color: RGBA::default(),
         }
     }
 
@@ -38,20 +40,7 @@ impl Scene {
         }
 
         while self.window.is_running() {
-            self.renderer.set_background_color(&self.background_color);
-
-            let keys = self.entity_manager.get_keys();
-            for key in keys {
-                if let Ok(id) = self
-                    .renderer
-                    .init_entity(self.entity_manager.as_ref_entity(key))
-                {
-                    self.renderer.draw_entity(id);
-                }
-            }
-
-            self.window.swap_buffers();
-            Window::poll_events();
+            self.frame();
         }
 
         Ok(())
@@ -64,12 +53,48 @@ impl Scene {
     pub fn add_entity(&mut self, entity: Entity) {
         self.entity_manager.add_entity(entity);
     }
+
+    /// # Errors
+    ///
+    /// Returns Err when the window fails to set itself as the current window.
+    pub fn start_one_frame(&mut self) -> Result<()> {
+        if !self.window.is_current() {
+            self.window.set_current()?;
+        }
+
+        self.frame();
+        Ok(())
+    }
+
+    #[must_use]
+    pub fn get_window(&self) -> &Window {
+        &self.window
+    }
+
+    fn frame(&mut self) {
+        self.renderer.set_background_color(&self.background_color);
+
+        let keys = self.entity_manager.get_keys();
+        for key in keys {
+            if let Ok(id) = self
+                .renderer
+                .init_entity(self.entity_manager.as_ref_entity(key))
+            {
+                self.renderer.draw_entity(id);
+            }
+        }
+
+        self.window.swap_buffers();
+        Window::poll_events();
+    }
 }
 
 #[cfg(test)]
 mod tests {
     #[cfg(test)]
     mod tests {
+        use std::rc::Rc;
+
         use serial_test::serial;
 
         use crate::{
@@ -108,7 +133,7 @@ mod tests {
         #[serial]
         fn test_scene_new() {
             let config = GlfwConfig::create().unwrap();
-            let window = config.create_window("Test", Resolution::default()).unwrap();
+            let window = Rc::new(config.create_window("Test", Resolution::default()).unwrap());
             let renderer = Box::new(MockRenderer::new());
             let scene = Scene::new(window, renderer);
 

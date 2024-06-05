@@ -6,3 +6,7 @@ edition = "2021"
 [dependencies]
 glfw-sys = { path = "../glfw-sys" }
 phoenix = { path = "../phoenix" }
+gl = "0.14.0"
+image = "0.25.1"
+thiserror = "1.0.61"
+colored = "2.1.0"

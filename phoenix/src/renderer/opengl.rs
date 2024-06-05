@@ -13,12 +13,13 @@ mod shader_compiler;
 pub type ShaderID = u32;
 pub type BufferID = u32;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct OpenGL {
     shaders_id: HashMap<BufferID, ShaderID>,
     buffers: HashMap<BufferID, Buffers>,
 }
 
+#[derive(Clone)]
 struct Buffers {
     pub vertex_array_object: u32,
     pub vertex_buffer_object: u32,
