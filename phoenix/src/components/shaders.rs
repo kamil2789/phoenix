@@ -88,10 +88,8 @@ mod tests {
 
     #[test]
     fn test_shader_src_new_from_non_existing_files_get_error() {
-        let shader = ShaderSource::new_from_file(
-            Path::new("/nonExistedPath"),
-            Path::new("/nonExistedPath"),
-        );
+        let shader =
+            ShaderSource::new_from_file(Path::new("/nonExistedPath"), Path::new("/nonExistedPath"));
         assert!(shader.is_err());
 
         if let Err(error) = shader {
@@ -112,7 +110,7 @@ mod tests {
         create_file(fragment_src, fragment_file);
 
         let shader =
-        ShaderSource::new_from_file(Path::new(vertex_file), Path::new(fragment_file)).unwrap();
+            ShaderSource::new_from_file(Path::new(vertex_file), Path::new(fragment_file)).unwrap();
 
         assert_eq!(shader.get_vertex_shader().trim(), vertex_src);
         assert_eq!(shader.get_fragment_shader().trim(), fragment_src);

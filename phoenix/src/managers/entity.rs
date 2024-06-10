@@ -37,6 +37,10 @@ struct IdGarbageCollector {
 }
 
 impl Entity {
+    pub fn new(components: Vec<Component>) -> Self {
+        Self { components }
+    }
+
     pub fn add_component(&mut self, component: Component) {
         self.components.push(component);
     }

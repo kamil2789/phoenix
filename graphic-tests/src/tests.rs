@@ -3,7 +3,10 @@ use crate::{
     image::{are_images_equal, read_image_from_file, save_screen_as_img_png},
     workspace::{TEST_FILE_EXTENSION, TEST_RESULTS_DIR, TEST_TEMPLATE_DIR},
 };
-use basic_2d_geometries::test_2d_red_triangle_on_green_background;
+use basic_2d_geometries::{
+    test_2d_default_color_on_default_background, test_2d_red_triangle_on_green_background,
+    test_2d_two_triangles_green_blue,
+};
 use colored::Colorize;
 use phoenix::{
     renderer::{opengl::OpenGL, Render},
@@ -16,10 +19,20 @@ pub mod basic_2d_geometries;
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 1] = [(
-    test_2d_red_triangle_on_green_background,
-    "test_2d_red_triangle_on_green_background",
-)];
+static TESTS: [(TestFunction, TestName); 3] = [
+    (
+        test_2d_red_triangle_on_green_background,
+        "test_2d_red_triangle_on_green_background",
+    ),
+    (
+        test_2d_default_color_on_default_background,
+        "test_2d_default_color_on_default_background",
+    ),
+    (
+        test_2d_two_triangles_green_blue,
+        "test_2d_two_triangles_green_blue",
+    ),
+];
 
 pub fn run() {
     prepare_working_directory();
@@ -52,10 +65,23 @@ pub fn run_specific_test(
     let template_path = TEST_TEMPLATE_DIR.to_owned() + test_name + TEST_FILE_EXTENSION;
     save_screen_as_img_png(window.as_ref(), &result_path).unwrap();
 
-    let result_image = read_image_from_file(&result_path).unwrap();
-    let template_image = read_image_from_file(&template_path).unwrap();
-
-    are_images_equal(&result_image, &template_image)
+    if let Ok(result_image) = read_image_from_file(&result_path) {
+        if let Ok(template_image) = read_image_from_file(&template_path) {
+            are_images_equal(&result_image, &template_image)
+        } else {
+            println!(
+                "Failed to read test template image from path: {}",
+                template_path
+            );
+            false
+        }
+    } else {
+        println!(
+            "Failed to read test result image from path: {}",
+            result_path
+        );
+        false
+    }
 }
 
 fn print_tests_status(failed_tests: Vec<TestName>, passed_tests: Vec<TestName>) {
