@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
+use geometry_rendering::set_uniform_color;
+
 use super::{Render, ID};
 use crate::components::color::RGBA;
 use crate::components::geometry::ShapeType;
-use crate::components::shaders::shader_program::ShaderProgram;
+use crate::components::shaders::ShaderSource;
 use crate::managers::entity::View;
 use crate::renderer::Result;
 
@@ -35,7 +37,7 @@ impl Buffers {
 }
 
 impl Render for OpenGL {
-    fn compile_shader_program(&mut self, shader_program: &ShaderProgram) -> Result<ID> {
+    fn compile_shader_program(&mut self, shader_program: &ShaderSource) -> Result<ID> {
         let shader_program_id = shader_compiler::compile(
             shader_program.get_vertex_shader(),
             shader_program.get_fragment_shader(),
@@ -56,7 +58,6 @@ impl Render for OpenGL {
             return Ok(entity.entity_id); //already initialized
         }
 
-        //color not supported
         if let Some(value) = entity.shape {
             match value.get_type() {
                 ShapeType::Triangle => {
@@ -69,6 +70,11 @@ impl Render for OpenGL {
         if let Some(value) = entity.shader_program {
             let id = self.compile_shader_program(value)?;
             self.shaders_id.insert(entity.entity_id, id);
+        }
+
+        if let Some(value) = entity.color {
+            let shader_id = self.shaders_id.get(&entity.entity_id).unwrap();
+            set_uniform_color("color", value, *shader_id);
         }
 
         Ok(entity.entity_id)

@@ -98,7 +98,7 @@ mod tests {
         use serial_test::serial;
 
         use crate::{
-            components::{color::RGBA, shaders::shader_program::ShaderProgram},
+            components::{color::RGBA, shaders::ShaderSource},
             managers::{entity::View, scene::Scene},
             renderer::{Error, Render},
             window::{GlfwConfig, Resolution},
@@ -123,7 +123,7 @@ mod tests {
 
             fn compile_shader_program(
                 &mut self,
-                _shader_program: &ShaderProgram,
+                _shader_program: &ShaderSource,
             ) -> crate::renderer::Result<crate::renderer::ID> {
                 todo!()
             }

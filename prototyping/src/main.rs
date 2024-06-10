@@ -2,7 +2,7 @@ use phoenix::{
     components::{
         color::RGBA,
         geometry::Triangle,
-        shaders::shader_program::{read_src_from_file, ShaderProgram},
+        shaders::{read_src_from_file, ShaderSource},
         Component,
     },
     managers::{entity::Entity, scene::Scene},
@@ -41,7 +41,7 @@ fn main() {
     ))
     .unwrap();
 
-    let shader_program = ShaderProgram::new(&src, &src2);
+    let shader_program = ShaderSource::new(&src, &src2);
 
     let vertices: [f32; 9] = [
         -0.5, -0.5, 0.0, // left

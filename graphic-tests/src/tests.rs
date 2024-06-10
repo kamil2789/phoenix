@@ -1,19 +1,18 @@
-use std::rc::Rc;
-
-use basic_2d_geometries::test_2d_red_triangle_on_green_background;
-use phoenix::{
-    renderer::{opengl::OpenGL, Render},
-    window::{GlfwConfig, Resolution, Window},
-};
-
 use crate::workspace::prepare_working_directory;
 use crate::{
     image::{are_images_equal, read_image_from_file, save_screen_as_img_png},
     workspace::{TEST_FILE_EXTENSION, TEST_RESULTS_DIR, TEST_TEMPLATE_DIR},
 };
+use basic_2d_geometries::test_2d_red_triangle_on_green_background;
 use colored::Colorize;
+use phoenix::{
+    renderer::{opengl::OpenGL, Render},
+    window::{GlfwConfig, Resolution, Window},
+};
+use std::rc::Rc;
 
 pub mod basic_2d_geometries;
+
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
@@ -61,10 +60,10 @@ pub fn run_specific_test(
 
 fn print_tests_status(failed_tests: Vec<TestName>, passed_tests: Vec<TestName>) {
     for test in failed_tests {
-        println!("test {} {}", test, "failed".red());
+        println!("test {} {}", test, "FAILED".red());
     }
     for test in passed_tests {
-        println!("test {} {}", test, "ok".green());
+        println!("test {} {}", test, "PASSED".green());
     }
 }
 

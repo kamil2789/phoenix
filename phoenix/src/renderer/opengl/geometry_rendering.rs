@@ -1,5 +1,7 @@
+use crate::components::color::RGBA;
+
 use super::Buffers;
-use std::ptr;
+use std::{ffi::CString, ptr};
 
 //RESULT TYPE SHOULD BE RESULT<T, ERR> - CHECK FOR ERR CASE
 #[must_use]
@@ -10,6 +12,14 @@ pub fn init_triangle(vertices: &[f32]) -> Buffers {
     set_vertex_attribute_pointer();
     unbind_buffers();
     buffers
+}
+
+pub fn set_uniform_color(variable_name: &str, color: &RGBA, shader_id: u32) {
+    let uniform_color = CString::new(variable_name).unwrap();
+    let color_location = unsafe { gl::GetUniformLocation(shader_id, uniform_color.as_ptr()) };
+    unsafe { gl::UseProgram(shader_id) };
+    let color = color.get_as_normalized_f32();
+    unsafe { gl::Uniform4f(color_location, color[0], color[1], color[2], color[3]) };
 }
 
 fn generate_buffers() -> Buffers {
