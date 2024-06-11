@@ -2,6 +2,8 @@ pub mod opengl;
 pub(crate) mod shaders;
 pub mod vulkan;
 
+use std::rc::Rc;
+
 use crate::{
     components::{color::RGBA, shaders::ShaderSource},
     managers::entity::View,
@@ -24,7 +26,7 @@ pub trait Render {
     ///
     /// Will return `Err` when the shader fails in the compilation or linking phase.
     /// The correct vertex and fragment shader should be given to this func.
-    fn compile_shader_program(&mut self, shader_program: &ShaderSource) -> Result<ID>;
+    fn compile_shader_program(&mut self, shader_program: Rc<ShaderSource>) -> Result<ID>;
     fn set_background_color(&self, color: &RGBA);
     /// # Errors
     ///

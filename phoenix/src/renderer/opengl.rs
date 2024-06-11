@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use geometry_rendering::set_uniform_color;
 
@@ -13,12 +14,13 @@ mod geometry_rendering;
 mod shader_compiler;
 
 pub type ShaderID = u32;
-pub type BufferID = u32;
+pub type EntityID = u32;
 
 #[derive(Default, Clone)]
 pub struct OpenGL {
-    shaders_id: HashMap<BufferID, ShaderID>,
-    buffers: HashMap<BufferID, Buffers>,
+    shaders_id: HashMap<EntityID, ShaderID>,
+    compiled_shaders: HashMap<Rc<ShaderSource>, ShaderID>,
+    buffers: HashMap<EntityID, Buffers>,
 }
 
 #[derive(Clone)]
@@ -37,7 +39,7 @@ impl Buffers {
 }
 
 impl Render for OpenGL {
-    fn compile_shader_program(&mut self, shader_program: &ShaderSource) -> Result<ID> {
+    fn compile_shader_program(&mut self, shader_program: Rc<ShaderSource>) -> Result<ID> {
         let shader_program_id = shader_compiler::compile(
             shader_program.get_vertex_shader(),
             shader_program.get_fragment_shader(),
@@ -67,8 +69,15 @@ impl Render for OpenGL {
             }
         }
 
-        if let Some(value) = entity.shader_program {
-            let id = self.compile_shader_program(value)?;
+        if let Some(value) = entity.shader_src {
+            let id;
+            if let Some(val) = self.compiled_shaders.get(&value) {
+                id = *val; //already compiled
+            } else {
+                id = self.compile_shader_program(value.clone())?;
+                self.compiled_shaders.insert(value, id);
+            }
+
             self.shaders_id.insert(entity.entity_id, id);
         }
 
@@ -100,5 +109,110 @@ impl Drop for OpenGL {
         self.shaders_id.iter().for_each(|(_, id)| unsafe {
             gl::DeleteProgram(*id);
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::rc::Rc;
+
+    use super::OpenGL;
+    use crate::window::{GlfwConfig, Resolution};
+    use crate::{
+        components::{color::RGBA, geometry::Triangle, shaders::ShaderSource},
+        managers::entity::View,
+        renderer::{
+            shaders::{UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT},
+            Render,
+        },
+    };
+    use serial_test::serial;
+
+    #[test]
+    #[serial]
+    fn test_opengl_init_entity() {
+        let config = GlfwConfig::create().unwrap();
+        let window = config
+            .create_window("test_opengl_init_entity", Resolution::default())
+            .unwrap();
+        window.set_current().unwrap();
+
+        let color = RGBA::default();
+        let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
+        let shader = Rc::new(ShaderSource::new(
+            UNIFORM_TRIANGLE_VERT,
+            UNIFORM_TRIANGLE_FRAG,
+        ));
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader));
+
+        let mut renderer = OpenGL::default();
+        let ret = renderer.init_entity(entity);
+        assert!(ret.is_ok());
+        assert_eq!(renderer.compiled_shaders.len(), 1);
+        assert_eq!(renderer.buffers.len(), 1);
+        assert_eq!(renderer.shaders_id.len(), 1);
+    }
+
+    #[test]
+    #[serial]
+    fn test_opengl_init_entity_already_initialized() {
+        let config = GlfwConfig::create().unwrap();
+        let window = config
+            .create_window("test_opengl_init_entity", Resolution::default())
+            .unwrap();
+        window.set_current().unwrap();
+
+        let color = RGBA::default();
+        let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
+        let shader = Rc::new(ShaderSource::new(
+            UNIFORM_TRIANGLE_VERT,
+            UNIFORM_TRIANGLE_FRAG,
+        ));
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()));
+
+        let second_entity = View::new(1, None, None, None);
+
+        let mut renderer = OpenGL::default();
+
+        assert!(renderer.init_entity(entity).is_ok());
+        assert!(renderer.init_entity(second_entity).is_ok());
+
+        assert_eq!(renderer.compiled_shaders.len(), 1);
+        assert_eq!(renderer.buffers.len(), 1);
+        assert_eq!(renderer.shaders_id.len(), 1);
+    }
+
+    #[test]
+    #[serial]
+    fn test_opengl_init_entity_compiled_shaders_reuse_shader() {
+        let config = GlfwConfig::create().unwrap();
+        let window = config
+            .create_window("test_opengl_init_entity", Resolution::default())
+            .unwrap();
+        window.set_current().unwrap();
+
+        let color = RGBA::default();
+        let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
+        let shader = Rc::new(ShaderSource::new(
+            UNIFORM_TRIANGLE_VERT,
+            UNIFORM_TRIANGLE_FRAG,
+        ));
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()));
+
+        let mut renderer = OpenGL::default();
+        assert!(renderer.init_entity(entity).is_ok());
+
+        let second_entity = View::new(2, Some(&color), Some(&vertices), Some(shader));
+
+        assert!(renderer.init_entity(second_entity).is_ok());
+        assert_eq!(renderer.compiled_shaders.len(), 1);
+        assert_eq!(renderer.buffers.len(), 2);
+        assert_eq!(renderer.shaders_id.len(), 2);
+
+        //check if the same shader is used
+        assert_eq!(
+            renderer.shaders_id.get(&1).unwrap(),
+            renderer.shaders_id.get(&2).unwrap()
+        );
     }
 }

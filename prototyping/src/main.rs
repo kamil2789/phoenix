@@ -1,15 +1,10 @@
 use phoenix::{
-    components::{
-        color::RGBA,
-        geometry::Triangle,
-        shaders::{read_src_from_file, ShaderSource},
-        Component,
-    },
+    components::{color::RGBA, geometry::Triangle, Component},
     managers::{entity::Entity, scene::Scene},
     renderer::opengl::OpenGL,
     window::{GlfwConfig, Resolution},
 };
-use std::{path::Path, rc::Rc};
+use std::rc::Rc;
 
 fn main() {
     println!("Hello, world!");
@@ -43,10 +38,16 @@ fn main() {
         0.0, 0.9, 0.0, // top
     ];
 
-    scene.set_background_color(RGBA::from_hex(0xff_a5_90_FF));
+    scene.set_background_color(RGBA::from_hex(0xFF_A5_90_FF));
     let triangle = Triangle::new(vertices);
-    let green_triangle = Entity::new(vec![Component::Geometry(Box::new(triangle)), Component::Color(RGBA::from_hex(0x00_FF_00_FF))]);
-    let blue_triangle = Entity::new(vec![Component::Geometry(Box::new(Triangle::new(second_vertices))), Component::Color(RGBA::from_hex(0x00_00_FF_FF))]);
+    let green_triangle = Entity::new(vec![
+        Component::Geometry(Box::new(triangle)),
+        Component::Color(RGBA::from_hex(0x00_FF_00_FF)),
+    ]);
+    let blue_triangle = Entity::new(vec![
+        Component::Geometry(Box::new(Triangle::new(second_vertices))),
+        Component::Color(RGBA::from_hex(0x00_00_FF_FF)),
+    ]);
 
     scene.add_entity(green_triangle);
     scene.add_entity(blue_triangle);

@@ -1,6 +1,8 @@
+use std::collections::HashSet;
 use std::fs::OpenOptions;
 use std::io::Read;
 use std::path::Path;
+use std::rc::Rc;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -12,10 +14,50 @@ pub enum Error {
     ReadFileError(#[from] std::io::Error),
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct ShaderSource {
     vertex_shader: String,
     fragment_shader: String,
+}
+
+#[derive(Default)]
+pub struct ShaderBase {
+    shaders: HashSet<Rc<ShaderSource>>,
+}
+
+impl ShaderBase {
+    pub fn register_from_str(
+        &mut self,
+        vertex_shader: &str,
+        fragment_shader: &str,
+    ) -> Rc<ShaderSource> {
+        let shader = Rc::new(ShaderSource::new(vertex_shader, fragment_shader));
+        self.register(shader)
+    }
+
+    pub fn register_from_source(&mut self, shader_src: &ShaderSource) -> Rc<ShaderSource> {
+        let shader = Rc::new(shader_src.clone());
+        self.register(shader)
+    }
+
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.shaders.len()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.shaders.is_empty()
+    }
+
+    fn register(&mut self, shader: Rc<ShaderSource>) -> Rc<ShaderSource> {
+        if let Some(value) = self.shaders.get(&shader) {
+            value.clone()
+        } else {
+            self.shaders.insert(shader.clone());
+            shader
+        }
+    }
 }
 
 /// # Errors
@@ -117,5 +159,29 @@ mod tests {
 
         assert!(fs::remove_file(vertex_file).is_ok());
         assert!(fs::remove_file(fragment_file).is_ok());
+    }
+
+    #[test]
+    fn test_shader_base() {
+        let vertex_src = "vertex shader source code";
+        let fragment_src = "fragment shader source code";
+
+        let mut base = ShaderBase::default();
+
+        let shader = base.register_from_str(vertex_src, fragment_src);
+
+        assert_eq!(shader.get_vertex_shader(), vertex_src);
+        assert_eq!(shader.get_fragment_shader(), fragment_src);
+        assert_eq!(base.len(), 1);
+
+        //same shader should be returned
+        let shader_src = ShaderSource::new(vertex_src, fragment_src);
+        let shader_two = base.register_from_source(&shader_src);
+        assert_eq!(shader_two.get_vertex_shader(), vertex_src);
+        assert_eq!(shader_two.get_fragment_shader(), fragment_src);
+        assert_eq!(base.len(), 1);
+
+        //Strong count should be 3. One for the base, one for the first shader and one for the second shader
+        assert_eq!(Rc::strong_count(&shader_two), 3);
     }
 }

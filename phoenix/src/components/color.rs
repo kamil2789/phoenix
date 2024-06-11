@@ -73,7 +73,7 @@ impl RGBA {
 
 impl Default for RGBA {
     fn default() -> Self {
-        RGBA::from_hex(0xFF_FF_FF_ff)
+        RGBA::from_hex(0xFF_FF_FF_FF)
     }
 }
 

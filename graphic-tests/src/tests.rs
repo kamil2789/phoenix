@@ -69,17 +69,11 @@ pub fn run_specific_test(
         if let Ok(template_image) = read_image_from_file(&template_path) {
             are_images_equal(&result_image, &template_image)
         } else {
-            println!(
-                "Failed to read test template image from path: {}",
-                template_path
-            );
+            println!("Failed to read test template image from path: {template_path}");
             false
         }
     } else {
-        println!(
-            "Failed to read test result image from path: {}",
-            result_path
-        );
+        println!("Failed to read test result image from path: {result_path}");
         false
     }
 }

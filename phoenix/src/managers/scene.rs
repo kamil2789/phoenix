@@ -123,7 +123,7 @@ mod tests {
 
             fn compile_shader_program(
                 &mut self,
-                _shader_program: &ShaderSource,
+                _shader_program: Rc<ShaderSource>,
             ) -> crate::renderer::Result<crate::renderer::ID> {
                 todo!()
             }

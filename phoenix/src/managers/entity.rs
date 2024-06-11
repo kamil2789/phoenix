@@ -1,6 +1,7 @@
-use std::collections::HashMap;
 use std::mem;
+use std::{collections::HashMap, rc::Rc};
 
+use crate::components::shaders::ShaderBase;
 use crate::{
     components::{color::RGBA, geometry::Shape, shaders::ShaderSource, Component},
     renderer::shaders::{UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT},
@@ -18,16 +19,17 @@ pub struct Entity {
 #[derive(Default)]
 pub struct Manager {
     colors: HashMap<ID, RGBA>,
-    shader_programs: HashMap<ID, ShaderSource>,
+    shaders_source: HashMap<ID, Rc<ShaderSource>>,
     shapes: HashMap<ID, Box<dyn Shape>>,
     id_gc: IdGarbageCollector,
+    shader_base: ShaderBase,
 }
 
 pub struct View<'a> {
     pub entity_id: ID,
     pub color: Option<&'a RGBA>,
     pub shape: Option<&'a dyn Shape>,
-    pub shader_program: Option<&'a ShaderSource>,
+    pub shader_src: Option<Rc<ShaderSource>>,
 }
 
 #[derive(Default)]
@@ -37,6 +39,7 @@ struct IdGarbageCollector {
 }
 
 impl Entity {
+    #[must_use]
     pub fn new(components: Vec<Component>) -> Self {
         Self { components }
     }
@@ -76,7 +79,8 @@ impl Manager {
                     self.shapes.insert(id, shape);
                 }
                 Component::ShaderProgram(shader_program) => {
-                    self.shader_programs.insert(id, shader_program);
+                    let tmp = self.shader_base.register_from_source(&shader_program);
+                    self.shaders_source.insert(id, tmp);
                 }
             }
         }
@@ -87,7 +91,7 @@ impl Manager {
     pub fn remove_entity(&mut self, id: ID) {
         self.colors.remove(&id);
         self.shapes.remove(&id);
-        self.shader_programs.remove(&id);
+        self.shaders_source.remove(&id);
         self.id_gc.remove_id(id);
     }
 
@@ -102,12 +106,13 @@ impl Manager {
         if let Some(value) = self.shapes.get(&key) {
             shape = Some(value.as_ref());
         }
-        View::new(
-            key,
-            self.colors.get(&key),
-            shape,
-            self.shader_programs.get(&key),
-        )
+
+        let mut shader = None;
+        if let Some(value) = self.shaders_source.get(&key) {
+            shader = Some(value.clone());
+        }
+
+        View::new(key, self.colors.get(&key), shape, shader)
     }
 
     fn preprocessing(mut entity: Entity) -> Entity {
@@ -128,17 +133,18 @@ impl Manager {
 }
 
 impl<'a> View<'a> {
-    fn new(
+    #[must_use]
+    pub fn new(
         entity_id: ID,
         color: Option<&'a RGBA>,
         shape: Option<&'a dyn Shape>,
-        shader_program: Option<&'a ShaderSource>,
+        shader_src: Option<Rc<ShaderSource>>,
     ) -> Self {
         Self {
             entity_id,
             color,
             shape,
-            shader_program,
+            shader_src,
         }
     }
 }
@@ -169,7 +175,7 @@ mod tests {
 
         assert_eq!(entity_manager.colors.len(), 0);
         assert_eq!(entity_manager.shapes.len(), 0);
-        assert_eq!(entity_manager.shader_programs.len(), 0);
+        assert_eq!(entity_manager.shaders_source.len(), 0);
     }
 
     #[test]
@@ -190,7 +196,7 @@ mod tests {
         assert_eq!(id, 1);
         assert_eq!(entity_manager.colors.len(), 1);
         assert_eq!(entity_manager.shapes.len(), 1);
-        assert_eq!(entity_manager.shader_programs.len(), 1);
+        assert_eq!(entity_manager.shaders_source.len(), 1);
     }
 
     #[test]
@@ -207,7 +213,7 @@ mod tests {
         assert_eq!(id, 1);
         assert_eq!(entity_manager.colors.len(), 0);
         assert_eq!(entity_manager.shapes.len(), 1);
-        assert_eq!(entity_manager.shader_programs.len(), 0);
+        assert_eq!(entity_manager.shaders_source.len(), 0);
     }
 
     #[test]
@@ -227,7 +233,7 @@ mod tests {
         assert_eq!(id, 1);
         assert_eq!(entity_manager.colors.len(), 1);
         assert_eq!(entity_manager.shapes.len(), 1);
-        assert_eq!(entity_manager.shader_programs.len(), 1);
+        assert_eq!(entity_manager.shaders_source.len(), 1);
     }
 
     #[test]
@@ -240,7 +246,7 @@ mod tests {
         assert_eq!(id, 0);
         assert_eq!(entity_manager.colors.len(), 0);
         assert_eq!(entity_manager.shapes.len(), 0);
-        assert_eq!(entity_manager.shader_programs.len(), 0);
+        assert_eq!(entity_manager.shaders_source.len(), 0);
     }
 
     #[test]
@@ -262,7 +268,7 @@ mod tests {
 
         assert_eq!(entity_manager.colors.len(), 0);
         assert_eq!(entity_manager.shapes.len(), 0);
-        assert_eq!(entity_manager.shader_programs.len(), 0);
+        assert_eq!(entity_manager.shaders_source.len(), 0);
     }
 
     #[test]
@@ -273,7 +279,7 @@ mod tests {
 
         assert_eq!(entity_manager.colors.len(), 0);
         assert_eq!(entity_manager.shapes.len(), 0);
-        assert_eq!(entity_manager.shader_programs.len(), 0);
+        assert_eq!(entity_manager.shaders_source.len(), 0);
     }
 
     #[test]
@@ -309,7 +315,7 @@ mod tests {
         assert_eq!(second_id, 2);
         assert_eq!(entity_manager.colors.len(), 2);
         assert_eq!(entity_manager.shapes.len(), 2);
-        assert_eq!(entity_manager.shader_programs.len(), 2);
+        assert_eq!(entity_manager.shaders_source.len(), 2);
     }
 
     #[test]
@@ -364,7 +370,9 @@ mod tests {
         assert_eq!(view.entity_id, id);
         assert_eq!(view.color.unwrap(), &RGBA::new(255, 0, 0, 255_f32));
         assert_eq!(view.shape.unwrap().get_vertices(), &vertices);
-        assert_eq!(view.shader_program.unwrap().get_vertex_shader(), "aa");
-        assert_eq!(view.shader_program.unwrap().get_fragment_shader(), "bb");
+
+        let shader = view.shader_src.unwrap();
+        assert_eq!(shader.get_vertex_shader(), "aa");
+        assert_eq!(shader.get_fragment_shader(), "bb");
     }
 }
