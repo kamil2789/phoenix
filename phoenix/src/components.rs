@@ -1,11 +1,13 @@
-use self::{color::RGBA, geometry::Shape, shaders::ShaderSource};
+use color::Color;
+
+use self::{geometry::Shape, shaders::ShaderSource};
 
 pub mod color;
 pub mod geometry;
 pub mod shaders;
 
 pub enum Component {
-    Color(RGBA),
+    Color(Color),
     Geometry(Box<dyn Shape>),
     ShaderProgram(ShaderSource),
 }

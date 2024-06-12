@@ -81,6 +81,8 @@ impl Scene {
                 .init_entity(self.entity_manager.as_ref_entity(key))
             {
                 self.renderer.draw_entity(id);
+            } else {
+                todo!("Handle error!!!")
             }
         }
 

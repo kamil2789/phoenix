@@ -1,4 +1,4 @@
-use crate::components::color::RGBA;
+use crate::components::color::{Color, RGBA};
 
 use super::Buffers;
 use std::{ffi::CString, ptr};
@@ -9,17 +9,47 @@ pub fn init_triangle(vertices: &[f32]) -> Buffers {
     let buffers = generate_buffers();
     bind_buffers(&buffers);
     send_data_to_cpu_buffer(vertices);
-    set_vertex_attribute_pointer();
+    //layout 0, 3 vertices and no other attributes 0
+    set_vertex_attribute_pointer(0, 3, 0);
     unbind_buffers();
     buffers
 }
 
-pub fn set_uniform_color(variable_name: &str, color: &RGBA, shader_id: u32) {
+pub fn init_triangle_with_color(position: &[f32], color: &[f32]) -> Buffers {
+    let buffers = generate_buffers();
+    bind_buffers(&buffers);
+    let vertices = combine_position_with_color(position, color);
+    send_data_to_cpu_buffer(&vertices);
+    //position
+    set_vertex_attribute_pointer(0, 7, 0);
+    //color
+    set_vertex_attribute_pointer(1, 7, 3);
+    unbind_buffers();
+    buffers
+}
+
+//TODO ADD RESULT<>
+pub fn set_uniform_color(variable_name: &str, color: &Color, shader_id: u32) {
     let uniform_color = CString::new(variable_name).unwrap();
     let color_location = unsafe { gl::GetUniformLocation(shader_id, uniform_color.as_ptr()) };
     unsafe { gl::UseProgram(shader_id) };
-    let color = color.get_as_normalized_f32();
-    unsafe { gl::Uniform4f(color_location, color[0], color[1], color[2], color[3]) };
+    if let Some(value) = color.as_ref_uniform() {
+        let color = value.get_as_normalized_f32();
+        unsafe { gl::Uniform4f(color_location, color[0], color[1], color[2], color[3]) };
+    }
+}
+
+fn combine_position_with_color(position: &[f32], color: &[f32]) -> Vec<f32> {
+    let mut result = Vec::with_capacity(position.len() + color.len());
+    let pos_stride = 3;
+    let color_stride = 4;
+    let iter = position.chunks(pos_stride).zip(color.chunks(color_stride));
+
+    for (pos, col) in iter {
+        result.extend_from_slice(pos);
+        result.extend_from_slice(col);
+    }
+    result
 }
 
 fn generate_buffers() -> Buffers {
@@ -51,18 +81,19 @@ fn send_data_to_cpu_buffer(vertices: &[f32]) {
     }
 }
 
-fn set_vertex_attribute_pointer() {
-    let stride = 3 * std::mem::size_of::<f32>();
+fn set_vertex_attribute_pointer(index: u32, stride: usize, offset: usize) {
+    let stride = stride * std::mem::size_of::<f32>();
+    let offset = offset * std::mem::size_of::<f32>();
     unsafe {
         gl::VertexAttribPointer(
-            0,
+            index,
             3,
             gl::FLOAT,
             gl::FALSE,
-            stride.try_into().unwrap(),
-            ptr::null(),
+            stride.try_into().unwrap_or(0),
+            offset as *const std::ffi::c_void,
         );
-        gl::EnableVertexAttribArray(0);
+        gl::EnableVertexAttribArray(index);
     }
 }
 
@@ -75,6 +106,7 @@ fn unbind_buffers() {
 
 #[cfg(test)]
 mod tests {
+    use super::combine_position_with_color;
     use crate::window::{GlfwConfig, Resolution};
     use serial_test::serial;
 
@@ -91,5 +123,27 @@ mod tests {
         let buffers = super::init_triangle(&vertices);
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
+    }
+
+    #[test]
+    fn test_combine_position_with_color() {
+        let position = vec![
+            1_f32, 2_f32, 3_f32, 4_f32, 5_f32, 6_f32, 7_f32, 8_f32, 9_f32,
+        ];
+
+        let color = vec![
+            0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32,
+            0.5_f32, 0.5_f32, 0.5_f32,
+        ];
+
+        let result = combine_position_with_color(&position, &color);
+        assert_eq!(
+            result,
+            vec![
+                1_f32, 2_f32, 3_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 4_f32, 5_f32, 6_f32,
+                0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 7_f32, 8_f32, 9_f32, 0.5_f32, 0.5_f32, 0.5_f32,
+                0.5_f32
+            ]
+        );
     }
 }

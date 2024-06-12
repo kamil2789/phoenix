@@ -1,5 +1,9 @@
 use phoenix::{
-    components::{color::RGBA, geometry::Triangle, Component},
+    components::{
+        color::{Color, RGBA},
+        geometry::Triangle,
+        Component,
+    },
     managers::{entity::Entity, scene::Scene},
     renderer::opengl::OpenGL,
     window::{GlfwConfig, Resolution},
@@ -42,11 +46,11 @@ fn main() {
     let triangle = Triangle::new(vertices);
     let green_triangle = Entity::new(vec![
         Component::Geometry(Box::new(triangle)),
-        Component::Color(RGBA::from_hex(0x00_FF_00_FF)),
+        Component::Color(Color::new(RGBA::from_hex(0x00_FF_00_FF))),
     ]);
     let blue_triangle = Entity::new(vec![
         Component::Geometry(Box::new(Triangle::new(second_vertices))),
-        Component::Color(RGBA::from_hex(0x00_00_FF_FF)),
+        Component::Color(Color::new(RGBA::from_hex(0x00_00_FF_FF))),
     ]);
 
     scene.add_entity(green_triangle);

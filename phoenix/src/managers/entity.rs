@@ -1,7 +1,9 @@
 use std::mem;
 use std::{collections::HashMap, rc::Rc};
 
+use crate::components::color::Color;
 use crate::components::shaders::ShaderBase;
+use crate::renderer::shaders::{VERTICES_COLORED_TRIANGLE_FRAG, VERTICES_COLORED_TRIANGLE_VERT};
 use crate::{
     components::{color::RGBA, geometry::Shape, shaders::ShaderSource, Component},
     renderer::shaders::{UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT},
@@ -18,7 +20,7 @@ pub struct Entity {
 
 #[derive(Default)]
 pub struct Manager {
-    colors: HashMap<ID, RGBA>,
+    colors: HashMap<ID, Color>,
     shaders_source: HashMap<ID, Rc<ShaderSource>>,
     shapes: HashMap<ID, Box<dyn Shape>>,
     id_gc: IdGarbageCollector,
@@ -27,7 +29,7 @@ pub struct Manager {
 
 pub struct View<'a> {
     pub entity_id: ID,
-    pub color: Option<&'a RGBA>,
+    pub color: Option<&'a Color>,
     pub shape: Option<&'a dyn Shape>,
     pub shader_src: Option<Rc<ShaderSource>>,
 }
@@ -58,6 +60,16 @@ impl Entity {
         self.components
             .iter()
             .any(|item| mem::discriminant(item) == mem::discriminant(component))
+    }
+
+    #[must_use]
+    pub fn get_color(&self) -> Option<&Color> {
+        self.components
+            .iter()
+            .find_map(|component| match component {
+                Component::Color(color) => Some(color),
+                _ => None,
+            })
     }
 }
 
@@ -116,12 +128,20 @@ impl Manager {
     }
 
     fn preprocessing(mut entity: Entity) -> Entity {
+        let color = entity.get_color();
         if !entity.contains_component(&Component::ShaderProgram(ShaderSource::default()))
-            && entity.contains_component(&Component::Color(RGBA::default()))
+            && color.is_some()
         {
-            entity.add_component(Component::ShaderProgram(
-                Manager::create_default_shader_uniform_color(),
-            ));
+            let tmp = color.unwrap();
+            if tmp.is_uniform() {
+                entity.add_component(Component::ShaderProgram(
+                    Manager::create_default_shader_uniform_color(),
+                ));
+            } else if tmp.is_vertices() {
+                entity.add_component(Component::ShaderProgram(
+                    Manager::create_default_shader_vertex_color(),
+                ));
+            }
         }
 
         entity
@@ -130,13 +150,20 @@ impl Manager {
     fn create_default_shader_uniform_color() -> ShaderSource {
         ShaderSource::new(UNIFORM_TRIANGLE_VERT, UNIFORM_TRIANGLE_FRAG)
     }
+
+    fn create_default_shader_vertex_color() -> ShaderSource {
+        ShaderSource::new(
+            VERTICES_COLORED_TRIANGLE_VERT,
+            VERTICES_COLORED_TRIANGLE_FRAG,
+        )
+    }
 }
 
 impl<'a> View<'a> {
     #[must_use]
     pub fn new(
         entity_id: ID,
-        color: Option<&'a RGBA>,
+        color: Option<&'a Color>,
         shape: Option<&'a dyn Shape>,
         shader_src: Option<Rc<ShaderSource>>,
     ) -> Self {
@@ -185,7 +212,7 @@ mod tests {
 
         let mut entity = Entity {
             components: vec![
-                Component::Color(RGBA::new(255, 0, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 0, 0, 255_f32))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
             ],
         };
@@ -224,7 +251,7 @@ mod tests {
         let entity = Entity {
             components: vec![
                 Component::Geometry(Box::new(Triangle::new(vertices))),
-                Component::Color(RGBA::new(255, 255, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 255, 0, 255_f32))),
             ],
         };
 
@@ -256,7 +283,7 @@ mod tests {
 
         let entity = Entity {
             components: vec![
-                Component::Color(RGBA::new(255, 0, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 0, 0, 255_f32))),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
             ],
@@ -289,7 +316,7 @@ mod tests {
 
         let entity = Entity {
             components: vec![
-                Component::Color(RGBA::new(255, 0, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 0, 0, 255_f32))),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
             ],
@@ -297,7 +324,7 @@ mod tests {
 
         let second_entity = Entity {
             components: vec![
-                Component::Color(RGBA::new(255, 0, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 0, 0, 255_f32))),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
             ],
@@ -325,7 +352,7 @@ mod tests {
 
         let entity = Entity {
             components: vec![
-                Component::Color(RGBA::new(255, 0, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 0, 0, 255_f32))),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
             ],
@@ -333,7 +360,7 @@ mod tests {
 
         let second_entity = Entity {
             components: vec![
-                Component::Color(RGBA::new(255, 0, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 0, 0, 255_f32))),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
             ],
@@ -359,7 +386,7 @@ mod tests {
         let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
         let entity = Entity {
             components: vec![
-                Component::Color(RGBA::new(255, 0, 0, 255_f32)),
+                Component::Color(Color::new(RGBA::new(255, 0, 0, 255_f32))),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("aa", "bb")),
             ],
@@ -368,7 +395,10 @@ mod tests {
         let view = entity_manager.as_ref_entity(id);
 
         assert_eq!(view.entity_id, id);
-        assert_eq!(view.color.unwrap(), &RGBA::new(255, 0, 0, 255_f32));
+        assert_eq!(
+            view.color.unwrap(),
+            &Color::new(RGBA::new(255, 0, 0, 255_f32))
+        );
         assert_eq!(view.shape.unwrap().get_vertices(), &vertices);
 
         let shader = view.shader_src.unwrap();

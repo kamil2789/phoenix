@@ -63,8 +63,22 @@ impl Render for OpenGL {
         if let Some(value) = entity.shape {
             match value.get_type() {
                 ShapeType::Triangle => {
-                    let buffers = geometry_rendering::init_triangle(value.get_vertices());
-                    self.buffers.insert(entity.entity_id, buffers);
+                    if let Some(color) = entity.color {
+                        if color.is_uniform() {
+                            let buffers = geometry_rendering::init_triangle(value.get_vertices());
+                            self.buffers.insert(entity.entity_id, buffers);
+                        }
+                        if let Some(color) = color.as_ref_vertices() {
+                            let buffers = geometry_rendering::init_triangle_with_color(
+                                value.get_vertices(),
+                                color,
+                            );
+                            self.buffers.insert(entity.entity_id, buffers);
+                        }
+                    } else {
+                        let buffers = geometry_rendering::init_triangle(value.get_vertices());
+                        self.buffers.insert(entity.entity_id, buffers);
+                    }
                 }
             }
         }
@@ -117,6 +131,7 @@ mod tests {
     use std::rc::Rc;
 
     use super::OpenGL;
+    use crate::components::color::Color;
     use crate::window::{GlfwConfig, Resolution};
     use crate::{
         components::{color::RGBA, geometry::Triangle, shaders::ShaderSource},
@@ -137,7 +152,7 @@ mod tests {
             .unwrap();
         window.set_current().unwrap();
 
-        let color = RGBA::default();
+        let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(
             UNIFORM_TRIANGLE_VERT,
@@ -162,7 +177,7 @@ mod tests {
             .unwrap();
         window.set_current().unwrap();
 
-        let color = RGBA::default();
+        let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(
             UNIFORM_TRIANGLE_VERT,
@@ -191,7 +206,7 @@ mod tests {
             .unwrap();
         window.set_current().unwrap();
 
-        let color = RGBA::default();
+        let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(
             UNIFORM_TRIANGLE_VERT,

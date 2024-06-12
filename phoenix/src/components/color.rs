@@ -1,9 +1,74 @@
+#[derive(PartialEq, Debug)]
+pub struct Color {
+    color: Type,
+}
+
+#[derive(PartialEq, Debug)]
+enum Type {
+    Uniform(RGBA),
+    Vertices(Vec<f32>),
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct RGBA {
     r: u8,
     g: u8,
     b: u8,
     a: f32,
+}
+
+impl Color {
+    #[must_use]
+    pub fn new(color: RGBA) -> Self {
+        Self {
+            color: Type::Uniform(color),
+        }
+    }
+
+    #[must_use]
+    pub fn from_vertices(color_vertices: Vec<f32>) -> Self {
+        Self {
+            color: Type::Vertices(color_vertices),
+        }
+    }
+
+    #[must_use]
+    pub fn is_uniform(&self) -> bool {
+        match &self.color {
+            Type::Uniform(_) => true,
+            _ => false,
+        }
+    }
+
+    #[must_use]
+    pub fn is_vertices(&self) -> bool {
+        match &self.color {
+            Type::Vertices(_) => true,
+            _ => false,
+        }
+    }
+
+    #[must_use]
+    pub fn as_ref_uniform(&self) -> Option<&RGBA> {
+        match &self.color {
+            Type::Uniform(color) => Some(color),
+            _ => None,
+        }
+    }
+
+    #[must_use]
+    pub fn as_ref_vertices(&self) -> Option<&Vec<f32>> {
+        match &self.color {
+            Type::Vertices(color) => Some(color),
+            _ => None,
+        }
+    }
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        Self::new(RGBA::default())
+    }
 }
 
 impl RGBA {

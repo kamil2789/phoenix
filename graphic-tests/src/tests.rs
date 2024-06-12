@@ -5,6 +5,7 @@ use crate::{
 };
 use basic_2d_geometries::{
     test_2d_default_color_on_default_background, test_2d_red_triangle_on_green_background,
+    test_2d_three_triangles_colors_uniform_vertex, test_2d_triangle_with_colored_vertices,
     test_2d_two_triangles_green_blue,
 };
 use colored::Colorize;
@@ -19,7 +20,7 @@ pub mod basic_2d_geometries;
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 3] = [
+static TESTS: [(TestFunction, TestName); 5] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -31,6 +32,14 @@ static TESTS: [(TestFunction, TestName); 3] = [
     (
         test_2d_two_triangles_green_blue,
         "test_2d_two_triangles_green_blue",
+    ),
+    (
+        test_2d_triangle_with_colored_vertices,
+        "test_2d_triangle_with_colored_vertices",
+    ),
+    (
+        test_2d_three_triangles_colors_uniform_vertex,
+        "test_2d_three_triangles_colors_uniform_vertex",
     ),
 ];
 
