@@ -67,19 +67,12 @@ impl Render for OpenGL {
         }
 
         if let Some(value) = entity.shader_src {
-            let id;
-            if let Some(val) = self.compiled_shaders.get(&value) {
-                id = *val; //already compiled
-            } else {
-                id = self.compile_shader_program(value.clone())?;
-                self.compiled_shaders.insert(value, id);
-            }
-
+            let id = self.handle_shader(value)?;
             self.shaders_id.insert(entity.entity_id, id);
         }
 
         if let Some(value) = entity.color {
-            let shader_id = self.shaders_id.get(&entity.entity_id).unwrap();
+            let shader_id = self.shaders_id.get(&entity.entity_id).unwrap_or(&0);
             set_uniform_color("color", value, *shader_id);
         }
 
@@ -102,6 +95,16 @@ impl Render for OpenGL {
 }
 
 impl OpenGL {
+    fn handle_shader(&mut self, shader: Rc<ShaderSource>) -> Result<ShaderID> {
+        if let Some(val) = self.compiled_shaders.get(&shader) {
+            return Ok(*val); //already compiled
+        }
+
+        let result = self.compile_shader_program(shader.clone())?;
+        self.compiled_shaders.insert(shader, result);
+        Ok(result)
+    }
+
     fn handle_vertices(shape: &dyn Shape, color: Option<&Color>) -> Result<Buffers> {
         match shape.get_type() {
             ShapeType::Triangle => {
