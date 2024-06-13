@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
 use crate::components::color::RGBA;
+use crate::entities;
 use crate::entities::entity::{Entity, Manager};
-use crate::entities::{self, preprocessing};
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
 

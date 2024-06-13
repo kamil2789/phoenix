@@ -3,9 +3,9 @@ use std::rc::Rc;
 
 use geometry_rendering::set_uniform_color;
 
-use super::{Render, ID};
-use crate::components::color::RGBA;
-use crate::components::geometry::ShapeType;
+use super::{Error, Render, ID};
+use crate::components::color::{Color, RGBA};
+use crate::components::geometry::{Shape, ShapeType};
 use crate::components::shaders::ShaderSource;
 use crate::entities::entity::View;
 use crate::renderer::Result;
@@ -23,7 +23,7 @@ pub struct OpenGL {
     buffers: HashMap<EntityID, Buffers>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct Buffers {
     pub vertex_array_object: u32,
     pub vertex_buffer_object: u32,
@@ -61,27 +61,9 @@ impl Render for OpenGL {
             return Ok(entity.entity_id); //already initialized
         }
 
-        if let Some(value) = entity.shape {
-            match value.get_type() {
-                ShapeType::Triangle => {
-                    if let Some(color) = entity.color {
-                        if color.is_uniform() {
-                            let buffers = geometry_rendering::init_triangle(value.get_vertices());
-                            self.buffers.insert(entity.entity_id, buffers);
-                        }
-                        if let Some(color) = color.as_ref_vertices() {
-                            let buffers = geometry_rendering::init_triangle_with_color(
-                                value.get_vertices(),
-                                color,
-                            );
-                            self.buffers.insert(entity.entity_id, buffers);
-                        }
-                    } else {
-                        let buffers = geometry_rendering::init_triangle(value.get_vertices());
-                        self.buffers.insert(entity.entity_id, buffers);
-                    }
-                }
-            }
+        if let Some(shape) = entity.shape {
+            let buffers = OpenGL::handle_vertices(shape, entity.color)?;
+            self.buffers.insert(entity.entity_id, buffers);
         }
 
         if let Some(value) = entity.shader_src {
@@ -115,6 +97,35 @@ impl Render for OpenGL {
                 gl::BindVertexArray(triangle.vertex_array_object);
                 gl::DrawArrays(gl::TRIANGLES, 0, 3);
             }
+        }
+    }
+}
+
+impl OpenGL {
+    fn handle_vertices(shape: &dyn Shape, color: Option<&Color>) -> Result<Buffers> {
+        match shape.get_type() {
+            ShapeType::Triangle => {
+                if let Some(val_color) = color {
+                    OpenGL::handle_colored_triangle(shape, val_color)
+                } else {
+                    Ok(geometry_rendering::init_triangle(shape.get_vertices()))
+                }
+            }
+        }
+    }
+
+    fn handle_colored_triangle(shape: &dyn Shape, color: &Color) -> Result<Buffers> {
+        if color.as_ref_uniform().is_some() {
+            Ok(geometry_rendering::init_triangle(shape.get_vertices()))
+        } else if let Some(vert_color) = color.as_ref_vertices() {
+            Ok(geometry_rendering::init_triangle_with_color(
+                shape.get_vertices(),
+                vert_color,
+            ))
+        } else {
+            Err(Error::RenderingError(
+                "Not supported color type".to_string(),
+            ))
         }
     }
 }

@@ -3,7 +3,11 @@ use phoenix::{
         color::{Color, RGBA},
         geometry::Triangle,
         Component,
-    }, entities::entity::Entity, renderer::opengl::OpenGL, systems::scene::Scene, window::{GlfwConfig, Resolution}
+    },
+    entities::entity::Entity,
+    renderer::opengl::OpenGL,
+    systems::scene::Scene,
+    window::{GlfwConfig, Resolution},
 };
 use std::rc::Rc;
 

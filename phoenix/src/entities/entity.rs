@@ -3,11 +3,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::components::color::Color;
 use crate::components::shaders::ShaderBase;
-use crate::renderer::shaders::{VERTICES_COLORED_TRIANGLE_FRAG, VERTICES_COLORED_TRIANGLE_VERT};
-use crate::{
-    components::{geometry::Shape, shaders::ShaderSource, Component},
-    renderer::shaders::{UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT},
-};
+use crate::components::{geometry::Shape, shaders::ShaderSource, Component};
 pub type ID = u32;
 
 ///Only one component of specific type can be added to the entity.
@@ -56,6 +52,11 @@ impl Entity {
     }
 
     #[must_use]
+    pub fn len(&self) -> usize {
+        self.components.len()
+    }
+
+    #[must_use]
     pub fn contains_component(&self, component: &Component) -> bool {
         self.components
             .iter()
@@ -74,12 +75,10 @@ impl Entity {
 }
 
 impl Manager {
-    pub fn add_entity(&mut self, mut entity: Entity) -> ID {
+    pub fn add_entity(&mut self, entity: Entity) -> ID {
         if entity.is_empty() {
             return 0;
         }
-
-        entity = Manager::preprocessing(entity);
 
         let id = self.id_gc.create_id();
         for component in entity.components {
@@ -125,37 +124,6 @@ impl Manager {
         }
 
         View::new(key, self.colors.get(&key), shape, shader)
-    }
-
-    fn preprocessing(mut entity: Entity) -> Entity {
-        let color = entity.get_color();
-        if !entity.contains_component(&Component::ShaderProgram(ShaderSource::default()))
-            && color.is_some()
-        {
-            let tmp = color.unwrap();
-            if tmp.is_uniform() {
-                entity.add_component(Component::ShaderProgram(
-                    Manager::create_default_shader_uniform_color(),
-                ));
-            } else if tmp.is_vertices() {
-                entity.add_component(Component::ShaderProgram(
-                    Manager::create_default_shader_vertex_color(),
-                ));
-            }
-        }
-
-        entity
-    }
-
-    fn create_default_shader_uniform_color() -> ShaderSource {
-        ShaderSource::new(UNIFORM_TRIANGLE_VERT, UNIFORM_TRIANGLE_FRAG)
-    }
-
-    fn create_default_shader_vertex_color() -> ShaderSource {
-        ShaderSource::new(
-            VERTICES_COLORED_TRIANGLE_VERT,
-            VERTICES_COLORED_TRIANGLE_FRAG,
-        )
     }
 }
 
@@ -241,26 +209,6 @@ mod tests {
         assert_eq!(entity_manager.colors.len(), 0);
         assert_eq!(entity_manager.shapes.len(), 1);
         assert_eq!(entity_manager.shaders_source.len(), 0);
-    }
-
-    #[test]
-    fn test_add_entity_geometry_with_color_no_custom_shader() {
-        let mut entity_manager = Manager::default();
-        let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
-
-        let entity = Entity {
-            components: vec![
-                Component::Geometry(Box::new(Triangle::new(vertices))),
-                Component::Color(Color::new(255, 255, 0, 255_f32)),
-            ],
-        };
-
-        let id = entity_manager.add_entity(entity);
-
-        assert_eq!(id, 1);
-        assert_eq!(entity_manager.colors.len(), 1);
-        assert_eq!(entity_manager.shapes.len(), 1);
-        assert_eq!(entity_manager.shaders_source.len(), 1);
     }
 
     #[test]

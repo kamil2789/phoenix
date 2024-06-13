@@ -5,7 +5,11 @@ use phoenix::{
         color::{Color, RGBA},
         geometry::Triangle,
         Component,
-    }, entities::entity::Entity, renderer::Render, systems::scene::Scene, window::Window
+    },
+    entities::entity::Entity,
+    renderer::Render,
+    systems::scene::Scene,
+    window::Window,
 };
 
 pub fn test_2d_red_triangle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {

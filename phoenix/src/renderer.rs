@@ -19,6 +19,8 @@ pub enum Error {
     CompilationError(String),
     #[error("Shader linking program error {0}")]
     LinkError(String),
+    #[error("Rendering error {0}")]
+    RenderingError(String),
 }
 
 pub trait Render {
