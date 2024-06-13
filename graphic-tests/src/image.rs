@@ -83,3 +83,84 @@ pub fn are_images_equal(first: &image::DynamicImage, second: &image::DynamicImag
     }
     true
 }
+
+#[cfg(test)]
+mod tests {
+    use phoenix::window::GlfwConfig;
+    use serial_test::serial;
+
+    use crate::image::{are_images_equal, read_image_from_file, save_screen_as_img_png};
+
+    use super::Resolution;
+
+    #[test]
+    #[serial]
+    fn test_save_screen_as_img_png() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 200,
+            height: 100,
+        };
+
+        let window = config.create_window("test", resolution).unwrap();
+        window.set_current().unwrap();
+
+        let result = save_screen_as_img_png(&window, "test.png");
+        assert!(result.is_ok());
+        assert!(std::path::Path::new("test.png").exists());
+        std::fs::remove_file("test.png").unwrap();
+        assert!(!std::path::Path::new("test.png").exists());
+    }
+
+    #[test]
+    #[serial]
+    fn test_read_image_from_file() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 200,
+            height: 100,
+        };
+
+        let window = config.create_window("test", resolution).unwrap();
+        window.set_current().unwrap();
+
+        let result = save_screen_as_img_png(&window, "test.png");
+        assert!(result.is_ok());
+        assert!(std::path::Path::new("test.png").exists());
+
+        let _ = read_image_from_file("test.png").unwrap();
+
+        std::fs::remove_file("test.png").unwrap();
+        assert!(!std::path::Path::new("test.png").exists());
+    }
+
+    #[test]
+    #[serial]
+    fn test_are_images_equal() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 200,
+            height: 100,
+        };
+
+        let window = config.create_window("test", resolution).unwrap();
+        window.set_current().unwrap();
+
+        save_screen_as_img_png(&window, "test.png").unwrap();
+        assert!(std::path::Path::new("test.png").exists());
+
+        save_screen_as_img_png(&window, "test_two.png").unwrap();
+        assert!(std::path::Path::new("test_two.png").exists());
+
+        let image = read_image_from_file("test.png").unwrap();
+        let image_two = read_image_from_file("test_two.png").unwrap();
+        assert!(read_image_from_file("test_three.png").is_err());
+
+        assert!(are_images_equal(&image, &image_two));
+
+        std::fs::remove_file("test.png").unwrap();
+        std::fs::remove_file("test_two.png").unwrap();
+        assert!(!std::path::Path::new("test.png").exists());
+        assert!(!std::path::Path::new("test_two.png").exists());
+    }
+}

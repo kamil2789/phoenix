@@ -7,7 +7,7 @@ use super::{Render, ID};
 use crate::components::color::RGBA;
 use crate::components::geometry::ShapeType;
 use crate::components::shaders::ShaderSource;
-use crate::managers::entity::View;
+use crate::entities::entity::View;
 use crate::renderer::Result;
 
 mod geometry_rendering;
@@ -55,6 +55,7 @@ impl Render for OpenGL {
         }
     }
 
+    /// Return the ID of the initialized entity
     fn init_entity(&mut self, entity: View) -> Result<ID> {
         if self.buffers.contains_key(&entity.entity_id) {
             return Ok(entity.entity_id); //already initialized
@@ -134,8 +135,8 @@ mod tests {
     use crate::components::color::Color;
     use crate::window::{GlfwConfig, Resolution};
     use crate::{
-        components::{color::RGBA, geometry::Triangle, shaders::ShaderSource},
-        managers::entity::View,
+        components::{geometry::Triangle, shaders::ShaderSource},
+        entities::entity::View,
         renderer::{
             shaders::{UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT},
             Render,

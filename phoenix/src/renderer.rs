@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 use crate::{
     components::{color::RGBA, shaders::ShaderSource},
-    managers::entity::View,
+    entities::entity::View,
 };
 use thiserror::Error;
 

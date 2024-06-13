@@ -19,10 +19,20 @@ pub struct RGBA {
 
 impl Color {
     #[must_use]
-    pub fn new(color: RGBA) -> Self {
+    pub fn from_rgba(color: RGBA) -> Self {
         Self {
             color: Type::Uniform(color),
         }
+    }
+
+    #[must_use]
+    pub fn new(red: u8, green: u8, blue: u8, alpha: f32) -> Self {
+        Self::from_rgba(RGBA::new(red, green, blue, alpha))
+    }
+
+    #[must_use]
+    pub fn from_hex(hex: u32) -> Self {
+        Self::from_rgba(RGBA::from_hex(hex))
     }
 
     #[must_use]
@@ -36,7 +46,7 @@ impl Color {
     pub fn is_uniform(&self) -> bool {
         match &self.color {
             Type::Uniform(_) => true,
-            _ => false,
+            Type::Vertices(_) => false,
         }
     }
 
@@ -44,7 +54,7 @@ impl Color {
     pub fn is_vertices(&self) -> bool {
         match &self.color {
             Type::Vertices(_) => true,
-            _ => false,
+            Type::Uniform(_) => false,
         }
     }
 
@@ -52,7 +62,7 @@ impl Color {
     pub fn as_ref_uniform(&self) -> Option<&RGBA> {
         match &self.color {
             Type::Uniform(color) => Some(color),
-            _ => None,
+            Type::Vertices(_) => None,
         }
     }
 
@@ -60,14 +70,14 @@ impl Color {
     pub fn as_ref_vertices(&self) -> Option<&Vec<f32>> {
         match &self.color {
             Type::Vertices(color) => Some(color),
-            _ => None,
+            Type::Uniform(_) => None,
         }
     }
 }
 
 impl Default for Color {
     fn default() -> Self {
-        Self::new(RGBA::default())
+        Self::from_rgba(RGBA::default())
     }
 }
 
@@ -184,5 +194,45 @@ mod tests {
         let color = RGBA::new(255, 0, 0, 1_f32);
         let rgba = color.get_as_normalized_f32();
         assert_eq!([1_f32, 0.0, 0.0, 1_f32], rgba);
+    }
+
+    #[test]
+    fn test_color_creation() {
+        let rgba = RGBA::new(255, 100, 10, 1_f32);
+
+        let color_from_rgba = Color::from_rgba(rgba.clone());
+        assert_eq!(*color_from_rgba.as_ref_uniform().unwrap(), rgba);
+
+        let color_from_hex = Color::from_hex(0xFF_FF_00_FF);
+        assert_eq!(
+            *color_from_hex.as_ref_uniform().unwrap(),
+            RGBA::new(255, 255, 0, 1_f32)
+        );
+
+        let color = Color::new(255, 100, 10, 1_f32);
+        assert_eq!(*color.as_ref_uniform().unwrap(), rgba);
+
+        let vertices = vec![0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32];
+        let color_vertices = Color::from_vertices(vertices.clone());
+        assert_eq!(*color_vertices.as_ref_vertices().unwrap(), vertices);
+    }
+
+    #[test]
+    fn test_color_as_ref() {
+        let rgba = RGBA::new(255, 100, 10, 1_f32);
+
+        let color_from_rgba = Color::from_rgba(rgba.clone());
+        assert!(color_from_rgba.as_ref_uniform().is_some());
+        assert!(color_from_rgba.as_ref_vertices().is_none());
+        assert!(color_from_rgba.is_uniform());
+        assert!(!color_from_rgba.is_vertices());
+
+        let vertices = vec![0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32];
+        let color_from_vertices = Color::from_vertices(vertices);
+
+        assert!(color_from_vertices.as_ref_uniform().is_none());
+        assert!(color_from_vertices.as_ref_vertices().is_some());
+        assert!(color_from_vertices.is_vertices());
+        assert!(!color_from_vertices.is_uniform());
     }
 }

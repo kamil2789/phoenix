@@ -1,8 +1,9 @@
 use std::rc::Rc;
 
-use super::entity::{Entity, Manager};
 use crate::components::color::RGBA;
-use crate::renderer::Render;
+use crate::entities::entity::{Entity, Manager};
+use crate::entities::{self, preprocessing};
+use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -11,6 +12,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("Window error: {0}")]
     WinError(#[from] WinError),
+    #[error("Renderer error: {0}")]
+    RendererError(#[from] renderer::Error),
 }
 
 pub struct Scene {
@@ -34,13 +37,14 @@ impl Scene {
     /// # Errors
     ///
     /// Returns Err when the window fails to set itself as the current window.
+    /// Returns Err when rendering in particular frame fails.
     pub fn start(&mut self) -> Result<()> {
         if !self.window.is_current() {
             self.window.set_current()?;
         }
 
         while self.window.is_running() {
-            self.frame();
+            self.frame()?;
         }
 
         Ok(())
@@ -51,7 +55,8 @@ impl Scene {
     }
 
     pub fn add_entity(&mut self, entity: Entity) {
-        self.entity_manager.add_entity(entity);
+        let result = entities::preprocessing::preprocessing(entity);
+        self.entity_manager.add_entity(result);
     }
 
     /// # Errors
@@ -62,8 +67,7 @@ impl Scene {
             self.window.set_current()?;
         }
 
-        self.frame();
-        Ok(())
+        self.frame()
     }
 
     #[must_use]
@@ -71,23 +75,20 @@ impl Scene {
         &self.window
     }
 
-    fn frame(&mut self) {
+    fn frame(&mut self) -> Result<()> {
         self.renderer.set_background_color(&self.background_color);
 
         let keys = self.entity_manager.get_keys();
         for key in keys {
-            if let Ok(id) = self
+            let id = self
                 .renderer
-                .init_entity(self.entity_manager.as_ref_entity(key))
-            {
-                self.renderer.draw_entity(id);
-            } else {
-                todo!("Handle error!!!")
-            }
+                .init_entity(self.entity_manager.as_ref_entity(key))?;
+            self.renderer.draw_entity(id);
         }
 
         self.window.swap_buffers();
         Window::poll_events();
+        Ok(())
     }
 }
 
@@ -100,17 +101,25 @@ mod tests {
         use serial_test::serial;
 
         use crate::{
-            components::{color::RGBA, shaders::ShaderSource},
-            managers::{entity::View, scene::Scene},
+            components::{
+                color::{Color, RGBA},
+                geometry::Triangle,
+                shaders::ShaderSource,
+                Component,
+            },
+            entities::entity::{Entity, View},
             renderer::{Error, Render},
+            systems::scene::Scene,
             window::{GlfwConfig, Resolution},
         };
 
-        struct MockRenderer;
+        struct MockRenderer {
+            entities: u32,
+        }
 
         impl MockRenderer {
             fn new() -> Self {
-                MockRenderer
+                MockRenderer { entities: 0 }
             }
         }
 
@@ -118,7 +127,8 @@ mod tests {
             fn set_background_color(&self, _color: &RGBA) {}
 
             fn init_entity(&mut self, _entity: View) -> Result<u32, Error> {
-                todo!()
+                self.entities += 1;
+                Ok(self.entities)
             }
 
             fn draw_entity(&self, _id: u32) {}
@@ -142,17 +152,35 @@ mod tests {
             assert_eq!(scene.background_color, RGBA::default());
         }
 
-        /* NO TESTABLE, NEED TO WAIT FOR EVENTS MANAGER
         #[test]
         #[serial]
-        fn test_scene_start() {
+        fn test_scene_start_one_frame_no_entities() {
             let config = GlfwConfig::create().unwrap();
-            let window = config.create_window("Test", Resolution::default()).unwrap();
+            let window = Rc::new(config.create_window("Test", Resolution::default()).unwrap());
             let renderer = Box::new(MockRenderer::new());
+
+            let mut scene = Scene::new(window, renderer);
+            assert!(scene.start_one_frame().is_ok());
+        }
+
+        #[test]
+        #[serial]
+        fn test_scene_start_one_frame() {
+            let config = GlfwConfig::create().unwrap();
+            let window = Rc::new(config.create_window("Test", Resolution::default()).unwrap());
+            let renderer = Box::new(MockRenderer::new());
+
             let mut scene = Scene::new(window, renderer);
 
-            scene.start().unwrap();
+            let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
+
+            let triangle = Triangle::new(vertices);
+            let mut entity = Entity::default();
+            entity.add_component(Component::Geometry(Box::new(triangle)));
+            entity.add_component(Component::Color(Color::from_hex(0xFF_00_00_FF)));
+
+            scene.add_entity(entity);
+            assert!(scene.start_one_frame().is_ok());
         }
-        */
     }
 }

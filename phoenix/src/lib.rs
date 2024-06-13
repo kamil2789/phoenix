@@ -1,4 +1,5 @@
 pub mod components;
-pub mod managers;
+pub mod entities;
 pub mod renderer;
+pub mod systems;
 pub mod window;

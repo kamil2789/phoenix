@@ -10,3 +10,6 @@ gl = "0.14.0"
 image = "0.25.1"
 thiserror = "1.0.61"
 colored = "2.1.0"
+
+[dev-dependencies]
+serial_test = "3.1.1"

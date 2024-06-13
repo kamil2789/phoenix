@@ -3,10 +3,7 @@ use phoenix::{
         color::{Color, RGBA},
         geometry::Triangle,
         Component,
-    },
-    managers::{entity::Entity, scene::Scene},
-    renderer::opengl::OpenGL,
-    window::{GlfwConfig, Resolution},
+    }, entities::entity::Entity, renderer::opengl::OpenGL, systems::scene::Scene, window::{GlfwConfig, Resolution}
 };
 use std::rc::Rc;
 
@@ -46,11 +43,11 @@ fn main() {
     let triangle = Triangle::new(vertices);
     let green_triangle = Entity::new(vec![
         Component::Geometry(Box::new(triangle)),
-        Component::Color(Color::new(RGBA::from_hex(0x00_FF_00_FF))),
+        Component::Color(Color::from_hex(0x00_FF_00_FF)),
     ]);
     let blue_triangle = Entity::new(vec![
         Component::Geometry(Box::new(Triangle::new(second_vertices))),
-        Component::Color(Color::new(RGBA::from_hex(0x00_00_FF_FF))),
+        Component::Color(Color::from_hex(0x00_00_FF_FF)),
     ]);
 
     scene.add_entity(green_triangle);

@@ -5,10 +5,7 @@ use phoenix::{
         color::{Color, RGBA},
         geometry::Triangle,
         Component,
-    },
-    managers::{entity::Entity, scene::Scene},
-    renderer::Render,
-    window::Window,
+    }, entities::entity::Entity, renderer::Render, systems::scene::Scene, window::Window
 };
 
 pub fn test_2d_red_triangle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
@@ -23,7 +20,7 @@ pub fn test_2d_red_triangle_on_green_background(window: Rc<Window>, render: Box<
     let triangle = Triangle::new(vertices);
     let mut entity = Entity::default();
     entity.add_component(Component::Geometry(Box::new(triangle)));
-    entity.add_component(Component::Color(Color::new(RGBA::from_hex(0xFF_00_00_FF))));
+    entity.add_component(Component::Color(Color::from_hex(0xFF_00_00_FF)));
 
     scene.add_entity(entity);
 
@@ -67,11 +64,11 @@ pub fn test_2d_two_triangles_green_blue(window: Rc<Window>, render: Box<dyn Rend
     let triangle = Triangle::new(vertices);
     let green_triangle = Entity::new(vec![
         Component::Geometry(Box::new(triangle)),
-        Component::Color(Color::new(RGBA::from_hex(0x00_FF_00_FF))),
+        Component::Color(Color::from_hex(0x00_FF_00_FF)),
     ]);
     let blue_triangle = Entity::new(vec![
         Component::Geometry(Box::new(Triangle::new(second_vertices))),
-        Component::Color(Color::new(RGBA::from_hex(0x00_00_FF_FF))),
+        Component::Color(Color::from_hex(0x00_00_FF_FF)),
     ]);
 
     scene.add_entity(green_triangle);
@@ -120,7 +117,7 @@ pub fn test_2d_three_triangles_colors_uniform_vertex(window: Rc<Window>, render:
     let triangle = Triangle::new(vertices);
     let green_triangle = Entity::new(vec![
         Component::Geometry(Box::new(triangle)),
-        Component::Color(Color::new(RGBA::from_hex(0x00_FF_00_FF))),
+        Component::Color(Color::from_hex(0x00_FF_00_FF)),
     ]);
     let disco_triangle = Entity::new(vec![
         Component::Geometry(Box::new(Triangle::new(second_vertices))),

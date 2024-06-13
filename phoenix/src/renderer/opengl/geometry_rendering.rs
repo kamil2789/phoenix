@@ -1,7 +1,7 @@
-use crate::components::color::{Color, RGBA};
+use crate::components::color::Color;
 
 use super::Buffers;
-use std::{ffi::CString, ptr};
+use std::ffi::CString;
 
 //RESULT TYPE SHOULD BE RESULT<T, ERR> - CHECK FOR ERR CASE
 #[must_use]

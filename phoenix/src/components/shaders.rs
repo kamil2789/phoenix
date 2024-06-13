@@ -129,9 +129,17 @@ mod tests {
     }
 
     #[test]
-    fn test_shader_src_new_from_non_existing_files_get_error() {
+    fn test_shader_src_new_from_non_existing_vertex_file_get_error() {
+        let vertex_src = "vertex shader source code";
+        let fragment_src = "fragment shader source code";
+        let vertex_file = "vertex_shader_test1.frag";
+        let fragment_file = "fragment_shader_test1.frag";
+
+        create_file(vertex_src, vertex_file);
+        create_file(fragment_src, fragment_file);
+
         let shader =
-            ShaderSource::new_from_file(Path::new("/nonExistedPath"), Path::new("/nonExistedPath"));
+            ShaderSource::new_from_file(Path::new("/nonExistedPath"), Path::new(fragment_file));
         assert!(shader.is_err());
 
         if let Err(error) = shader {
@@ -139,14 +147,21 @@ mod tests {
                 .to_string()
                 .contains("File could not be opened, path: /nonExistedPath"));
         }
+
+        let shader =
+            ShaderSource::new_from_file(Path::new(vertex_file), Path::new("/nonExistedPath"));
+        assert!(shader.is_err());
+
+        assert!(fs::remove_file(vertex_file).is_ok());
+        assert!(fs::remove_file(fragment_file).is_ok());
     }
 
     #[test]
     fn test_shader_src_new_from_file() {
         let vertex_src = "vertex shader source code";
         let fragment_src = "fragment shader source code";
-        let vertex_file = "vertex_shader.frag";
-        let fragment_file = "fragment_shader.frag";
+        let vertex_file = "vertex_shader_test2.frag";
+        let fragment_file = "fragment_shader_test2.frag";
 
         create_file(vertex_src, vertex_file);
         create_file(fragment_src, fragment_file);
@@ -167,6 +182,7 @@ mod tests {
         let fragment_src = "fragment shader source code";
 
         let mut base = ShaderBase::default();
+        assert!(base.is_empty());
 
         let shader = base.register_from_str(vertex_src, fragment_src);
 
