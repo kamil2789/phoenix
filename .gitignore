@@ -18,4 +18,4 @@ Cargo.lock
 
 /target
 
-graphic-tests/tests_results
+graphic-tests/test_results/
