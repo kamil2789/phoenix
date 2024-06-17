@@ -8,6 +8,7 @@ use basic_2d_geometries::{
     test_2d_three_triangles_colors_uniform_vertex, test_2d_triangle_with_colored_vertices,
     test_2d_two_triangles_green_blue,
 };
+use basic_2d_textures::{test_2d_brick_wall_triangle, test_2d_two_brick_wall_triangle};
 use colored::Colorize;
 use phoenix::{
     renderer::{opengl::OpenGL, Render},
@@ -16,11 +17,12 @@ use phoenix::{
 use std::rc::Rc;
 
 pub mod basic_2d_geometries;
+pub mod basic_2d_textures;
 
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 5] = [
+static TESTS: [(TestFunction, TestName); 7] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -40,6 +42,11 @@ static TESTS: [(TestFunction, TestName); 5] = [
     (
         test_2d_three_triangles_colors_uniform_vertex,
         "test_2d_three_triangles_colors_uniform_vertex",
+    ),
+    (test_2d_brick_wall_triangle, "test_2d_brick_wall_triangle"),
+    (
+        test_2d_two_brick_wall_triangle,
+        "test_2d_two_brick_wall_triangle",
     ),
 ];
 

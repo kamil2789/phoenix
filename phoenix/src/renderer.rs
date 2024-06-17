@@ -5,7 +5,7 @@ pub mod vulkan;
 use std::rc::Rc;
 
 use crate::{
-    components::{color::RGBA, shaders::ShaderSource},
+    components::{color::RGBA, shaders::ShaderSource, texture::Texture},
     entities::entity::View,
 };
 use thiserror::Error;
@@ -34,5 +34,9 @@ pub trait Render {
     ///
     /// Will return `Err` when shader compilation failed.
     fn init_entity(&mut self, entity: View) -> Result<ID>;
+    /// # Errors
+    ///
+    /// Will return `Err` when texture initialization failed.
+    fn init_texture(&mut self, texture: &Texture) -> Result<ID>;
     fn draw_entity(&self, entity_id: ID);
 }

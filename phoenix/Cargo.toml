@@ -10,3 +10,4 @@ serial_test = "3.1.1"
 glfw-sys = { path = "../glfw-sys" }
 thiserror = "1.0.61"
 gl = "0.14.0"
+image = "0.25.1"

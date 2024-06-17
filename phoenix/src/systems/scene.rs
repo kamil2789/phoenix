@@ -105,10 +105,11 @@ mod tests {
                 color::{Color, RGBA},
                 geometry::Triangle,
                 shaders::ShaderSource,
+                texture::Texture,
                 Component,
             },
             entities::entity::{Entity, View},
-            renderer::{Error, Render},
+            renderer::{Error, Render, ID},
             systems::scene::Scene,
             window::{GlfwConfig, Resolution},
         };
@@ -137,6 +138,10 @@ mod tests {
                 &mut self,
                 _shader_program: Rc<ShaderSource>,
             ) -> crate::renderer::Result<crate::renderer::ID> {
+                todo!()
+            }
+
+            fn init_texture(&mut self, _texture: &Texture) -> crate::renderer::Result<ID> {
                 todo!()
             }
         }

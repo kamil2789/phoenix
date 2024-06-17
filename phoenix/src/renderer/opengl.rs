@@ -7,13 +7,16 @@ use super::{Error, Render, ID};
 use crate::components::color::{Color, RGBA};
 use crate::components::geometry::{Shape, ShapeType};
 use crate::components::shaders::ShaderSource;
+use crate::components::texture::Texture;
 use crate::entities::entity::View;
 use crate::renderer::Result;
 
 mod geometry_rendering;
 mod shader_compiler;
+mod textures;
 
 pub type ShaderID = u32;
+pub type TextureID = u32;
 pub type EntityID = u32;
 
 #[derive(Default, Clone)]
@@ -21,6 +24,7 @@ pub struct OpenGL {
     shaders_id: HashMap<EntityID, ShaderID>,
     compiled_shaders: HashMap<Rc<ShaderSource>, ShaderID>,
     buffers: HashMap<EntityID, Buffers>,
+    textures: HashMap<EntityID, TextureID>,
 }
 
 #[derive(Clone, Default)]
@@ -62,7 +66,7 @@ impl Render for OpenGL {
         }
 
         if let Some(shape) = entity.shape {
-            let buffers = OpenGL::handle_vertices(shape, entity.color)?;
+            let buffers = OpenGL::handle_vertices(shape, &entity)?;
             self.buffers.insert(entity.entity_id, buffers);
         }
 
@@ -76,6 +80,11 @@ impl Render for OpenGL {
             set_uniform_color("color", value, *shader_id);
         }
 
+        if let Some(texture) = entity.texture {
+            let texture_id = self.init_texture(texture)?;
+            self.textures.insert(entity.entity_id, texture_id);
+        }
+
         Ok(entity.entity_id)
     }
 
@@ -86,11 +95,19 @@ impl Render for OpenGL {
                 gl::UseProgram(*shader);
             }
 
+            if let Some(texture) = self.textures.get(&entity_id) {
+                gl::BindTexture(gl::TEXTURE_2D, *texture);
+            }
+
             if let Some(triangle) = self.buffers.get(&entity_id) {
                 gl::BindVertexArray(triangle.vertex_array_object);
                 gl::DrawArrays(gl::TRIANGLES, 0, 3);
             }
         }
+    }
+
+    fn init_texture(&mut self, texture: &Texture) -> Result<ID> {
+        textures::init_texture(texture)
     }
 }
 
@@ -105,11 +122,15 @@ impl OpenGL {
         Ok(result)
     }
 
-    fn handle_vertices(shape: &dyn Shape, color: Option<&Color>) -> Result<Buffers> {
+    fn handle_vertices(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
         match shape.get_type() {
             ShapeType::Triangle => {
-                if let Some(val_color) = color {
+                if let Some(val_color) = entity.color {
                     OpenGL::handle_colored_triangle(shape, val_color)
+                } else if entity.texture.is_some() {
+                    Ok(geometry_rendering::init_triangle_with_texture(
+                        shape.get_vertices(),
+                    ))
                 } else {
                     Ok(geometry_rendering::init_triangle(shape.get_vertices()))
                 }
@@ -173,7 +194,7 @@ mod tests {
             UNIFORM_TRIANGLE_VERT,
             UNIFORM_TRIANGLE_FRAG,
         ));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader));
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader), None);
 
         let mut renderer = OpenGL::default();
         let ret = renderer.init_entity(entity);
@@ -198,9 +219,9 @@ mod tests {
             UNIFORM_TRIANGLE_VERT,
             UNIFORM_TRIANGLE_FRAG,
         ));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()));
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None);
 
-        let second_entity = View::new(1, None, None, None);
+        let second_entity = View::new(1, None, None, None, None);
 
         let mut renderer = OpenGL::default();
 
@@ -227,12 +248,12 @@ mod tests {
             UNIFORM_TRIANGLE_VERT,
             UNIFORM_TRIANGLE_FRAG,
         ));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()));
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None);
 
         let mut renderer = OpenGL::default();
         assert!(renderer.init_entity(entity).is_ok());
 
-        let second_entity = View::new(2, Some(&color), Some(&vertices), Some(shader));
+        let second_entity = View::new(2, Some(&color), Some(&vertices), Some(shader), None);
 
         assert!(renderer.init_entity(second_entity).is_ok());
         assert_eq!(renderer.compiled_shaders.len(), 1);

@@ -3,6 +3,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::components::color::Color;
 use crate::components::shaders::ShaderBase;
+use crate::components::texture::Texture;
 use crate::components::{geometry::Shape, shaders::ShaderSource, Component};
 pub type ID = u32;
 
@@ -19,6 +20,7 @@ pub struct Manager {
     colors: HashMap<ID, Color>,
     shaders_source: HashMap<ID, Rc<ShaderSource>>,
     shapes: HashMap<ID, Box<dyn Shape>>,
+    textures: HashMap<ID, Texture>,
     id_gc: IdGarbageCollector,
     shader_base: ShaderBase,
 }
@@ -28,6 +30,7 @@ pub struct View<'a> {
     pub color: Option<&'a Color>,
     pub shape: Option<&'a dyn Shape>,
     pub shader_src: Option<Rc<ShaderSource>>,
+    pub texture: Option<&'a Texture>,
 }
 
 #[derive(Default)]
@@ -89,9 +92,14 @@ impl Manager {
                 Component::Geometry(shape) => {
                     self.shapes.insert(id, shape);
                 }
+
+                //TODO! Check if the shader program is the same. Possible bug???
                 Component::ShaderProgram(shader_program) => {
                     let tmp = self.shader_base.register_from_source(&shader_program);
                     self.shaders_source.insert(id, tmp);
+                }
+                Component::Texture(texture) => {
+                    self.textures.insert(id, texture);
                 }
             }
         }
@@ -123,7 +131,13 @@ impl Manager {
             shader = Some(value.clone());
         }
 
-        View::new(key, self.colors.get(&key), shape, shader)
+        View::new(
+            key,
+            self.colors.get(&key),
+            shape,
+            shader,
+            self.textures.get(&key),
+        )
     }
 }
 
@@ -134,12 +148,14 @@ impl<'a> View<'a> {
         color: Option<&'a Color>,
         shape: Option<&'a dyn Shape>,
         shader_src: Option<Rc<ShaderSource>>,
+        texture: Option<&'a Texture>,
     ) -> Self {
         Self {
             entity_id,
             color,
             shape,
             shader_src,
+            texture,
         }
     }
 }
@@ -267,6 +283,7 @@ mod tests {
                 Component::Color(Color::new(255, 0, 0, 255_f32)),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
+                Component::Texture(Texture::default()),
             ],
         };
 
@@ -275,6 +292,7 @@ mod tests {
                 Component::Color(Color::new(255, 0, 0, 255_f32)),
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
+                Component::Texture(Texture::default()),
             ],
         };
 
@@ -290,6 +308,7 @@ mod tests {
         assert_eq!(second_id, 2);
         assert_eq!(entity_manager.colors.len(), 2);
         assert_eq!(entity_manager.shapes.len(), 2);
+        assert_eq!(entity_manager.textures.len(), 2);
         assert_eq!(entity_manager.shaders_source.len(), 2);
     }
 

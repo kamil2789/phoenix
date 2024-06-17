@@ -2,6 +2,7 @@ use std::{env, fs};
 
 pub const TEST_RESULTS_DIR: &str = "test_results/";
 pub const TEST_TEMPLATE_DIR: &str = "assets/test_templates/";
+pub const TEST_TEXTURE_DIR: &str = "assets/textures/";
 pub const TEST_PROJECT_NAME: &str = "graphic-tests";
 pub const TEST_FILE_EXTENSION: &str = ".png";
 

@@ -10,7 +10,7 @@ pub fn init_triangle(vertices: &[f32]) -> Buffers {
     bind_buffers(&buffers);
     send_data_to_cpu_buffer(vertices);
     //layout 0, 3 vertices and no other attributes 0
-    set_vertex_attribute_pointer(0, 3, 0);
+    set_vertex_attribute_pointer(0, 3, 3, 0);
     unbind_buffers();
     buffers
 }
@@ -21,9 +21,22 @@ pub fn init_triangle_with_color(position: &[f32], color: &[f32]) -> Buffers {
     let vertices = combine_position_with_color(position, color);
     send_data_to_cpu_buffer(&vertices);
     //position
-    set_vertex_attribute_pointer(0, 7, 0);
+    set_vertex_attribute_pointer(0, 3, 7, 0);
     //color
-    set_vertex_attribute_pointer(1, 7, 3);
+    set_vertex_attribute_pointer(1, 4, 7, 3);
+    unbind_buffers();
+    buffers
+}
+
+pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
+    let buffers = generate_buffers();
+    bind_buffers(&buffers);
+    let vertices = combine_position_with_texture(position);
+    send_data_to_cpu_buffer(&vertices);
+    //position
+    set_vertex_attribute_pointer(0, 3, 5, 0);
+    //color
+    set_vertex_attribute_pointer(1, 2, 5, 3);
     unbind_buffers();
     buffers
 }
@@ -48,6 +61,22 @@ fn combine_position_with_color(position: &[f32], color: &[f32]) -> Vec<f32> {
     for (pos, col) in iter {
         result.extend_from_slice(pos);
         result.extend_from_slice(col);
+    }
+    result
+}
+
+fn combine_position_with_texture(position: &[f32]) -> Vec<f32> {
+    let texture_vertices = [0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+    let mut result = Vec::with_capacity(position.len() + texture_vertices.len());
+    let pos_size = 3;
+    let texture_size = 2;
+    let iter = position
+        .chunks(pos_size)
+        .zip(texture_vertices.chunks(texture_size));
+
+    for (pos, tex) in iter {
+        result.extend_from_slice(pos);
+        result.extend_from_slice(tex);
     }
     result
 }
@@ -81,13 +110,13 @@ fn send_data_to_cpu_buffer(vertices: &[f32]) {
     }
 }
 
-fn set_vertex_attribute_pointer(index: u32, stride: usize, offset: usize) {
+fn set_vertex_attribute_pointer(index: u32, size: i32, stride: usize, offset: usize) {
     let stride = stride * std::mem::size_of::<f32>();
     let offset = offset * std::mem::size_of::<f32>();
     unsafe {
         gl::VertexAttribPointer(
             index,
-            3,
+            size,
             gl::FLOAT,
             gl::FALSE,
             stride.try_into().unwrap_or(0),
@@ -107,7 +136,10 @@ fn unbind_buffers() {
 #[cfg(test)]
 mod tests {
     use super::combine_position_with_color;
-    use crate::window::{GlfwConfig, Resolution};
+    use crate::{
+        renderer::opengl::geometry_rendering::combine_position_with_texture,
+        window::{GlfwConfig, Resolution},
+    };
     use serial_test::serial;
 
     #[test]
@@ -143,6 +175,22 @@ mod tests {
                 1_f32, 2_f32, 3_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 4_f32, 5_f32, 6_f32,
                 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 7_f32, 8_f32, 9_f32, 0.5_f32, 0.5_f32, 0.5_f32,
                 0.5_f32
+            ]
+        );
+    }
+
+    #[test]
+    fn test_combine_position_with_texture() {
+        let position = vec![
+            1_f32, 2_f32, 3_f32, 4_f32, 5_f32, 6_f32, 7_f32, 8_f32, 9_f32,
+        ];
+
+        let result = combine_position_with_texture(&position);
+        assert_eq!(
+            result,
+            vec![
+                1_f32, 2_f32, 3_f32, 0.0, 0.0, 4_f32, 5_f32, 6_f32, 1.0, 0.0, 7_f32, 8_f32, 9_f32,
+                0.5, 1.0
             ]
         );
     }
