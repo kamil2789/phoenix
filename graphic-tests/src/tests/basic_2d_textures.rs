@@ -43,7 +43,7 @@ pub fn test_2d_brick_wall_triangle(window: Rc<Window>, render: Box<dyn Render>) 
 
     scene.set_background_color(RGBA::from_hex(0x00_B5_00_FF));
     if let Err(err) = scene.start_one_frame() {
-        println!("{}", err.to_string());
+        println!("{err}");
     }
 }
 
@@ -87,6 +87,6 @@ pub fn test_2d_two_brick_wall_triangle(window: Rc<Window>, render: Box<dyn Rende
 
     scene.set_background_color(RGBA::from_hex(0x00_B5_00_FF));
     if let Err(err) = scene.start_one_frame() {
-        println!("{}", err.to_string());
+        println!("{err}");
     }
 }

@@ -77,7 +77,9 @@ impl Render for OpenGL {
 
         if let Some(value) = entity.color {
             let shader_id = self.shaders_id.get(&entity.entity_id).unwrap_or(&0);
-            set_uniform_color("color", value, *shader_id);
+            if value.as_ref_uniform().is_some() {
+                set_uniform_color("color", value, *shader_id)?;
+            }
         }
 
         if let Some(texture) = entity.texture {

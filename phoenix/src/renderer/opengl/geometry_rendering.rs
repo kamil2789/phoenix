@@ -1,4 +1,7 @@
-use crate::components::color::Color;
+use crate::{
+    components::color::Color,
+    renderer::{Error, Result},
+};
 
 use super::Buffers;
 use std::ffi::CString;
@@ -41,14 +44,47 @@ pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
     buffers
 }
 
-//TODO ADD RESULT<>
-pub fn set_uniform_color(variable_name: &str, color: &Color, shader_id: u32) {
-    let uniform_color = CString::new(variable_name).unwrap();
-    let color_location = unsafe { gl::GetUniformLocation(shader_id, uniform_color.as_ptr()) };
+#[allow(dead_code)]
+pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
+    if let Ok(location) = get_uniform_variable_location(shader_id, variable_name) {
+        unsafe { gl::UseProgram(shader_id) };
+        unsafe { gl::Uniform1i(location, 1) };
+        Ok(())
+    } else {
+        Err(Error::RenderingError(
+            "Invalid variable name for uniform searching".to_string(),
+        ))
+    }
+}
+
+pub fn set_uniform_color(variable_name: &str, color: &Color, shader_id: u32) -> Result<()> {
+    let color_location = get_uniform_variable_location(shader_id, variable_name)?;
     unsafe { gl::UseProgram(shader_id) };
     if let Some(value) = color.as_ref_uniform() {
         let color = value.get_as_normalized_f32();
         unsafe { gl::Uniform4f(color_location, color[0], color[1], color[2], color[3]) };
+        Ok(())
+    } else {
+        Err(Error::RenderingError(
+            "Color variable is not uniform".to_string(),
+        ))
+    }
+}
+
+fn get_uniform_variable_location(shader_id: u32, variable_name: &str) -> Result<i32> {
+    if let Ok(name) = CString::new(variable_name) {
+        let location = unsafe { gl::GetUniformLocation(shader_id, name.as_ptr()) };
+        if location == -1 {
+            Err(Error::RenderingError(
+                "Uniform variable not found".to_string(),
+            ))
+        } else {
+            Ok(location)
+        }
+    } else {
+        Err(Error::RenderingError(
+            "Invalid variable name for uniform searching".to_string(),
+        ))
     }
 }
 
