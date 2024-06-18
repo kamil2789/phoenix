@@ -12,9 +12,7 @@ use super::entity::Entity;
 pub fn preprocessing(mut entity: Entity) -> Entity {
     if is_need_default_color_shader(&entity) {
         entity = add_default_shader_component_to_color(entity);
-    }
-
-    if is_need_default_texture_shader(&entity) {
+    } else if is_need_default_texture_shader(&entity) {
         entity = add_default_shader_component_to_texture(entity);
     }
 
@@ -50,6 +48,7 @@ fn is_need_default_texture_shader(entity: &Entity) -> bool {
 fn is_need_default_color_shader(entity: &Entity) -> bool {
     !entity.contains_component(&Component::ShaderProgram(ShaderSource::default()))
         && entity.get_color().is_some()
+        && !entity.contains_component(&Component::Texture(Texture::default()))
 }
 
 fn create_default_shader_uniform_color() -> ShaderSource {

@@ -44,17 +44,13 @@ pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
     buffers
 }
 
-#[allow(dead_code)]
 pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
-    if let Ok(location) = get_uniform_variable_location(shader_id, variable_name) {
-        unsafe { gl::UseProgram(shader_id) };
-        unsafe { gl::Uniform1i(location, 1) };
-        Ok(())
-    } else {
-        Err(Error::RenderingError(
-            "Invalid variable name for uniform searching".to_string(),
-        ))
-    }
+    let location = get_uniform_variable_location(shader_id, variable_name)?;
+    unsafe {
+        gl::UseProgram(shader_id);
+        gl::Uniform1i(location, 1);
+    };
+    Ok(())
 }
 
 pub fn set_uniform_color(variable_name: &str, color: &Color, shader_id: u32) -> Result<()> {
@@ -76,7 +72,7 @@ fn get_uniform_variable_location(shader_id: u32, variable_name: &str) -> Result<
         let location = unsafe { gl::GetUniformLocation(shader_id, name.as_ptr()) };
         if location == -1 {
             Err(Error::RenderingError(
-                "Uniform variable not found".to_string(),
+                "Uniform variable location not found".to_string(),
             ))
         } else {
             Ok(location)

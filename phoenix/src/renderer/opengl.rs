@@ -75,16 +75,25 @@ impl Render for OpenGL {
             self.shaders_id.insert(entity.entity_id, id);
         }
 
+        if let Some(texture) = entity.texture {
+            let texture_id = self.init_texture(texture)?;
+            self.textures.insert(entity.entity_id, texture_id);
+        }
+
+        if entity.texture.is_some()
+            && entity.color.is_some()
+            && entity.color.unwrap().as_ref_uniform().is_some()
+        {
+            if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
+                geometry_rendering::set_uniform_bool("isUniformColor", *shader_id)?;
+            };
+        }
+
         if let Some(value) = entity.color {
             let shader_id = self.shaders_id.get(&entity.entity_id).unwrap_or(&0);
             if value.as_ref_uniform().is_some() {
                 set_uniform_color("color", value, *shader_id)?;
             }
-        }
-
-        if let Some(texture) = entity.texture {
-            let texture_id = self.init_texture(texture)?;
-            self.textures.insert(entity.entity_id, texture_id);
         }
 
         Ok(entity.entity_id)
@@ -127,12 +136,12 @@ impl OpenGL {
     fn handle_vertices(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
         match shape.get_type() {
             ShapeType::Triangle => {
-                if let Some(val_color) = entity.color {
-                    OpenGL::handle_colored_triangle(shape, val_color)
-                } else if entity.texture.is_some() {
+                if entity.texture.is_some() {
                     Ok(geometry_rendering::init_triangle_with_texture(
                         shape.get_vertices(),
                     ))
+                } else if let Some(val_color) = entity.color {
+                    OpenGL::handle_colored_triangle(shape, val_color)
                 } else {
                     Ok(geometry_rendering::init_triangle(shape.get_vertices()))
                 }
