@@ -10,7 +10,8 @@ use basic_2d_geometries::{
 };
 use basic_2d_textures::{
     test_2d_brick_wall_disco_triangle, test_2d_brick_wall_triangle,
-    test_2d_brick_wall_uniform_red_triangle, test_2d_two_brick_wall_triangle,
+    test_2d_brick_wall_uniform_red_triangle, test_2d_happy_face_linear_texture,
+    test_2d_two_brick_wall_triangle,
 };
 use colored::Colorize;
 use phoenix::{
@@ -25,7 +26,7 @@ pub mod basic_2d_textures;
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 9] = [
+static TESTS: [(TestFunction, TestName); 10] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -58,6 +59,10 @@ static TESTS: [(TestFunction, TestName); 9] = [
     (
         test_2d_brick_wall_disco_triangle,
         "test_2d_brick_wall_disco_triangle",
+    ),
+    (
+        test_2d_happy_face_linear_texture,
+        "test_2d_happy_face_texture",
     ),
 ];
 

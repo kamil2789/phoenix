@@ -46,6 +46,11 @@ fn is_mipmaps_set(min_filtering: MinFiltering) -> bool {
 }
 
 fn generate_texture(texture: &Texture) -> Result<()> {
+    let encode = if texture.is_alpha_channel() {
+        gl::RGBA
+    } else {
+        gl::RGB
+    };
     unsafe {
         gl::TexImage2D(
             gl::TEXTURE_2D,
@@ -54,7 +59,7 @@ fn generate_texture(texture: &Texture) -> Result<()> {
             texture.get_width().try_into().unwrap_or(0),
             texture.get_height().try_into().unwrap_or(0),
             0,
-            gl::RGB,
+            encode,
             gl::UNSIGNED_BYTE,
             texture.get_raw_data().as_ptr().cast::<std::ffi::c_void>(),
         );

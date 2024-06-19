@@ -1,5 +1,6 @@
+use super::Result;
 use image::{self, DynamicImage};
-use std::rc::Rc;
+use std::{path::Path, rc::Rc};
 
 pub type TexID = u32;
 
@@ -51,6 +52,14 @@ pub enum MinFiltering {
     Filtering(Filtering),
 }
 
+/// # Errors
+///
+/// Will return `Err` if file could not be opened or data in the file is corrupted.
+pub fn load(path: &Path) -> Result<Rc<DynamicImage>> {
+    let texture_data = image::open(Path::new(&path))?;
+    Ok(Rc::new(texture_data.flipv()))
+}
+
 impl Texture {
     #[must_use]
     pub fn new(data: Rc<DynamicImage>, config: Config) -> Self {
@@ -79,6 +88,11 @@ impl Texture {
     #[must_use]
     pub fn get_raw_data(&self) -> &[u8] {
         self.data.as_bytes()
+    }
+
+    #[must_use]
+    pub fn is_alpha_channel(&self) -> bool {
+        matches!(*self.data, DynamicImage::ImageRgba8(_))
     }
 }
 

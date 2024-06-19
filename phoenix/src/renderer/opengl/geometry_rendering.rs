@@ -170,19 +170,19 @@ fn send_data_to_cpu_buffer(vertices: &[f32]) {
     }
 }
 
-fn set_vertex_attribute_pointer(index: u32, size: i32, stride: usize, offset: usize) {
+fn set_vertex_attribute_pointer(layout: u32, size: i32, stride: usize, offset: usize) {
     let stride = stride * std::mem::size_of::<f32>();
     let offset = offset * std::mem::size_of::<f32>();
     unsafe {
         gl::VertexAttribPointer(
-            index,
+            layout,
             size,
             gl::FLOAT,
             gl::FALSE,
             stride.try_into().unwrap_or(0),
             offset as *const std::ffi::c_void,
         );
-        gl::EnableVertexAttribArray(index);
+        gl::EnableVertexAttribArray(layout);
     }
 }
 
