@@ -124,6 +124,14 @@ impl OpenGL {
         match shape.get_type() {
             ShapeType::Triangle => {
                 if entity.texture.is_some() {
+                    if let Some(val) = entity.color {
+                        if let Some(tmp) = val.as_ref_vertices() {
+                            return Ok(geometry_rendering::init_triangle_with_color_and_texture(
+                                shape.get_vertices(),
+                                tmp,
+                            ));
+                        }
+                    }
                     Ok(geometry_rendering::init_triangle_with_texture(
                         shape.get_vertices(),
                     ))

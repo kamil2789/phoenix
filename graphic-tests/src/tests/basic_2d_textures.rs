@@ -123,3 +123,42 @@ pub fn test_2d_brick_wall_uniform_red_triangle(window: Rc<Window>, render: Box<d
         println!("{err}");
     }
 }
+
+pub fn test_2d_brick_wall_disco_triangle(window: Rc<Window>, render: Box<dyn Render>) {
+    let mut scene = Scene::new(window, render);
+
+    let vertices: [f32; 9] = [
+        -0.5, -0.5, 0.0, // left
+        0.5, -0.5, 0.0, // right
+        0.0, 0.5, 0.0, // top
+    ];
+
+    let colors = vec![
+        1.0, 0.0, 0.0, 1.0, // left
+        0.0, 1.0, 0.0, 1.0, // right
+        0.0, 0.0, 1.0, 1.0, // top
+    ];
+
+    let triangle = Triangle::new(vertices);
+    let mut entity = Entity::default();
+    let texture_config = Config {
+        wrapping_horizontal: Wrapping::Repeat,
+        wrapping_vertical: Wrapping::Repeat,
+        min_filtering: MinFiltering::Filtering(Filtering::Nearest),
+        max_filtering: Filtering::Nearest,
+    };
+
+    let path = TEST_TEXTURE_DIR.to_owned() + "brickwall.jpg";
+    let texture_data = Rc::new(image::open(Path::new(&path)).unwrap());
+    let texture = Texture::new(texture_data, texture_config);
+    entity.add_component(Component::Texture(texture));
+    entity.add_component(Component::Geometry(Box::new(triangle)));
+    entity.add_component(Component::Color(Color::from_vertices(colors)));
+
+    scene.add_entity(entity);
+
+    scene.set_background_color(RGBA::from_hex(0xC1_B1_A1_FF));
+    if let Err(err) = scene.start_one_frame() {
+        println!("{err}");
+    }
+}

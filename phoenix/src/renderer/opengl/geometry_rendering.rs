@@ -44,6 +44,21 @@ pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
     buffers
 }
 
+pub fn init_triangle_with_color_and_texture(position: &[f32], color: &[f32]) -> Buffers {
+    let buffers = generate_buffers();
+    bind_buffers(&buffers);
+    let vertices = combine_position_with_color_and_texture(position, color);
+    send_data_to_cpu_buffer(&vertices);
+    //position
+    set_vertex_attribute_pointer(0, 3, 9, 0);
+    //color
+    set_vertex_attribute_pointer(1, 4, 9, 3);
+    //texture
+    set_vertex_attribute_pointer(2, 2, 9, 7);
+    unbind_buffers();
+    buffers
+}
+
 pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
     let location = get_uniform_variable_location(shader_id, variable_name)?;
     unsafe {
@@ -107,6 +122,25 @@ fn combine_position_with_texture(position: &[f32]) -> Vec<f32> {
     result
 }
 
+fn combine_position_with_color_and_texture(position: &[f32], color: &[f32]) -> Vec<f32> {
+    let texture_vertices = [0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+    let mut result = Vec::with_capacity(position.len() + color.len() + texture_vertices.len());
+    let pos_size = 3;
+    let color_size = 4;
+    let texture_size = 2;
+    let iter = position
+        .chunks(pos_size)
+        .zip(color.chunks(color_size))
+        .zip(texture_vertices.chunks(texture_size));
+
+    for ((pos, col), tex) in iter {
+        result.extend_from_slice(pos);
+        result.extend_from_slice(col);
+        result.extend_from_slice(tex);
+    }
+    result
+}
+
 fn generate_buffers() -> Buffers {
     let mut vertex_array_object = 0;
     let mut vertex_buffer_object = 0;
@@ -163,7 +197,9 @@ fn unbind_buffers() {
 mod tests {
     use super::combine_position_with_color;
     use crate::{
-        renderer::opengl::geometry_rendering::combine_position_with_texture,
+        renderer::opengl::geometry_rendering::{
+            combine_position_with_color_and_texture, combine_position_with_texture,
+        },
         window::{GlfwConfig, Resolution},
     };
     use serial_test::serial;
@@ -217,6 +253,28 @@ mod tests {
             vec![
                 1_f32, 2_f32, 3_f32, 0.0, 0.0, 4_f32, 5_f32, 6_f32, 1.0, 0.0, 7_f32, 8_f32, 9_f32,
                 0.5, 1.0
+            ]
+        );
+    }
+
+    #[test]
+    fn test_combine_position_with_color_and_texture() {
+        let position = vec![
+            1_f32, 2_f32, 3_f32, 4_f32, 5_f32, 6_f32, 7_f32, 8_f32, 9_f32,
+        ];
+        let color = vec![
+            0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32,
+            0.5_f32, 0.5_f32, 0.5_f32,
+        ];
+
+        let result = combine_position_with_color_and_texture(&position, &color);
+
+        assert_eq!(
+            result,
+            vec![
+                1_f32, 2_f32, 3_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.0, 0.0, 4_f32, 5_f32,
+                6_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 1.0, 0.0, 7_f32, 8_f32, 9_f32, 0.5_f32,
+                0.5_f32, 0.5_f32, 0.5_f32, 0.5, 1.0
             ]
         );
     }
