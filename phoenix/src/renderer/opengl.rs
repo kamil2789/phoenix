@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use geometry_rendering::set_uniform_color;
+use geometry_rendering::{set_uniform_bool, set_uniform_color};
 
 use super::{Error, Render, ID};
 use crate::components::color::{Color, RGBA};
@@ -65,35 +65,22 @@ impl Render for OpenGL {
             return Ok(entity.entity_id); //already initialized
         }
 
+        if let Some(value) = entity.shader_src.as_ref() {
+            let id = self.handle_shader(value.clone())?;
+            self.shaders_id.insert(entity.entity_id, id);
+        }
+
         if let Some(shape) = entity.shape {
             let buffers = OpenGL::handle_vertices(shape, &entity)?;
             self.buffers.insert(entity.entity_id, buffers);
-        }
-
-        if let Some(value) = entity.shader_src {
-            let id = self.handle_shader(value)?;
-            self.shaders_id.insert(entity.entity_id, id);
+            if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
+                OpenGL::set_uniform_shader_variables(&entity, *shader_id)?;
+            }
         }
 
         if let Some(texture) = entity.texture {
             let texture_id = self.init_texture(texture)?;
             self.textures.insert(entity.entity_id, texture_id);
-        }
-
-        if entity.texture.is_some()
-            && entity.color.is_some()
-            && entity.color.unwrap().as_ref_uniform().is_some()
-        {
-            if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
-                geometry_rendering::set_uniform_bool("isUniformColor", *shader_id)?;
-            };
-        }
-
-        if let Some(value) = entity.color {
-            let shader_id = self.shaders_id.get(&entity.entity_id).unwrap_or(&0);
-            if value.as_ref_uniform().is_some() {
-                set_uniform_color("color", value, *shader_id)?;
-            }
         }
 
         Ok(entity.entity_id)
@@ -163,6 +150,19 @@ impl OpenGL {
             ))
         }
     }
+
+    fn set_uniform_shader_variables(entity: &View, shader_id: u32) -> Result<()> {
+        if let Some(color) = entity.color {
+            if let Some(value) = color.as_ref_uniform() {
+                set_uniform_color("color", value, shader_id)?;
+                if entity.texture.is_some() {
+                    set_uniform_bool("isUniformColor", shader_id)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl Drop for OpenGL {
@@ -179,14 +179,12 @@ mod tests {
 
     use super::OpenGL;
     use crate::components::color::Color;
+    use crate::renderer::shaders::UNIFORM_TRIANGLE_FRAG;
     use crate::window::{GlfwConfig, Resolution};
     use crate::{
         components::{geometry::Triangle, shaders::ShaderSource},
         entities::entity::View,
-        renderer::{
-            shaders::{UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT},
-            Render,
-        },
+        renderer::{shaders::UNIFORM_TRIANGLE_VERT, Render},
     };
     use serial_test::serial;
 

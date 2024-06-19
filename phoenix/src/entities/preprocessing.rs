@@ -2,6 +2,7 @@ use crate::{
     components::{shaders::ShaderSource, texture::Texture, Component},
     renderer::shaders::{
         TEXTURE_TRIANGLE_FRAG, TEXTURE_TRIANGLE_VERT, UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT,
+        VERTICES_COLORED_TEXTURE_TRIANGLE_FRAG, VERTICES_COLORED_TEXTURE_TRIANGLE_VERT,
         VERTICES_COLORED_TRIANGLE_FRAG, VERTICES_COLORED_TRIANGLE_VERT,
     },
 };
@@ -10,45 +11,60 @@ use super::entity::Entity;
 
 #[must_use]
 pub fn preprocessing(mut entity: Entity) -> Entity {
-    if is_need_default_color_shader(&entity) {
-        entity = add_default_shader_component_to_color(entity);
-    } else if is_need_default_texture_shader(&entity) {
-        entity = add_default_shader_component_to_texture(entity);
+    //only triangle is supported
+    if is_shader(&entity) {
+        return entity;
+    }
+
+    if is_texture(&entity) && is_vertices_color(&entity) {
+        insert_vertices_colored_texture_triangle(&mut entity);
+    } else if is_texture(&entity) {
+        insert_texture_triangle(&mut entity);
+    } else if is_vertices_color(&entity) {
+        insert_vertices_colored_triangle(&mut entity);
+    } else {
+        insert_uniform_triangle(&mut entity);
     }
 
     entity
 }
 
-fn add_default_shader_component_to_color(mut entity: Entity) -> Entity {
+fn is_shader(entity: &Entity) -> bool {
+    entity.contains_component(&Component::ShaderProgram(ShaderSource::default()))
+}
+
+fn is_texture(entity: &Entity) -> bool {
+    entity.contains_component(&Component::Texture(Texture::default()))
+}
+
+fn is_vertices_color(entity: &Entity) -> bool {
     if let Some(color) = entity.get_color() {
-        if color.is_uniform() {
-            entity.add_component(Component::ShaderProgram(
-                create_default_shader_uniform_color(),
-            ));
-        } else if color.is_vertices() {
-            entity.add_component(Component::ShaderProgram(
-                create_default_shader_vertex_color(),
-            ));
-        }
+        color.is_vertices()
+    } else {
+        false
     }
-
-    entity
 }
 
-fn add_default_shader_component_to_texture(mut entity: Entity) -> Entity {
+fn insert_vertices_colored_texture_triangle(entity: &mut Entity) {
+    entity.add_component(Component::ShaderProgram(
+        create_default_vertices_colored_texture_shader(),
+    ));
+}
+
+fn insert_texture_triangle(entity: &mut Entity) {
     entity.add_component(Component::ShaderProgram(create_default_texture_shader()));
-    entity
 }
 
-fn is_need_default_texture_shader(entity: &Entity) -> bool {
-    !entity.contains_component(&Component::ShaderProgram(ShaderSource::default()))
-        && entity.contains_component(&Component::Texture(Texture::default()))
+fn insert_vertices_colored_triangle(entity: &mut Entity) {
+    entity.add_component(Component::ShaderProgram(
+        create_default_shader_vertex_color(),
+    ));
 }
 
-fn is_need_default_color_shader(entity: &Entity) -> bool {
-    !entity.contains_component(&Component::ShaderProgram(ShaderSource::default()))
-        && entity.get_color().is_some()
-        && !entity.contains_component(&Component::Texture(Texture::default()))
+fn insert_uniform_triangle(entity: &mut Entity) {
+    entity.add_component(Component::ShaderProgram(
+        create_default_shader_uniform_color(),
+    ));
 }
 
 fn create_default_shader_uniform_color() -> ShaderSource {
@@ -64,6 +80,13 @@ fn create_default_shader_vertex_color() -> ShaderSource {
 
 fn create_default_texture_shader() -> ShaderSource {
     ShaderSource::new(TEXTURE_TRIANGLE_VERT, TEXTURE_TRIANGLE_FRAG)
+}
+
+fn create_default_vertices_colored_texture_shader() -> ShaderSource {
+    ShaderSource::new(
+        VERTICES_COLORED_TEXTURE_TRIANGLE_VERT,
+        VERTICES_COLORED_TEXTURE_TRIANGLE_FRAG,
+    )
 }
 
 #[cfg(test)]
@@ -108,15 +131,15 @@ mod tests {
     }
 
     #[test]
-    fn test_add_default_shader_component_to_texture_no_texture() {
+    fn test_add_default_shader_component() {
         let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
 
         let entity = Entity::new(vec![Component::Geometry(Box::new(Triangle::new(vertices)))]);
 
         assert_eq!(1, entity.len());
         let result = preprocessing(entity);
-        assert!(!result.contains_component(&Component::ShaderProgram(ShaderSource::default())));
-        assert_eq!(1, result.len());
+        assert!(result.contains_component(&Component::ShaderProgram(ShaderSource::default())));
+        assert_eq!(2, result.len());
     }
 
     #[test]
