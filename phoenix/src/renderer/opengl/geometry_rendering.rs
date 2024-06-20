@@ -1,3 +1,6 @@
+use cgmath::Matrix;
+use cgmath::Matrix4;
+
 use crate::{
     components::color::RGBA,
     renderer::{Error, Result},
@@ -65,6 +68,17 @@ pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
         gl::UseProgram(shader_id);
         gl::Uniform1i(location, 1);
     };
+    Ok(())
+}
+
+pub fn set_uniform_matrix4f(
+    variable_name: &str,
+    matrix: Matrix4<f32>,
+    shader_id: u32,
+) -> Result<()> {
+    let location = get_uniform_variable_location(shader_id, variable_name)?;
+    unsafe { gl::UseProgram(shader_id) };
+    unsafe { gl::UniformMatrix4fv(location, 1, gl::FALSE, matrix.as_ptr()) };
     Ok(())
 }
 

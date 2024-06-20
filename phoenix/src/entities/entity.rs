@@ -4,6 +4,7 @@ use std::{collections::HashMap, rc::Rc};
 use crate::components::color::Color;
 use crate::components::shaders::ShaderBase;
 use crate::components::texture::Texture;
+use crate::components::transformer::Transformer;
 use crate::components::{geometry::Shape, shaders::ShaderSource, Component};
 pub type ID = u32;
 
@@ -21,6 +22,7 @@ pub struct Manager {
     shaders_source: HashMap<ID, Rc<ShaderSource>>,
     shapes: HashMap<ID, Box<dyn Shape>>,
     textures: HashMap<ID, Texture>,
+    transformers: HashMap<ID, Transformer>,
     id_gc: IdGarbageCollector,
     shader_base: ShaderBase,
 }
@@ -101,10 +103,19 @@ impl Manager {
                 Component::Texture(texture) => {
                     self.textures.insert(id, texture);
                 }
+
+                Component::Transformer(transformer) => {
+                    self.transformers.insert(id, transformer);
+                }
             }
         }
 
         id
+    }
+
+    #[must_use]
+    pub fn as_ref_transformers(&self, key: ID) -> Option<&Transformer> {
+        self.transformers.get(&key)
     }
 
     pub fn remove_entity(&mut self, id: ID) {
@@ -284,6 +295,7 @@ mod tests {
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
                 Component::Texture(Texture::default()),
+                Component::Transformer(Transformer::default()),
             ],
         };
 
@@ -293,6 +305,7 @@ mod tests {
                 Component::Geometry(Box::new(Triangle::new(vertices))),
                 Component::ShaderProgram(ShaderSource::new("", "")),
                 Component::Texture(Texture::default()),
+                Component::Transformer(Transformer::default()),
             ],
         };
 
@@ -310,6 +323,7 @@ mod tests {
         assert_eq!(entity_manager.shapes.len(), 2);
         assert_eq!(entity_manager.textures.len(), 2);
         assert_eq!(entity_manager.shaders_source.len(), 2);
+        assert_eq!(entity_manager.transformers.len(), 2);
     }
 
     #[test]

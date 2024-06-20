@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use geometry_rendering::{set_uniform_bool, set_uniform_color};
+use geometry_rendering::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f};
 
 use super::{Error, Render, ID};
 use crate::components::color::{Color, RGBA};
 use crate::components::geometry::{Shape, ShapeType};
 use crate::components::shaders::ShaderSource;
 use crate::components::texture::Texture;
+use crate::components::transformer::Transformer;
 use crate::entities::entity::View;
 use crate::renderer::Result;
 
@@ -106,6 +107,29 @@ impl Render for OpenGL {
 
     fn init_texture(&mut self, texture: &Texture) -> Result<ID> {
         textures::init_texture(texture)
+    }
+
+    fn perform_transformations(
+        &mut self,
+        entity_id: ID,
+        transformation: &Transformer,
+    ) -> Result<()> {
+        if let Some(shader) = self.shaders_id.get(&entity_id) {
+            if let Some(translation) = transformation.get_translation_matrix() {
+                set_uniform_matrix4f("translation", translation, *shader)?;
+            }
+            if let Some(rotation) = transformation.get_rotation_matrix() {
+                set_uniform_matrix4f("rotation", rotation, *shader)?;
+            }
+            if let Some(scale) = transformation.get_scale_matrix() {
+                set_uniform_matrix4f("scale", scale, *shader)?;
+            }
+            Ok(())
+        } else {
+            Err(Error::TransformationError(format!(
+                "No shader found for entity {entity_id}"
+            )))
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    components::{shaders::ShaderSource, texture::Texture, Component},
+    components::{shaders::ShaderSource, texture::Texture, transformer::Transformer, Component},
     renderer::shaders::{
         TEXTURE_TRIANGLE_FRAG, TEXTURE_TRIANGLE_VERT, UNIFORM_TRIANGLE_FRAG, UNIFORM_TRIANGLE_VERT,
         VERTICES_COLORED_TEXTURE_TRIANGLE_FRAG, VERTICES_COLORED_TEXTURE_TRIANGLE_VERT,
@@ -26,7 +26,15 @@ pub fn preprocessing(mut entity: Entity) -> Entity {
         insert_uniform_triangle(&mut entity);
     }
 
+    if !is_transformer(&entity) {
+        entity.add_component(Component::Transformer(Transformer::default()));
+    }
+
     entity
+}
+
+fn is_transformer(entity: &Entity) -> bool {
+    entity.contains_component(&Component::Transformer(Transformer::default()))
 }
 
 fn is_shader(entity: &Entity) -> bool {
@@ -111,7 +119,7 @@ mod tests {
         assert_eq!(2, entity.len());
         let result = preprocessing(entity);
         assert!(result.contains_component(&Component::ShaderProgram(ShaderSource::default())));
-        assert_eq!(3, result.len());
+        assert_eq!(4, result.len());
     }
 
     #[test]
@@ -127,7 +135,7 @@ mod tests {
         assert_eq!(2, entity.len());
         let result = preprocessing(entity);
         assert!(result.contains_component(&Component::ShaderProgram(ShaderSource::default())));
-        assert_eq!(3, result.len());
+        assert_eq!(4, result.len());
     }
 
     #[test]
@@ -139,7 +147,7 @@ mod tests {
         assert_eq!(1, entity.len());
         let result = preprocessing(entity);
         assert!(result.contains_component(&Component::ShaderProgram(ShaderSource::default())));
-        assert_eq!(2, result.len());
+        assert_eq!(3, result.len());
     }
 
     #[test]
@@ -154,6 +162,6 @@ mod tests {
         assert_eq!(2, entity.len());
         let result = preprocessing(entity);
         assert!(result.contains_component(&Component::ShaderProgram(ShaderSource::default())));
-        assert_eq!(3, result.len());
+        assert_eq!(4, result.len());
     }
 }

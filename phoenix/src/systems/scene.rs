@@ -83,6 +83,9 @@ impl Scene {
             let id = self
                 .renderer
                 .init_entity(self.entity_manager.as_ref_entity(key))?;
+            if let Some(transformer) = self.entity_manager.as_ref_transformers(key) {
+                self.renderer.perform_transformations(id, transformer)?;
+            }
             self.renderer.draw_entity(id);
         }
 
@@ -143,6 +146,14 @@ mod tests {
 
             fn init_texture(&mut self, _texture: &Texture) -> crate::renderer::Result<ID> {
                 todo!()
+            }
+
+            fn perform_transformations(
+                &mut self,
+                _entity_id: ID,
+                _transformation: &crate::components::transformer::Transformer,
+            ) -> crate::renderer::Result<()> {
+                Ok(())
             }
         }
 

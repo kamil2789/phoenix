@@ -11,3 +11,4 @@ glfw-sys = { path = "../glfw-sys" }
 thiserror = "1.0.61"
 gl = "0.14.0"
 image = "0.25.1"
+cgmath = "0.18.0"

@@ -5,7 +5,7 @@ pub mod vulkan;
 use std::rc::Rc;
 
 use crate::{
-    components::{color::RGBA, shaders::ShaderSource, texture::Texture},
+    components::{color::RGBA, shaders::ShaderSource, texture::Texture, transformer::Transformer},
     entities::entity::View,
 };
 use thiserror::Error;
@@ -21,6 +21,8 @@ pub enum Error {
     LinkError(String),
     #[error("Rendering error {0}")]
     RenderingError(String),
+    #[error("Transformation error {0}")]
+    TransformationError(String),
 }
 
 pub trait Render {
@@ -38,5 +40,13 @@ pub trait Render {
     ///
     /// Will return `Err` when texture initialization failed.
     fn init_texture(&mut self, texture: &Texture) -> Result<ID>;
+    /// # Errors
+    ///
+    /// Will return `Err` when transformation failed or cannot be applied.
+    fn perform_transformations(
+        &mut self,
+        entity_id: ID,
+        transformation: &Transformer,
+    ) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
 }

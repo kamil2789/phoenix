@@ -1,4 +1,6 @@
 use color::Color;
+use texture::Texture;
+use transformer::Transformer;
 
 use self::{geometry::Shape, shaders::ShaderSource};
 
@@ -6,6 +8,7 @@ pub mod color;
 pub mod geometry;
 pub mod shaders;
 pub mod texture;
+pub mod transformer;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -23,7 +26,8 @@ pub enum Component {
     Color(Color),
     Geometry(Box<dyn Shape>),
     ShaderProgram(ShaderSource),
-    Texture(texture::Texture),
+    Texture(Texture),
+    Transformer(Transformer),
 }
 
 #[cfg(test)]
