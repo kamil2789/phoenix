@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use super::camera::{Camera, Config};
 use crate::components::color::RGBA;
 use crate::entities;
 use crate::entities::entity::{Entity, Manager};
@@ -21,6 +22,7 @@ pub struct Scene {
     window: Rc<Window>,
     renderer: Box<dyn Render>,
     background_color: RGBA,
+    camera: Option<Camera>,
 }
 
 impl Scene {
@@ -31,6 +33,7 @@ impl Scene {
             window,
             renderer,
             background_color: RGBA::default(),
+            camera: None,
         }
     }
 
@@ -75,6 +78,10 @@ impl Scene {
         &self.window
     }
 
+    pub fn register_camera(&mut self, camera_config: &Config) {
+        self.camera = Some(Camera::new(&self.window.get_resolution(), camera_config));
+    }
+
     fn frame(&mut self) -> Result<()> {
         self.renderer.set_background_color(&self.background_color);
 
@@ -85,6 +92,11 @@ impl Scene {
                 .init_entity(self.entity_manager.as_ref_entity(key))?;
             if let Some(transformer) = self.entity_manager.as_ref_transformers(key) {
                 self.renderer.perform_transformations(id, transformer)?;
+            }
+
+            if let Some(cam) = &self.camera {
+                self.renderer
+                    .perform_camera_transformation(id, cam.get_projection())?;
             }
             self.renderer.draw_entity(id);
         }
@@ -101,6 +113,7 @@ mod tests {
     mod tests {
         use std::rc::Rc;
 
+        use cgmath::Matrix4;
         use serial_test::serial;
 
         use crate::{
@@ -154,6 +167,14 @@ mod tests {
                 _transformation: &crate::components::transformer::Transformer,
             ) -> crate::renderer::Result<()> {
                 Ok(())
+            }
+
+            fn perform_camera_transformation(
+                &mut self,
+                _entity_id: ID,
+                _camera_matrix: &Matrix4<f32>,
+            ) -> crate::renderer::Result<()> {
+                todo!()
             }
         }
 

@@ -13,7 +13,10 @@ use basic_2d_textures::{
     test_2d_brick_wall_uniform_red_triangle, test_2d_happy_face_linear_texture,
     test_2d_two_brick_wall_triangle,
 };
-use basic_2d_transformations::{test_2d_triangle_rotation_and_scale, test_2d_triangle_translation};
+use basic_2d_transformations::{
+    test_2d_triangle_rotation_and_scale, test_2d_triangle_rotation_scale_perspective,
+    test_2d_triangle_translation,
+};
 use colored::Colorize;
 use phoenix::{
     renderer::{opengl::OpenGL, Render},
@@ -28,7 +31,7 @@ pub mod basic_2d_transformations;
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 12] = [
+static TESTS: [(TestFunction, TestName); 13] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -67,7 +70,14 @@ static TESTS: [(TestFunction, TestName); 12] = [
         "test_2d_happy_face_texture",
     ),
     (test_2d_triangle_translation, "test_2d_triangle_translation"),
-    (test_2d_triangle_rotation_and_scale, "test_2d_triangle_rotation_and_scale"),
+    (
+        test_2d_triangle_rotation_and_scale,
+        "test_2d_triangle_rotation_and_scale",
+    ),
+    (
+        test_2d_triangle_rotation_scale_perspective,
+        "test_2d_triangle_rotation_scale_perspective",
+    ),
 ];
 
 pub fn run() {

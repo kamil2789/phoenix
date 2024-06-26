@@ -25,6 +25,7 @@ impl Builder {
     }
 
     #[must_use]
+
     pub fn with_rotation(mut self, rotation: Vector3<f32>) -> Self {
         self.result.rotation = rotation;
         self

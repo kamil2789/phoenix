@@ -8,6 +8,7 @@ use crate::{
     components::{color::RGBA, shaders::ShaderSource, texture::Texture, transformer::Transformer},
     entities::entity::View,
 };
+use cgmath::Matrix4;
 use thiserror::Error;
 
 pub type ID = u32;
@@ -47,6 +48,14 @@ pub trait Render {
         &mut self,
         entity_id: ID,
         transformation: &Transformer,
+    ) -> Result<()>;
+    /// # Errors
+    ///
+    /// Will return `Err` when transformation failed or cannot be applied.
+    fn perform_camera_transformation(
+        &mut self,
+        entity_id: ID,
+        camera_matrix: &Matrix4<f32>,
     ) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
 }

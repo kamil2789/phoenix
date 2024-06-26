@@ -73,7 +73,7 @@ pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
 
 pub fn set_uniform_matrix4f(
     variable_name: &str,
-    matrix: Matrix4<f32>,
+    matrix: &Matrix4<f32>,
     shader_id: u32,
 ) -> Result<()> {
     let location = get_uniform_variable_location(shader_id, variable_name)?;

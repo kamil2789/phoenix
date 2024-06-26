@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use cgmath::Matrix4;
 use geometry_rendering::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f};
 
 use super::{Error, Render, ID};
@@ -116,13 +117,13 @@ impl Render for OpenGL {
     ) -> Result<()> {
         if let Some(shader) = self.shaders_id.get(&entity_id) {
             if let Some(translation) = transformation.get_translation_matrix() {
-                set_uniform_matrix4f("translation", translation, *shader)?;
+                set_uniform_matrix4f("translation", &translation, *shader)?;
             }
             if let Some(rotation) = transformation.get_rotation_matrix() {
-                set_uniform_matrix4f("rotation", rotation, *shader)?;
+                set_uniform_matrix4f("rotation", &rotation, *shader)?;
             }
             if let Some(scale) = transformation.get_scale_matrix() {
-                set_uniform_matrix4f("scale", scale, *shader)?;
+                set_uniform_matrix4f("scale", &scale, *shader)?;
             }
             Ok(())
         } else {
@@ -130,6 +131,17 @@ impl Render for OpenGL {
                 "No shader found for entity {entity_id}"
             )))
         }
+    }
+
+    fn perform_camera_transformation(
+        &mut self,
+        entity_id: ID,
+        camera_matrix: &Matrix4<f32>,
+    ) -> Result<()> {
+        if let Some(shader) = self.shaders_id.get(&entity_id) {
+            set_uniform_matrix4f("projection", camera_matrix, *shader)?;
+        }
+        Ok(())
     }
 }
 
