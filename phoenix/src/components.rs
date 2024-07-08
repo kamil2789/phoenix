@@ -2,11 +2,12 @@ use color::Color;
 use texture::Texture;
 use transformer::Transformer;
 
-use self::{geometry::Shape, shaders::ShaderSource};
+use self::shaders::ShaderSource;
 
 pub mod color;
-pub mod geometry;
+pub mod plane_geometry;
 pub mod shaders;
+pub mod solid_geometry;
 pub mod texture;
 pub mod transformer;
 
@@ -30,12 +31,23 @@ pub enum Component {
     Transformer(Transformer),
 }
 
+pub trait Shape {
+    fn get_vertices(&self) -> &[f32];
+    fn get_type(&self) -> ShapeType;
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum ShapeType {
+    Triangle,
+    Cube,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::components::Component;
 
     use std::mem;
-    const MEMORY_USAGE_FOR_COMPONENTS_ENUM: usize = 48;
+    const MEMORY_USAGE_FOR_COMPONENTS_ENUM: usize = 56;
 
     #[test]
     fn test_check_maximum_memory_usage_for_components_enum() {

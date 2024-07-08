@@ -38,3 +38,13 @@ impl Camera {
         &self.projection
     }
 }
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            near_plane: 0.1,
+            far_plane: 100.0,
+            field_of_vision: 45.0,
+        }
+    }
+}

@@ -4,7 +4,7 @@ use cgmath::vec3;
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        geometry::Triangle,
+        plane_geometry::Triangle,
         texture::{load, Config, Filtering, MinFiltering, Mipmaps, Texture, Wrapping},
         transformer::Builder,
         Component,

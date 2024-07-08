@@ -5,7 +5,7 @@ use crate::components::color::Color;
 use crate::components::shaders::ShaderBase;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
-use crate::components::{geometry::Shape, shaders::ShaderSource, Component};
+use crate::components::{shaders::ShaderSource, Component, Shape};
 pub type ID = u32;
 
 ///Only one component of specific type can be added to the entity.
@@ -150,6 +150,11 @@ impl Manager {
             self.textures.get(&key),
         )
     }
+
+    #[must_use]
+    pub fn get_shape(&self, key: ID) -> Option<&dyn Shape> {
+        self.shapes.get(&key).map(std::convert::AsRef::as_ref)
+    }
 }
 
 impl<'a> View<'a> {
@@ -189,7 +194,7 @@ impl IdGarbageCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::geometry::Triangle;
+    use crate::components::plane_geometry::Triangle;
 
     #[test]
     fn test_new_manager() {

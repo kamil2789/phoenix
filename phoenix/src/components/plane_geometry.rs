@@ -1,12 +1,4 @@
-pub trait Shape {
-    fn get_vertices(&self) -> &[f32];
-    fn get_type(&self) -> ShapeType;
-}
-
-#[derive(PartialEq, Debug)]
-pub enum ShapeType {
-    Triangle,
-}
+use super::{Shape, ShapeType};
 
 #[derive(Clone)]
 pub struct Triangle {
@@ -32,7 +24,7 @@ impl Shape for Triangle {
 
 #[cfg(test)]
 mod tests {
-    use crate::components::geometry::{Shape, ShapeType, Triangle}; // Import the Shape trait and ShapeType enum.
+    use crate::components::plane_geometry::{Shape, ShapeType, Triangle}; // Import the Shape trait and ShapeType enum.
 
     #[test]
     fn test_new_triangle() {

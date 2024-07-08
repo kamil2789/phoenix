@@ -82,6 +82,18 @@ impl Scene {
         self.camera = Some(Camera::new(&self.window.get_resolution(), camera_config));
     }
 
+    pub fn enable_3d(&mut self) {
+        self.renderer.enable_3d();
+    }
+
+    /// # Errors
+    ///
+    /// Returns Err when the window fails to set itself as the current window.
+    pub fn set_current_window(&self) -> Result<()> {
+        self.window.set_current()?;
+        Ok(())
+    }
+
     fn frame(&mut self) -> Result<()> {
         self.renderer.set_background_color(&self.background_color);
 
@@ -119,7 +131,7 @@ mod tests {
         use crate::{
             components::{
                 color::{Color, RGBA},
-                geometry::Triangle,
+                plane_geometry::Triangle,
                 shaders::ShaderSource,
                 texture::Texture,
                 Component,
@@ -174,6 +186,10 @@ mod tests {
                 _entity_id: ID,
                 _camera_matrix: &Matrix4<f32>,
             ) -> crate::renderer::Result<()> {
+                todo!()
+            }
+
+            fn enable_3d(&self) {
                 todo!()
             }
         }

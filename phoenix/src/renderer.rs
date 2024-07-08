@@ -58,4 +58,5 @@ pub trait Render {
         camera_matrix: &Matrix4<f32>,
     ) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
+    fn enable_3d(&self);
 }

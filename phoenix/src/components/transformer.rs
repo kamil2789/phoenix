@@ -1,8 +1,9 @@
-use cgmath::{vec3, Matrix4, Vector3, Zero};
+use cgmath::{vec3, InnerSpace, Matrix4, Vector3, Zero};
 
 pub struct Transformer {
     translation: Vector3<f32>,
     rotation: Vector3<f32>,
+    custom_axis_rotation_angle: Option<f32>,
     scale: Vector3<f32>,
 }
 
@@ -38,6 +39,13 @@ impl Builder {
     }
 
     #[must_use]
+    pub fn with_custom_axis_rotation_angle(mut self, axis: Vector3<f32>, angle: f32) -> Self {
+        self.result.rotation = axis;
+        self.result.custom_axis_rotation_angle = Some(angle);
+        self
+    }
+
+    #[must_use]
     pub fn build(self) -> Transformer {
         self.result
     }
@@ -50,6 +58,7 @@ impl Transformer {
             translation,
             rotation,
             scale,
+            custom_axis_rotation_angle: None,
         }
     }
 
@@ -78,6 +87,15 @@ impl Transformer {
     }
 
     #[must_use]
+    pub fn new_custom_axis_rotation_angle(axis: Vector3<f32>, angle: f32) -> Self {
+        Self {
+            rotation: axis,
+            custom_axis_rotation_angle: Some(angle),
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
     pub fn get_translation_matrix(&self) -> Option<Matrix4<f32>> {
         if self.translation == Vector3::zero() {
             None
@@ -89,7 +107,14 @@ impl Transformer {
     #[must_use]
     pub fn get_rotation_matrix(&self) -> Option<Matrix4<f32>> {
         if self.rotation == Vector3::zero() {
-            None
+            return None;
+        }
+
+        if let Some(angle) = self.custom_axis_rotation_angle {
+            Some(Matrix4::from_axis_angle(
+                self.rotation.normalize(),
+                cgmath::Deg(angle),
+            ))
         } else {
             Some(
                 Matrix4::<f32>::from_angle_x(cgmath::Deg(self.rotation.x))
@@ -119,6 +144,7 @@ impl Default for Transformer {
             translation: Vector3::zero(),
             rotation: Vector3::zero(),
             scale: vec3(1.0, 1.0, 1.0),
+            custom_axis_rotation_angle: None,
         }
     }
 }

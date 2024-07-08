@@ -37,7 +37,13 @@ pub fn init_triangle_with_color(position: &[f32], color: &[f32]) -> Buffers {
 pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
     let buffers = generate_buffers();
     bind_buffers(&buffers);
-    let vertices = combine_position_with_texture(position);
+
+    let vertices = if position.len() > 100 {
+        combine_position_with_color_and_texture_for_3d_cube(position)
+    } else {
+        combine_position_with_texture(position)
+    };
+
     send_data_to_cpu_buffer(&vertices);
     //position
     set_vertex_attribute_pointer(0, 3, 5, 0);
@@ -105,6 +111,29 @@ fn get_uniform_variable_location(shader_id: u32, variable_name: &str) -> Result<
             "Invalid variable name for uniform searching".to_string(),
         ))
     }
+}
+
+//TODO REMOVE THIS
+fn combine_position_with_color_and_texture_for_3d_cube(position: &[f32]) -> Vec<f32> {
+    let texture_vertices: [f32; 72] = [
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0,
+        1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+        1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+    ];
+
+    let mut result = Vec::with_capacity(position.len() + texture_vertices.len());
+    let pos_size = 3;
+    let texture_size = 2;
+    let iter = position
+        .chunks(pos_size)
+        .zip(texture_vertices.chunks(texture_size));
+
+    for (pos, tex) in iter {
+        result.extend_from_slice(pos);
+        result.extend_from_slice(tex);
+    }
+    result
 }
 
 fn combine_position_with_color(position: &[f32], color: &[f32]) -> Vec<f32> {

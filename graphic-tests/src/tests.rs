@@ -17,6 +17,7 @@ use basic_2d_transformations::{
     test_2d_triangle_rotation_and_scale, test_2d_triangle_rotation_scale_perspective,
     test_2d_triangle_translation,
 };
+use basic_3d_geometries::test_3d_gold_cube_on_green_background;
 use colored::Colorize;
 use phoenix::{
     renderer::{opengl::OpenGL, Render},
@@ -27,11 +28,12 @@ use std::rc::Rc;
 pub mod basic_2d_geometries;
 pub mod basic_2d_textures;
 pub mod basic_2d_transformations;
+pub mod basic_3d_geometries;
 
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 13] = [
+static TESTS: [(TestFunction, TestName); 14] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -77,6 +79,10 @@ static TESTS: [(TestFunction, TestName); 13] = [
     (
         test_2d_triangle_rotation_scale_perspective,
         "test_2d_triangle_rotation_scale_perspective",
+    ),
+    (
+        test_3d_gold_cube_on_green_background,
+        "test_3d_gold_cube_on_green_background",
     ),
 ];
 

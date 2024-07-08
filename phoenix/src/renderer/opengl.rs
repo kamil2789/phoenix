@@ -6,10 +6,10 @@ use geometry_rendering::{set_uniform_bool, set_uniform_color, set_uniform_matrix
 
 use super::{Error, Render, ID};
 use crate::components::color::{Color, RGBA};
-use crate::components::geometry::{Shape, ShapeType};
 use crate::components::shaders::ShaderSource;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
+use crate::components::{Shape, ShapeType};
 use crate::entities::entity::View;
 use crate::renderer::Result;
 
@@ -26,6 +26,7 @@ pub struct OpenGL {
     shaders_id: HashMap<EntityID, ShaderID>,
     compiled_shaders: HashMap<Rc<ShaderSource>, ShaderID>,
     buffers: HashMap<EntityID, Buffers>,
+    shapes_type: HashMap<EntityID, ShapeType>,
     textures: HashMap<EntityID, TextureID>,
 }
 
@@ -57,7 +58,11 @@ impl Render for OpenGL {
         unsafe {
             let rgba = color.get_as_normalized_f32();
             gl::ClearColor(rgba[0], rgba[1], rgba[2], rgba[3]);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            if gl::IsEnabled(gl::DEPTH_TEST) == gl::TRUE {
+                gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+            } else {
+                gl::Clear(gl::COLOR_BUFFER_BIT);
+            }
         }
     }
 
@@ -78,6 +83,8 @@ impl Render for OpenGL {
             if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
                 OpenGL::set_uniform_shader_variables(&entity, *shader_id)?;
             }
+
+            self.shapes_type.insert(entity.entity_id, shape.get_type());
         }
 
         if let Some(texture) = entity.texture {
@@ -89,7 +96,6 @@ impl Render for OpenGL {
     }
 
     fn draw_entity(&self, entity_id: ID) {
-        //support only triangles
         unsafe {
             if let Some(shader) = self.shaders_id.get(&entity_id) {
                 gl::UseProgram(*shader);
@@ -101,7 +107,13 @@ impl Render for OpenGL {
 
             if let Some(triangle) = self.buffers.get(&entity_id) {
                 gl::BindVertexArray(triangle.vertex_array_object);
-                gl::DrawArrays(gl::TRIANGLES, 0, 3);
+                if let Some(shape_type) = self.shapes_type.get(&entity_id) {
+                    gl::DrawArrays(
+                        gl::TRIANGLES,
+                        0,
+                        OpenGL::get_vertices_by_shape_type(shape_type).into(),
+                    );
+                }
             }
         }
     }
@@ -143,6 +155,13 @@ impl Render for OpenGL {
         }
         Ok(())
     }
+
+    //TODO ADD RESULT
+    fn enable_3d(&self) {
+        unsafe {
+            gl::Enable(gl::DEPTH_TEST);
+        }
+    }
 }
 
 impl OpenGL {
@@ -158,25 +177,27 @@ impl OpenGL {
 
     fn handle_vertices(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
         match shape.get_type() {
-            ShapeType::Triangle => {
-                if entity.texture.is_some() {
-                    if let Some(val) = entity.color {
-                        if let Some(tmp) = val.as_ref_vertices() {
-                            return Ok(geometry_rendering::init_triangle_with_color_and_texture(
-                                shape.get_vertices(),
-                                tmp,
-                            ));
-                        }
-                    }
-                    Ok(geometry_rendering::init_triangle_with_texture(
+            ShapeType::Cube | ShapeType::Triangle => OpenGL::handle_triangle(shape, entity),
+        }
+    }
+
+    fn handle_triangle(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
+        if entity.texture.is_some() {
+            if let Some(val) = entity.color {
+                if let Some(tmp) = val.as_ref_vertices() {
+                    return Ok(geometry_rendering::init_triangle_with_color_and_texture(
                         shape.get_vertices(),
-                    ))
-                } else if let Some(val_color) = entity.color {
-                    OpenGL::handle_colored_triangle(shape, val_color)
-                } else {
-                    Ok(geometry_rendering::init_triangle(shape.get_vertices()))
+                        tmp,
+                    ));
                 }
             }
+            Ok(geometry_rendering::init_triangle_with_texture(
+                shape.get_vertices(),
+            ))
+        } else if let Some(val_color) = entity.color {
+            OpenGL::handle_colored_triangle(shape, val_color)
+        } else {
+            Ok(geometry_rendering::init_triangle(shape.get_vertices()))
         }
     }
 
@@ -207,6 +228,13 @@ impl OpenGL {
 
         Ok(())
     }
+
+    fn get_vertices_by_shape_type(shape: &ShapeType) -> u8 {
+        match shape {
+            ShapeType::Triangle => 3,
+            ShapeType::Cube => 36,
+        }
+    }
 }
 
 impl Drop for OpenGL {
@@ -226,7 +254,7 @@ mod tests {
     use crate::renderer::shaders::UNIFORM_TRIANGLE_FRAG;
     use crate::window::{GlfwConfig, Resolution};
     use crate::{
-        components::{geometry::Triangle, shaders::ShaderSource},
+        components::{plane_geometry::Triangle, shaders::ShaderSource},
         entities::entity::View,
         renderer::{shaders::UNIFORM_TRIANGLE_VERT, Render},
     };

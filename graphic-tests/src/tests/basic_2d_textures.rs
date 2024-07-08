@@ -3,7 +3,7 @@ use std::{path::Path, rc::Rc};
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        geometry::Triangle,
+        plane_geometry::Triangle,
         texture::{load, Config, Filtering, MinFiltering, Texture, Wrapping},
         Component,
     },
