@@ -3,12 +3,12 @@ use std::rc::Rc;
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        plane_geometry::Triangle,
+        plane_geometry::{Circle, Point, Triangle},
         Component,
     },
     entities::entity::Entity,
     renderer::Render,
-    systems::scene::Scene,
+    systems::{scaler::Scaler, scene::Scene},
     window::Window,
 };
 
@@ -136,5 +136,22 @@ pub fn test_2d_three_triangles_colors_uniform_vertex(window: Rc<Window>, render:
     scene.add_entity(green_triangle);
     scene.add_entity(disco_triangle);
     scene.add_entity(second_disco_triangle);
+    scene.start_one_frame().unwrap();
+}
+
+pub fn test_2d_blue_circle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
+    let scaler = Scaler::new(window.get_resolution());
+    let mut scene = Scene::new(window, render);
+
+    let radius = scaler.radius(0.5);
+    let circle = Circle::new(&Point::new_normalized(0.0, 0.0, 0.0), &radius, 32);
+
+    let mut entity = Entity::default();
+    entity.add_component(Component::Geometry(Box::new(circle)));
+    entity.add_component(Component::Color(Color::from_hex(0x00_00_EF_FF)));
+
+    scene.add_entity(entity);
+
+    scene.set_background_color(RGBA::from_hex(0x00_FF_00_FF));
     scene.start_one_frame().unwrap();
 }

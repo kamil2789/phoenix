@@ -34,13 +34,15 @@ pub struct OpenGL {
 struct Buffers {
     pub vertex_array_object: u32,
     pub vertex_buffer_object: u32,
+    pub indices: u8,
 }
 
 impl Buffers {
-    fn new(vertex_array_object: u32, vertex_buffer_object: u32) -> Buffers {
+    fn new(vertex_array_object: u32, vertex_buffer_object: u32, indices: u8) -> Buffers {
         Buffers {
             vertex_array_object,
             vertex_buffer_object,
+            indices,
         }
     }
 }
@@ -105,14 +107,17 @@ impl Render for OpenGL {
                 gl::BindTexture(gl::TEXTURE_2D, *texture);
             }
 
-            if let Some(triangle) = self.buffers.get(&entity_id) {
-                gl::BindVertexArray(triangle.vertex_array_object);
+            if let Some(buffer) = self.buffers.get(&entity_id) {
+                gl::BindVertexArray(buffer.vertex_array_object);
                 if let Some(shape_type) = self.shapes_type.get(&entity_id) {
-                    gl::DrawArrays(
-                        gl::TRIANGLES,
-                        0,
-                        OpenGL::get_vertices_by_shape_type(shape_type).into(),
-                    );
+                    match shape_type {
+                        ShapeType::Triangle | ShapeType::Cube => {
+                            gl::DrawArrays(gl::TRIANGLES, 0, buffer.indices.into())
+                        }
+                        ShapeType::Circle => {
+                            gl::DrawArrays(gl::TRIANGLE_FAN, 1, i32::from(buffer.indices - 1))
+                        }
+                    };
                 }
             }
         }
@@ -177,7 +182,9 @@ impl OpenGL {
 
     fn handle_vertices(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
         match shape.get_type() {
-            ShapeType::Cube | ShapeType::Triangle => OpenGL::handle_triangle(shape, entity),
+            ShapeType::Cube | ShapeType::Triangle | ShapeType::Circle => {
+                OpenGL::handle_triangle(shape, entity)
+            }
         }
     }
 
@@ -227,13 +234,6 @@ impl OpenGL {
         }
 
         Ok(())
-    }
-
-    fn get_vertices_by_shape_type(shape: &ShapeType) -> u8 {
-        match shape {
-            ShapeType::Triangle => 3,
-            ShapeType::Cube => 36,
-        }
     }
 }
 

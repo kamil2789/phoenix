@@ -12,7 +12,7 @@ use std::ffi::CString;
 //RESULT TYPE SHOULD BE RESULT<T, ERR> - CHECK FOR ERR CASE
 #[must_use]
 pub fn init_triangle(vertices: &[f32]) -> Buffers {
-    let buffers = generate_buffers();
+    let buffers = generate_buffers(vertices);
     bind_buffers(&buffers);
     send_data_to_cpu_buffer(vertices);
     //layout 0, 3 vertices and no other attributes 0
@@ -22,7 +22,7 @@ pub fn init_triangle(vertices: &[f32]) -> Buffers {
 }
 
 pub fn init_triangle_with_color(position: &[f32], color: &[f32]) -> Buffers {
-    let buffers = generate_buffers();
+    let buffers = generate_buffers(position);
     bind_buffers(&buffers);
     let vertices = combine_position_with_color(position, color);
     send_data_to_cpu_buffer(&vertices);
@@ -35,7 +35,7 @@ pub fn init_triangle_with_color(position: &[f32], color: &[f32]) -> Buffers {
 }
 
 pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
-    let buffers = generate_buffers();
+    let buffers = generate_buffers(position);
     bind_buffers(&buffers);
 
     let vertices = if position.len() > 100 {
@@ -54,7 +54,7 @@ pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
 }
 
 pub fn init_triangle_with_color_and_texture(position: &[f32], color: &[f32]) -> Buffers {
-    let buffers = generate_buffers();
+    let buffers = generate_buffers(position);
     bind_buffers(&buffers);
     let vertices = combine_position_with_color_and_texture(position, color);
     send_data_to_cpu_buffer(&vertices);
@@ -184,14 +184,19 @@ fn combine_position_with_color_and_texture(position: &[f32], color: &[f32]) -> V
     result
 }
 
-fn generate_buffers() -> Buffers {
+fn generate_buffers(vertices: &[f32]) -> Buffers {
     let mut vertex_array_object = 0;
     let mut vertex_buffer_object = 0;
     unsafe {
         gl::GenVertexArrays(1, &mut vertex_array_object);
         gl::GenBuffers(1, &mut vertex_buffer_object);
     }
-    Buffers::new(vertex_array_object, vertex_buffer_object)
+
+    Buffers::new(
+        vertex_array_object,
+        vertex_buffer_object,
+        u8::try_from(vertices.len() / 3).unwrap_or(0),
+    )
 }
 
 fn bind_buffers(buffers: &Buffers) {
@@ -202,7 +207,7 @@ fn bind_buffers(buffers: &Buffers) {
 }
 
 fn send_data_to_cpu_buffer(vertices: &[f32]) {
-    let size = vertices.len() * std::mem::size_of_val(vertices);
+    let size = std::mem::size_of_val(vertices);
     unsafe {
         gl::BufferData(
             gl::ARRAY_BUFFER,

@@ -96,7 +96,6 @@ impl Scene {
 
     fn frame(&mut self) -> Result<()> {
         self.renderer.set_background_color(&self.background_color);
-
         let keys = self.entity_manager.get_keys();
         for key in keys {
             let id = self
@@ -105,14 +104,12 @@ impl Scene {
             if let Some(transformer) = self.entity_manager.as_ref_transformers(key) {
                 self.renderer.perform_transformations(id, transformer)?;
             }
-
             if let Some(cam) = &self.camera {
                 self.renderer
                     .perform_camera_transformation(id, cam.get_projection())?;
             }
             self.renderer.draw_entity(id);
         }
-
         self.window.swap_buffers();
         Window::poll_events();
         Ok(())

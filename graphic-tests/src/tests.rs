@@ -4,9 +4,9 @@ use crate::{
     workspace::{TEST_FILE_EXTENSION, TEST_RESULTS_DIR, TEST_TEMPLATE_DIR},
 };
 use basic_2d_geometries::{
-    test_2d_default_color_on_default_background, test_2d_red_triangle_on_green_background,
-    test_2d_three_triangles_colors_uniform_vertex, test_2d_triangle_with_colored_vertices,
-    test_2d_two_triangles_green_blue,
+    test_2d_blue_circle_on_green_background, test_2d_default_color_on_default_background,
+    test_2d_red_triangle_on_green_background, test_2d_three_triangles_colors_uniform_vertex,
+    test_2d_triangle_with_colored_vertices, test_2d_two_triangles_green_blue,
 };
 use basic_2d_textures::{
     test_2d_brick_wall_disco_triangle, test_2d_brick_wall_triangle,
@@ -33,7 +33,7 @@ pub mod basic_3d_geometries;
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 14] = [
+static TESTS: [(TestFunction, TestName); 15] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -83,6 +83,10 @@ static TESTS: [(TestFunction, TestName); 14] = [
     (
         test_3d_gold_cube_on_green_background,
         "test_3d_gold_cube_on_green_background",
+    ),
+    (
+        test_2d_blue_circle_on_green_background,
+        "test_2d_blue_circle_on_green_background",
     ),
 ];
 

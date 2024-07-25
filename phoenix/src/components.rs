@@ -39,6 +39,7 @@ pub trait Shape {
 #[derive(PartialEq, Debug, Clone)]
 pub enum ShapeType {
     Triangle,
+    Circle,
     Cube,
 }
 
