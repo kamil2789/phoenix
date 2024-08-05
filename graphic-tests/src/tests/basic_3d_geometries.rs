@@ -4,7 +4,8 @@ use cgmath::vec3;
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        solid_geometry::Cube,
+        geometry::solid::{Cube, Sphere},
+        geometry::Point,
         texture::{self, load, Filtering, MinFiltering, Mipmaps, Texture, Wrapping},
         transformer::Builder,
         Component,
@@ -48,6 +49,27 @@ pub fn test_3d_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn
 
     scene.set_background_color(RGBA::from_hex(0x56_7D_46_FF));
     scene.register_camera(&camera::Config::default());
+    scene.set_current_window().unwrap();
+    scene.enable_3d();
+    scene.start_one_frame().unwrap();
+}
+
+pub fn test_3d_red_sphere_on_green_screen(window: Rc<Window>, render: Box<dyn Render>) {
+    let mut scene = Scene::new(window, render);
+
+    let sphere = Sphere::new(
+        &Point::new_normalized(0.0, 0.0, 0.0),
+        0.25,
+        16,
+    );
+
+    let mut entity = Entity::default();
+    entity.add_component(Component::Geometry(Box::new(sphere)));
+    entity.add_component(Component::Color(Color::from_hex(0xFF_00_00_FF)));
+
+    scene.add_entity(entity);
+
+    scene.set_background_color(RGBA::from_hex(0x00_FF_00_FF));
     scene.set_current_window().unwrap();
     scene.enable_3d();
     scene.start_one_frame().unwrap();

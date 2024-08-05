@@ -34,11 +34,11 @@ pub struct OpenGL {
 struct Buffers {
     pub vertex_array_object: u32,
     pub vertex_buffer_object: u32,
-    pub indices: u8,
+    pub indices: u16
 }
 
 impl Buffers {
-    fn new(vertex_array_object: u32, vertex_buffer_object: u32, indices: u8) -> Buffers {
+    fn new(vertex_array_object: u32, vertex_buffer_object: u32, indices: u16) -> Buffers {
         Buffers {
             vertex_array_object,
             vertex_buffer_object,
@@ -112,11 +112,13 @@ impl Render for OpenGL {
                 if let Some(shape_type) = self.shapes_type.get(&entity_id) {
                     match shape_type {
                         ShapeType::Triangle | ShapeType::Cube => {
-                            gl::DrawArrays(gl::TRIANGLES, 0, buffer.indices.into())
+                            gl::DrawArrays(gl::TRIANGLES, 0, buffer.indices.into());
                         }
-                        ShapeType::Circle => {
-                            gl::DrawArrays(gl::TRIANGLE_FAN, 1, i32::from(buffer.indices - 1))
-                        }
+                        ShapeType::Circle => 
+                            gl::DrawArrays(gl::TRIANGLE_FAN, 1, i32::from(buffer.indices - 1)),
+                        
+
+                        ShapeType::Sphere => gl::DrawArrays(1, 0, buffer.indices.into()),
                     };
                 }
             }
@@ -182,37 +184,37 @@ impl OpenGL {
 
     fn handle_vertices(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
         match shape.get_type() {
-            ShapeType::Cube | ShapeType::Triangle | ShapeType::Circle => {
-                OpenGL::handle_triangle(shape, entity)
+            ShapeType::Cube | ShapeType::Triangle | ShapeType::Circle | ShapeType::Sphere => {
+                OpenGL::handle_shape(shape, entity)
             }
         }
     }
 
-    fn handle_triangle(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
+    fn handle_shape(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
         if entity.texture.is_some() {
             if let Some(val) = entity.color {
                 if let Some(tmp) = val.as_ref_vertices() {
-                    return Ok(geometry_rendering::init_triangle_with_color_and_texture(
+                    return Ok(geometry_rendering::init_shape_with_color_and_texture(
                         shape.get_vertices(),
                         tmp,
                     ));
                 }
             }
-            Ok(geometry_rendering::init_triangle_with_texture(
+            Ok(geometry_rendering::init_shape_with_texture(
                 shape.get_vertices(),
             ))
         } else if let Some(val_color) = entity.color {
             OpenGL::handle_colored_triangle(shape, val_color)
         } else {
-            Ok(geometry_rendering::init_triangle(shape.get_vertices()))
+            Ok(geometry_rendering::init_shape(shape.get_vertices()))
         }
     }
 
     fn handle_colored_triangle(shape: &dyn Shape, color: &Color) -> Result<Buffers> {
         if color.as_ref_uniform().is_some() {
-            Ok(geometry_rendering::init_triangle(shape.get_vertices()))
+            Ok(geometry_rendering::init_shape(shape.get_vertices()))
         } else if let Some(vert_color) = color.as_ref_vertices() {
-            Ok(geometry_rendering::init_triangle_with_color(
+            Ok(geometry_rendering::init_shape_with_color(
                 shape.get_vertices(),
                 vert_color,
             ))
@@ -254,7 +256,7 @@ mod tests {
     use crate::renderer::shaders::UNIFORM_TRIANGLE_FRAG;
     use crate::window::{GlfwConfig, Resolution};
     use crate::{
-        components::{plane_geometry::Triangle, shaders::ShaderSource},
+        components::{geometry::plane::Triangle, shaders::ShaderSource},
         entities::entity::View,
         renderer::{shaders::UNIFORM_TRIANGLE_VERT, Render},
     };

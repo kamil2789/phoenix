@@ -194,7 +194,7 @@ impl IdGarbageCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::plane_geometry::Triangle;
+    use crate::components::geometry::plane::Triangle;
 
     #[test]
     fn test_new_manager() {

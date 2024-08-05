@@ -3,7 +3,10 @@ use std::rc::Rc;
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        plane_geometry::{Circle, Point, Triangle},
+        geometry::{
+            plane::{Circle, Triangle},
+            Point,
+        },
         Component,
     },
     entities::entity::Entity,

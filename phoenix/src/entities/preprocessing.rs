@@ -102,7 +102,7 @@ mod tests {
     use super::preprocessing;
     use crate::{
         components::{
-            color::Color, plane_geometry::Triangle, shaders::ShaderSource, texture::Texture,
+            color::Color, geometry::plane::Triangle, shaders::ShaderSource, texture::Texture,
             Component,
         },
         entities::entity::Entity,

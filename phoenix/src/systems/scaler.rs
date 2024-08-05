@@ -1,4 +1,4 @@
-use crate::{components::plane_geometry::Radius, window::Resolution};
+use crate::{components::geometry::Radius, window::Resolution};
 
 pub struct Scaler {
     resolution: Resolution,

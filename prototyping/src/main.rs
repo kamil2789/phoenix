@@ -1,7 +1,7 @@
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        plane_geometry::Triangle,
+        geometry::plane::Triangle,
         Component,
     },
     entities::entity::Entity,

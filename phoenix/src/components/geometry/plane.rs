@@ -1,20 +1,9 @@
-use super::{Shape, ShapeType};
+use super::{Point, Radius};
+use crate::components::{Shape, ShapeType};
 
 #[derive(Clone)]
 pub struct Triangle {
     vertices: [f32; 9],
-}
-
-#[derive(Clone)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-pub struct Radius {
-    pub width: f32,
-    pub height: f32,
 }
 
 pub struct Circle {
@@ -48,33 +37,6 @@ impl Shape for Circle {
     }
 }
 
-impl Point {
-    #[must_use]
-    pub fn new_normalized(x: f32, y: f32, z: f32) -> Self {
-        Self {
-            x: Self::normalize(x),
-            y: Self::normalize(y),
-            z: Self::normalize(z),
-        }
-    }
-
-    fn normalize(value: f32) -> f32 {
-        if value < 0.0 {
-            0.0
-        } else if value > 1.0 {
-            1.0
-        } else {
-            value
-        }
-    }
-}
-
-impl From<Point> for Vec<f32> {
-    fn from(point: Point) -> Self {
-        vec![point.x, point.y, point.z]
-    }
-}
-
 impl Circle {
     #[must_use]
     pub fn new(center: &Point, radius: &Radius, mut segments: u8) -> Self {
@@ -101,7 +63,7 @@ impl Circle {
 
 #[cfg(test)]
 mod tests {
-    use crate::components::plane_geometry::{Shape, ShapeType, Triangle}; // Import the Shape trait and ShapeType enum.
+    use crate::components::geometry::plane::{Shape, ShapeType, Triangle}; // Import the Shape trait and ShapeType enum.
 
     #[test]
     fn test_new_triangle() {

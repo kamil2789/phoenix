@@ -11,7 +11,7 @@ use std::ffi::CString;
 
 //RESULT TYPE SHOULD BE RESULT<T, ERR> - CHECK FOR ERR CASE
 #[must_use]
-pub fn init_triangle(vertices: &[f32]) -> Buffers {
+pub fn init_shape(vertices: &[f32]) -> Buffers {
     let buffers = generate_buffers(vertices);
     bind_buffers(&buffers);
     send_data_to_cpu_buffer(vertices);
@@ -21,7 +21,7 @@ pub fn init_triangle(vertices: &[f32]) -> Buffers {
     buffers
 }
 
-pub fn init_triangle_with_color(position: &[f32], color: &[f32]) -> Buffers {
+pub fn init_shape_with_color(position: &[f32], color: &[f32]) -> Buffers {
     let buffers = generate_buffers(position);
     bind_buffers(&buffers);
     let vertices = combine_position_with_color(position, color);
@@ -34,7 +34,7 @@ pub fn init_triangle_with_color(position: &[f32], color: &[f32]) -> Buffers {
     buffers
 }
 
-pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
+pub fn init_shape_with_texture(position: &[f32]) -> Buffers {
     let buffers = generate_buffers(position);
     bind_buffers(&buffers);
 
@@ -53,7 +53,7 @@ pub fn init_triangle_with_texture(position: &[f32]) -> Buffers {
     buffers
 }
 
-pub fn init_triangle_with_color_and_texture(position: &[f32], color: &[f32]) -> Buffers {
+pub fn init_shape_with_color_and_texture(position: &[f32], color: &[f32]) -> Buffers {
     let buffers = generate_buffers(position);
     bind_buffers(&buffers);
     let vertices = combine_position_with_color_and_texture(position, color);
@@ -195,7 +195,7 @@ fn generate_buffers(vertices: &[f32]) -> Buffers {
     Buffers::new(
         vertex_array_object,
         vertex_buffer_object,
-        u8::try_from(vertices.len() / 3).unwrap_or(0),
+        u16::try_from(vertices.len() / 3).unwrap_or(0),
     )
 }
 
@@ -262,7 +262,7 @@ mod tests {
         window.set_current().unwrap();
 
         let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
-        let buffers = super::init_triangle(&vertices);
+        let buffers = super::init_shape(&vertices);
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
     }

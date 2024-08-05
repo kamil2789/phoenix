@@ -128,7 +128,7 @@ mod tests {
         use crate::{
             components::{
                 color::{Color, RGBA},
-                plane_geometry::Triangle,
+                geometry::plane::Triangle,
                 shaders::ShaderSource,
                 texture::Texture,
                 Component,

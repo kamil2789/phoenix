@@ -5,9 +5,8 @@ use transformer::Transformer;
 use self::shaders::ShaderSource;
 
 pub mod color;
-pub mod plane_geometry;
+pub mod geometry;
 pub mod shaders;
-pub mod solid_geometry;
 pub mod texture;
 pub mod transformer;
 
@@ -31,6 +30,13 @@ pub enum Component {
     Transformer(Transformer),
 }
 
+#[derive(Clone)]
+pub enum FillMode {
+    Lines,
+    Solid,
+}
+
+
 pub trait Shape {
     fn get_vertices(&self) -> &[f32];
     fn get_type(&self) -> ShapeType;
@@ -41,6 +47,13 @@ pub enum ShapeType {
     Triangle,
     Circle,
     Cube,
+    Sphere,
+}
+
+impl Default for FillMode {
+    fn default() -> Self {
+        Self::Solid
+    }
 }
 
 #[cfg(test)]
