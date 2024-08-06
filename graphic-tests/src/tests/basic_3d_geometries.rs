@@ -4,15 +4,17 @@ use cgmath::vec3;
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        geometry::solid::{Cube, Sphere},
-        geometry::Point,
+        geometry::{
+            solid::{Cube, Sphere},
+            Point,
+        },
         texture::{self, load, Filtering, MinFiltering, Mipmaps, Texture, Wrapping},
         transformer::Builder,
-        Component,
+        Component, FillMode,
     },
     entities::entity::Entity,
     renderer::Render,
-    systems::{camera, scene::Scene},
+    systems::{camera, scaler::Scaler, scene::Scene},
     window::Window,
 };
 
@@ -55,14 +57,14 @@ pub fn test_3d_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn
 }
 
 pub fn test_3d_red_sphere_on_green_screen(window: Rc<Window>, render: Box<dyn Render>) {
+    let scaler = Scaler::new(window.get_resolution());
     let mut scene = Scene::new(window, render);
 
-    let sphere = Sphere::new(
-        &Point::new_normalized(0.0, 0.0, 0.0),
-        0.25,
-        16,
-    );
+    let radius = scaler.radius(0.25);
 
+    let mut sphere = Sphere::new(&Point::new_normalized(0.0, 0.0, 0.0), &radius, 16);
+
+    sphere.set_fill_mode(FillMode::Lines);
     let mut entity = Entity::default();
     entity.add_component(Component::Geometry(Box::new(sphere)));
     entity.add_component(Component::Color(Color::from_hex(0xFF_00_00_FF)));

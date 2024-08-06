@@ -30,16 +30,19 @@ pub enum Component {
     Transformer(Transformer),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum FillMode {
     Lines,
     Solid,
+    Fan,
 }
-
 
 pub trait Shape {
     fn get_vertices(&self) -> &[f32];
     fn get_type(&self) -> ShapeType;
+    fn get_fill_mode(&self) -> FillMode {
+        FillMode::Solid
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]

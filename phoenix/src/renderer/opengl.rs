@@ -9,7 +9,7 @@ use crate::components::color::{Color, RGBA};
 use crate::components::shaders::ShaderSource;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
-use crate::components::{Shape, ShapeType};
+use crate::components::{FillMode, Shape, ShapeType};
 use crate::entities::entity::View;
 use crate::renderer::Result;
 
@@ -28,13 +28,14 @@ pub struct OpenGL {
     buffers: HashMap<EntityID, Buffers>,
     shapes_type: HashMap<EntityID, ShapeType>,
     textures: HashMap<EntityID, TextureID>,
+    shape_fill_mode: HashMap<EntityID, u32>,
 }
 
 #[derive(Clone, Default)]
 struct Buffers {
     pub vertex_array_object: u32,
     pub vertex_buffer_object: u32,
-    pub indices: u16
+    pub indices: u16,
 }
 
 impl Buffers {
@@ -80,13 +81,17 @@ impl Render for OpenGL {
         }
 
         if let Some(shape) = entity.shape {
-            let buffers = OpenGL::handle_vertices(shape, &entity)?;
+            let buffers = OpenGL::handle_shape(shape, &entity)?;
             self.buffers.insert(entity.entity_id, buffers);
             if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
                 OpenGL::set_uniform_shader_variables(&entity, *shader_id)?;
             }
 
             self.shapes_type.insert(entity.entity_id, shape.get_type());
+            self.shape_fill_mode.insert(
+                entity.entity_id,
+                OpenGL::match_fill_mode(shape.get_fill_mode()),
+            );
         }
 
         if let Some(texture) = entity.texture {
@@ -110,15 +115,17 @@ impl Render for OpenGL {
             if let Some(buffer) = self.buffers.get(&entity_id) {
                 gl::BindVertexArray(buffer.vertex_array_object);
                 if let Some(shape_type) = self.shapes_type.get(&entity_id) {
+                    let mode: u32 = *self
+                        .shape_fill_mode
+                        .get(&entity_id)
+                        .unwrap_or(&gl::TRIANGLES);
                     match shape_type {
                         ShapeType::Triangle | ShapeType::Cube => {
-                            gl::DrawArrays(gl::TRIANGLES, 0, buffer.indices.into());
+                            gl::DrawArrays(mode, 0, buffer.indices.into());
                         }
-                        ShapeType::Circle => 
-                            gl::DrawArrays(gl::TRIANGLE_FAN, 1, i32::from(buffer.indices - 1)),
-                        
+                        ShapeType::Circle => gl::DrawArrays(mode, 1, i32::from(buffer.indices - 1)),
 
-                        ShapeType::Sphere => gl::DrawArrays(1, 0, buffer.indices.into()),
+                        ShapeType::Sphere => gl::DrawArrays(mode, 0, buffer.indices.into()),
                     };
                 }
             }
@@ -182,11 +189,11 @@ impl OpenGL {
         Ok(result)
     }
 
-    fn handle_vertices(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
-        match shape.get_type() {
-            ShapeType::Cube | ShapeType::Triangle | ShapeType::Circle | ShapeType::Sphere => {
-                OpenGL::handle_shape(shape, entity)
-            }
+    fn match_fill_mode(mode: FillMode) -> u32 {
+        match mode {
+            FillMode::Lines => gl::LINES,
+            FillMode::Solid => gl::TRIANGLES,
+            FillMode::Fan => gl::TRIANGLE_FAN,
         }
     }
 

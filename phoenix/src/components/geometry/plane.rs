@@ -1,5 +1,5 @@
 use super::{Point, Radius};
-use crate::components::{Shape, ShapeType};
+use crate::components::{FillMode, Shape, ShapeType};
 
 #[derive(Clone)]
 pub struct Triangle {
@@ -34,6 +34,10 @@ impl Shape for Circle {
 
     fn get_type(&self) -> ShapeType {
         ShapeType::Circle
+    }
+
+    fn get_fill_mode(&self) -> FillMode {
+        FillMode::Fan
     }
 }
 

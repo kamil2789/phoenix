@@ -1,14 +1,14 @@
-use crate::components::{Shape, ShapeType};
+use crate::components::{FillMode, Shape, ShapeType};
 
-use super::Point;
-
+use super::{Point, Radius};
 
 pub struct Cube {
     vertices: [f32; 108],
 }
 
 pub struct Sphere {
-    vertices: Vec<f32>
+    vertices: Vec<f32>,
+    mode: FillMode,
 }
 
 impl Cube {
@@ -41,33 +41,38 @@ impl Cube {
 
 impl Sphere {
     #[must_use]
-    pub fn new(center: &Point, radius: f32, precision: u16) -> Self {
+    pub fn new(center: &Point, radius: &Radius, precision: u16) -> Self {
         let mut vertices: Vec<Vec<Point>> = Vec::new();
-        vertices.push(Sphere::calculate_upper_point(center, radius));
+        vertices.push(Sphere::calculate_upper_point(center, radius.height));
         vertices.extend(Sphere::calculate_sector_points(center, radius, precision));
-        vertices.push(Sphere::calculate_bottom_point(center, radius));
+        vertices.push(Sphere::calculate_bottom_point(center, radius.height));
         Self {
             vertices: Sphere::generate_geometry(&vertices, precision),
+            mode: FillMode::Solid,
         }
     }
 
-    fn calculate_upper_point(center: &Point, radius: f32) -> Vec<Point> {
+    pub fn set_fill_mode(&mut self, mode: FillMode) {
+        self.mode = mode;
+    }
+
+    fn calculate_upper_point(center: &Point, height_radius: f32) -> Vec<Point> {
         vec![Point {
             x: center.x,
             y: center.y,
-            z: radius + center.z,
+            z: height_radius + center.z,
         }]
     }
 
-    fn calculate_bottom_point(center: &Point, radius: f32) -> Vec<Point> {
+    fn calculate_bottom_point(center: &Point, height_radius: f32) -> Vec<Point> {
         vec![Point {
             x: center.x,
             y: center.y,
-            z: -radius + center.z,
+            z: -height_radius + center.z,
         }]
     }
 
-    fn calculate_sector_points(center: &Point, radius: f32, precision: u16) -> Vec<Vec<Point>> {
+    fn calculate_sector_points(center: &Point, radius: &Radius, precision: u16) -> Vec<Vec<Point>> {
         let mut result: Vec<Vec<Point>> = Vec::new();
         let sector_angle_leap = 360_f32 / f32::from(precision * 3);
         let stack_angle_leap = 180_f32 / f32::from(precision);
@@ -90,12 +95,17 @@ impl Sphere {
         result
     }
 
-    fn calculate_point(center: &Point, radius: f32, sector_angle: f32, stack_angle: f32) -> Point {
+    fn calculate_point(
+        center: &Point,
+        radius: &Radius,
+        sector_angle: f32,
+        stack_angle: f32,
+    ) -> Point {
         let radian_sector_angle = f32::to_radians(sector_angle);
         let radian_stack_angle = f32::to_radians(stack_angle);
-        let x = radius * f32::cos(radian_stack_angle) * f32::cos(radian_sector_angle);
-        let y = radius * f32::cos(radian_stack_angle) * f32::sin(radian_sector_angle);
-        let z = radius * f32::sin(radian_stack_angle);
+        let x = radius.width * f32::cos(radian_stack_angle) * f32::cos(radian_sector_angle);
+        let y = radius.height * f32::cos(radian_stack_angle) * f32::sin(radian_sector_angle);
+        let z = radius.height * f32::sin(radian_stack_angle);
         Point {
             x: x + center.x,
             y: y + center.y,
@@ -204,5 +214,55 @@ impl Shape for Sphere {
 
     fn get_type(&self) -> ShapeType {
         ShapeType::Sphere
+    }
+
+    fn get_fill_mode(&self) -> FillMode {
+        self.mode
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sphere_vertices_count() {
+        let center = Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let radius = Radius {
+            width: 1.0,
+            height: 1.0,
+        };
+        let precision = 10;
+        let sphere = Sphere::new(&center, &radius, precision);
+
+        // Calculate expected number of vertices
+        let expected_vertices = Sphere::estimate_buffer_len(precision);
+
+        assert_eq!(sphere.vertices.len(), expected_vertices);
+    }
+
+    #[test]
+    fn test_sphere_precision_effect() {
+        let center = Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let radius = Radius {
+            width: 1.0,
+            height: 1.0,
+        };
+
+        let low_precision = 5;
+        let high_precision = 10;
+
+        let low_precision_sphere = Sphere::new(&center, &radius, low_precision);
+        let high_precision_sphere = Sphere::new(&center, &radius, high_precision);
+
+        assert!(low_precision_sphere.vertices.len() < high_precision_sphere.vertices.len());
     }
 }
