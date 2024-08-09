@@ -57,6 +57,9 @@ pub trait Render {
         entity_id: ID,
         camera_matrix: &Matrix4<f32>,
     ) -> Result<()>;
+    /// # Errors
+    ///
+    /// Will return `Err` when transformation failed or cannot be applied.
     fn perform_camera_position_transformation(
         &mut self,
         entity_id: ID,

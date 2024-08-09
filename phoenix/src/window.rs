@@ -177,6 +177,7 @@ impl Window {
         (width, height)
     }
 
+    #[must_use]
     pub fn get_raw_mut_window(&self) -> *mut glfw_bindings::GLFWwindow {
         self.window
     }

@@ -18,7 +18,7 @@ pub(super) struct Camera {
     //near_plane: f32,
     //far_plane: f32,
     //field_of_vision: f32,
-    camera_speed: f32,
+    speed: f32,
     position: Point3<f32>,
     projection: Matrix4<f32>,
 }
@@ -43,26 +43,26 @@ impl Camera {
             //near_plane: camera_config.near_plane,
             //far_plane: camera_config.far_plane,
             //field_of_vision: camera_config.field_of_vision,
-            camera_speed: 0.1,
+            speed: 0.1,
             position: Point3::new(0.0, 0.0, 0.0),
             projection,
         }
     }
 
     pub fn move_forward(&mut self) {
-        self.position += self.camera_speed * CAMERA_FRONT;
+        self.position += self.speed * CAMERA_FRONT;
     }
 
     pub fn move_backward(&mut self) {
-        self.position += -(self.camera_speed * CAMERA_FRONT);
+        self.position += -(self.speed * CAMERA_FRONT);
     }
 
     pub fn move_left(&mut self) {
-        self.position += -(CAMERA_FRONT.cross(CAMERA_UP).normalize() * self.camera_speed);
+        self.position += -(CAMERA_FRONT.cross(CAMERA_UP).normalize() * self.speed);
     }
 
     pub fn move_right(&mut self) {
-        self.position += CAMERA_FRONT.cross(CAMERA_UP).normalize() * self.camera_speed;
+        self.position += CAMERA_FRONT.cross(CAMERA_UP).normalize() * self.speed;
     }
 
     #[must_use]

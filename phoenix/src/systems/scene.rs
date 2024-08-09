@@ -3,7 +3,7 @@ use std::rc::Rc;
 use super::camera::{Camera, Config};
 use crate::components::color::RGBA;
 use crate::entities::entity::{Entity, Manager};
-use crate::events::manager::EventManager;
+use crate::events::action::Action;
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
 use crate::{entities, events};
@@ -26,7 +26,7 @@ pub struct Scene {
     renderer: Box<dyn Render>,
     background_color: RGBA,
     camera: Option<Camera>,
-    pub event_manager: EventManager,
+    pub event_manager: events::Manager,
 }
 
 impl Scene {
@@ -38,7 +38,7 @@ impl Scene {
             renderer,
             background_color: RGBA::default(),
             camera: None,
-            event_manager: EventManager::new(window),
+            event_manager: events::Manager::new(window),
         }
     }
 
@@ -102,7 +102,7 @@ impl Scene {
     fn frame(&mut self) -> Result<()> {
         self.renderer.set_background_color(&self.background_color);
 
-        self.event_manager.process_key_callbacks()?;
+        self.handle_key_callbacks();
 
         let keys = self.entity_manager.get_keys();
         for key in keys {
@@ -123,6 +123,20 @@ impl Scene {
         self.window.swap_buffers();
         Window::poll_events();
         Ok(())
+    }
+
+    fn handle_key_callbacks(&mut self) {
+        if let Some(mut actions) = self.event_manager.process_key_callbacks() {
+            //write separate module (maybe action interpreter?)
+            if let Some(action) = actions.pop() {
+                match action {
+                    Action::CameraUpdateForward => self.camera.as_mut().unwrap().move_forward(),
+                    Action::CameraUpdateBackward => self.camera.as_mut().unwrap().move_backward(),
+                    Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(),
+                    Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(),
+                }
+            }
+        }
     }
 }
 

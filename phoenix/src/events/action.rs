@@ -1,1 +1,7 @@
-pub enum Action {}
+#[derive(Clone)]
+pub enum Action {
+    CameraUpdateForward,
+    CameraUpdateBackward,
+    CameraUpdateLeft,
+    CameraUpdateRight,
+}

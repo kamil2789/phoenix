@@ -12,7 +12,8 @@ use phoenix::{
     },
     entities::entity::Entity,
     events::{
-        keys_binding::{KEY_D, KEY_E},
+        action::Action,
+        keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W},
         user_input::UserInput,
     },
     renderer::opengl::OpenGL,
@@ -42,12 +43,24 @@ fn main() {
     let scaler = Scaler::new(window.get_resolution());
 
     let mut scene = Scene::new(window, render);
-    scene
-        .event_manager
-        .bind_key(UserInput::new_key_press(KEY_E.into()));
-    scene
-        .event_manager
-        .bind_key(UserInput::new_key_press(KEY_D.into()));
+    scene.event_manager.bind_key(
+        UserInput::new_key_press(KEY_A.into()),
+        Action::CameraUpdateLeft,
+    );
+    scene.event_manager.bind_key(
+        UserInput::new_key_press(KEY_D.into()),
+        Action::CameraUpdateRight,
+    );
+
+    scene.event_manager.bind_key(
+        UserInput::new_key_press(KEY_W.into()),
+        Action::CameraUpdateForward,
+    );
+
+    scene.event_manager.bind_key(
+        UserInput::new_key_press(KEY_S.into()),
+        Action::CameraUpdateBackward,
+    );
 
     let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
 
