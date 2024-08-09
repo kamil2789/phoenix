@@ -7,6 +7,7 @@ layout (location = 2) in vec2 in_texture_coord;
 uniform mat4 translation = mat4(0.0);
 uniform mat4 rotation = mat4(0.0);
 uniform mat4 scale = mat4(0.0);
+uniform mat4 camera_pos = mat4(0.0);
 uniform mat4 projection = mat4(0.0);
 
 out vec2 text_coord;
@@ -25,6 +26,10 @@ void main()
 
     if (scale != mat4(0.0)) {
         gl_Position = scale * gl_Position;
+    }
+
+    if (camera_pos != mat4(0.0)) {
+        gl_Position = camera_pos * gl_Position;
     }
 
     if (projection != mat4(0.0)) {

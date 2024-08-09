@@ -159,13 +159,24 @@ impl Render for OpenGL {
         }
     }
 
-    fn perform_camera_transformation(
+    fn perform_camera_projection_transformation(
         &mut self,
         entity_id: ID,
         camera_matrix: &Matrix4<f32>,
     ) -> Result<()> {
         if let Some(shader) = self.shaders_id.get(&entity_id) {
             set_uniform_matrix4f("projection", camera_matrix, *shader)?;
+        }
+        Ok(())
+    }
+
+    fn perform_camera_position_transformation(
+        &mut self,
+        entity_id: ID,
+        camera_matrix: &Matrix4<f32>,
+    ) -> Result<()> {
+        if let Some(shader) = self.shaders_id.get(&entity_id) {
+            set_uniform_matrix4f("camera_pos", camera_matrix, *shader)?;
         }
         Ok(())
     }

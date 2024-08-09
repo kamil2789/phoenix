@@ -1,15 +1,25 @@
+use cgmath::vec3;
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        geometry::plane::Triangle,
-        Component,
+        geometry::{
+            solid::{Cube, Sphere},
+            Point,
+        },
+        texture::{self, load, Filtering, MinFiltering, Mipmaps, Texture, Wrapping},
+        transformer::Builder,
+        Component, FillMode,
     },
     entities::entity::Entity,
+    events::{
+        keys_binding::{KEY_D, KEY_E},
+        user_input::UserInput,
+    },
     renderer::opengl::OpenGL,
-    systems::scene::Scene,
+    systems::{camera, scaler::Scaler, scene::Scene},
     window::{GlfwConfig, Resolution},
 };
-use std::rc::Rc;
+use std::{path::Path, rc::Rc};
 
 fn main() {
     println!("Hello, world!");
@@ -19,8 +29,8 @@ fn main() {
             .create_window(
                 "OpenGL",
                 Resolution {
-                    width: 800,
-                    height: 600,
+                    width: 1600,
+                    height: 900,
                 },
             )
             .unwrap(),
@@ -29,32 +39,60 @@ fn main() {
     window.set_current().unwrap();
 
     let render = Box::<OpenGL>::default();
+    let scaler = Scaler::new(window.get_resolution());
+
     let mut scene = Scene::new(window, render);
+    scene
+        .event_manager
+        .bind_key(UserInput::new_key_press(KEY_E.into()));
+    scene
+        .event_manager
+        .bind_key(UserInput::new_key_press(KEY_D.into()));
 
-    let vertices: [f32; 9] = [
-        -0.2, -0.2, 0.0, // left
-        0.0, 0.0, 0.0, // right
-        0.5, 0.0, 0.0, // top
-    ];
+    let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
 
-    let second_vertices: [f32; 9] = [
-        0.4, 0.4, 0.0, // left
-        0.9, 0.9, 0.0, // right
-        0.0, 0.9, 0.0, // top
-    ];
+    let texture_config = texture::Config {
+        wrapping_horizontal: Wrapping::Repeat,
+        wrapping_vertical: Wrapping::Repeat,
+        min_filtering: MinFiltering::Mimpmap(Mipmaps::LinearMipmapLinear),
+        max_filtering: Filtering::Nearest,
+    };
 
-    scene.set_background_color(RGBA::from_hex(0xFF_A5_90_FF));
-    let triangle = Triangle::new(vertices);
-    let green_triangle = Entity::new(vec![
-        Component::Geometry(Box::new(triangle)),
-        Component::Color(Color::from_hex(0x00_FF_00_FF)),
-    ]);
-    let blue_triangle = Entity::new(vec![
-        Component::Geometry(Box::new(Triangle::new(second_vertices))),
-        Component::Color(Color::from_hex(0x00_00_FF_FF)),
-    ]);
+    let path = "graphic-tests/assets/textures/brickwall.jpg";
+    let texture_data = load(Path::new(&path)).unwrap();
+    let texture = Texture::new(texture_data, texture_config);
 
-    scene.add_entity(green_triangle);
-    scene.add_entity(blue_triangle);
+    let mut entity = Entity::default();
+    entity.add_component(Component::Geometry(Box::new(cube)));
+    entity.add_component(Component::Color(Color::from_hex(0xFF_D7_00_FF)));
+    entity.add_component(Component::Texture(texture));
+    entity.add_component(Component::Transformer(
+        Builder::new()
+            .with_translation(vec3(0.0, 0.0, -3.0))
+            .with_custom_axis_rotation_angle(vec3(0.5, 1.0, 0.0), 60.0)
+            .build(),
+    ));
+
+    scene.add_entity(entity);
+
+    let radius = scaler.radius(0.2);
+    let mut sphere = Sphere::new(&Point::new_normalized(0.6, 0.6, 0.0), &radius, 16);
+
+    sphere.set_fill_mode(FillMode::Lines);
+    let mut entity_sphere = Entity::default();
+    entity_sphere.add_component(Component::Geometry(Box::new(sphere)));
+    entity_sphere.add_component(Component::Color(Color::from_hex(0xFF_00_00_FF)));
+    entity_sphere.add_component(Component::Transformer(
+        Builder::new()
+            .with_translation(vec3(0.0, 0.0, -5.0))
+            .build(),
+    ));
+
+    scene.add_entity(entity_sphere);
+
+    scene.set_background_color(RGBA::from_hex(0xD3_FF_CC_FF));
+    scene.register_camera(&camera::Config::default());
+    scene.enable_3d();
+
     scene.start().unwrap();
 }

@@ -2,10 +2,11 @@ use std::rc::Rc;
 
 use super::camera::{Camera, Config};
 use crate::components::color::RGBA;
-use crate::entities;
 use crate::entities::entity::{Entity, Manager};
+use crate::events::manager::EventManager;
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
+use crate::{entities, events};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -15,6 +16,8 @@ pub enum Error {
     WinError(#[from] WinError),
     #[error("Renderer error: {0}")]
     RendererError(#[from] renderer::Error),
+    #[error("Event error: {0}")]
+    EventError(#[from] events::Error),
 }
 
 pub struct Scene {
@@ -23,6 +26,7 @@ pub struct Scene {
     renderer: Box<dyn Render>,
     background_color: RGBA,
     camera: Option<Camera>,
+    pub event_manager: EventManager,
 }
 
 impl Scene {
@@ -30,10 +34,11 @@ impl Scene {
     pub fn new(window: Rc<Window>, renderer: Box<dyn Render>) -> Self {
         Scene {
             entity_manager: Manager::default(),
-            window,
+            window: window.clone(),
             renderer,
             background_color: RGBA::default(),
             camera: None,
+            event_manager: EventManager::new(window),
         }
     }
 
@@ -96,6 +101,9 @@ impl Scene {
 
     fn frame(&mut self) -> Result<()> {
         self.renderer.set_background_color(&self.background_color);
+
+        self.event_manager.process_key_callbacks()?;
+
         let keys = self.entity_manager.get_keys();
         for key in keys {
             let id = self
@@ -106,7 +114,9 @@ impl Scene {
             }
             if let Some(cam) = &self.camera {
                 self.renderer
-                    .perform_camera_transformation(id, cam.get_projection())?;
+                    .perform_camera_position_transformation(id, &cam.get_camera_position())?;
+                self.renderer
+                    .perform_camera_projection_transformation(id, cam.get_projection())?;
             }
             self.renderer.draw_entity(id);
         }
@@ -178,7 +188,15 @@ mod tests {
                 Ok(())
             }
 
-            fn perform_camera_transformation(
+            fn perform_camera_projection_transformation(
+                &mut self,
+                _entity_id: ID,
+                _camera_matrix: &Matrix4<f32>,
+            ) -> crate::renderer::Result<()> {
+                todo!()
+            }
+
+            fn perform_camera_position_transformation(
                 &mut self,
                 _entity_id: ID,
                 _camera_matrix: &Matrix4<f32>,

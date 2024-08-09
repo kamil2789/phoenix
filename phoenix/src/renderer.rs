@@ -52,7 +52,12 @@ pub trait Render {
     /// # Errors
     ///
     /// Will return `Err` when transformation failed or cannot be applied.
-    fn perform_camera_transformation(
+    fn perform_camera_projection_transformation(
+        &mut self,
+        entity_id: ID,
+        camera_matrix: &Matrix4<f32>,
+    ) -> Result<()>;
+    fn perform_camera_position_transformation(
         &mut self,
         entity_id: ID,
         camera_matrix: &Matrix4<f32>,

@@ -131,7 +131,6 @@ impl Window {
     pub fn set_current(&self) -> Result<()> {
         unsafe {
             glfw_bindings::glfwMakeContextCurrent(self.window);
-            glfw_bindings::glfwSetFramebufferSizeCallback(self.window, std::ptr::null_mut());
         }
         Window::load_gl_functions()?;
         Ok(())
@@ -145,6 +144,12 @@ impl Window {
     pub fn swap_buffers(&self) {
         unsafe {
             glfw_bindings::glfwSwapBuffers(self.window);
+        }
+    }
+
+    pub fn close(&self) {
+        unsafe {
+            glfw_bindings::glfwSetWindowShouldClose(self.window, 1);
         }
     }
 
@@ -170,6 +175,10 @@ impl Window {
         let mut height: c_int = 0;
         unsafe { glfw_bindings::glfwGetFramebufferSize(self.window, &mut width, &mut height) };
         (width, height)
+    }
+
+    pub fn get_raw_mut_window(&self) -> *mut glfw_bindings::GLFWwindow {
+        self.window
     }
 
     fn load_gl_functions() -> Result<()> {
