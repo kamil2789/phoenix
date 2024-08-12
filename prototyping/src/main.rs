@@ -13,8 +13,8 @@ use phoenix::{
     entities::entity::Entity,
     events::{
         action::Action,
-        keyboard_input::KeyboardInput,
         keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W},
+        user_input::{KeyboardInput, MouseInput},
     },
     renderer::opengl::OpenGL,
     systems::{camera, scaler::Scaler, scene::Scene},
@@ -23,7 +23,6 @@ use phoenix::{
 use std::{path::Path, rc::Rc};
 
 fn main() {
-    println!("Hello, world!");
     let config = GlfwConfig::create().unwrap();
     let window = Rc::new(
         config
@@ -61,6 +60,10 @@ fn main() {
         KeyboardInput::new_key(KEY_S.into()),
         Action::CameraUpdateBackward,
     );
+
+    scene
+        .event_manager
+        .bind_mouse(MouseInput::Scroll, Action::CameraFov(0.0));
 
     let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
 

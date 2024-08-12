@@ -1,5 +1,5 @@
 use crate::window::Window;
-use std::{ffi::c_int, rc::Rc};
+use std::{collections::HashMap, ffi::c_int, rc::Rc, sync::Mutex};
 
 use glfw_sys::glfw_bindings::{
     glfwGetKey, glfwSetCursorPosCallback, glfwSetFramebufferSizeCallback, glfwSetKeyCallback,
@@ -7,6 +7,8 @@ use glfw_sys::glfw_bindings::{
 };
 
 use super::action::Action;
+
+static SCROLL_QUEUE: Mutex<Option<f32>> = Mutex::new(Some(0.0));
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct KeyboardInput {
@@ -20,14 +22,21 @@ pub enum KeyState {
     Press = 1,
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub enum MouseInput {
+    Scroll,
+    CursorPos,
+}
+
+pub(super) struct ControlBinding {
+    window: Rc<Window>,
+    key_binding: Vec<KeyEvent>,
+    mouse_binding: HashMap<MouseInput, Action>,
+}
+
 struct KeyEvent {
     pub keyboard_input: KeyboardInput,
     pub action: Action,
-}
-
-pub(super) struct KeyBinding {
-    window: Rc<Window>,
-    key_binding: Vec<KeyEvent>,
 }
 
 impl KeyboardInput {
@@ -57,17 +66,20 @@ impl From<c_int> for KeyState {
     }
 }
 
-impl KeyBinding {
+impl ControlBinding {
     pub fn new(window: Rc<Window>) -> Self {
-        KeyBinding::set_callbacks(&window);
+        ControlBinding::set_callbacks(&window);
         Self {
             window,
             key_binding: Vec::new(),
+            mouse_binding: HashMap::new(),
         }
     }
 
-    pub fn process_key_status(&mut self) -> Vec<Action> {
-        self.get_keyboard_input()
+    pub fn process_callbacks(&mut self) -> Vec<Action> {
+        let mut result = self.get_keyboard_input();
+        result.append(&mut self.get_mouse_input());
+        result
     }
 
     pub fn get_keyboard_input(&self) -> Vec<Action> {
@@ -90,11 +102,35 @@ impl KeyBinding {
         results
     }
 
+    pub fn get_mouse_input(&self) -> Vec<Action> {
+        let mut result = vec![];
+        if let Some(action) = self.get_scroll_data() {
+            result.push(action);
+        }
+
+        result
+    }
+
     pub fn bind_key(&mut self, keyboard_input: KeyboardInput, action: Action) {
         self.key_binding.push(KeyEvent {
             keyboard_input,
             action,
         });
+    }
+
+    pub fn bind_mouse(&mut self, mouse_input: MouseInput, action: Action) {
+        self.mouse_binding.insert(mouse_input, action);
+    }
+
+    fn get_scroll_data(&self) -> Option<Action> {
+        if self.mouse_binding.contains_key(&MouseInput::Scroll) {
+            if let Ok(mut data) = SCROLL_QUEUE.try_lock() {
+                if let Some(value) = data.take() {
+                    return Some(Action::CameraFov(value));
+                }
+            }
+        }
+        None
     }
 
     fn is_key_pressed(&self, key: i32) -> bool {
@@ -122,9 +158,9 @@ impl KeyBinding {
     }
 }
 
-impl Drop for KeyBinding {
+impl Drop for ControlBinding {
     fn drop(&mut self) {
-        KeyBinding::unset_callbacks(&self.window);
+        ControlBinding::unset_callbacks(&self.window);
     }
 }
 
@@ -141,6 +177,9 @@ extern "C" fn cursor_pos_callback(_window: *mut GLFWwindow, _xpos: f64, _ypos: f
     //nothing right now
 }
 
-extern "C" fn scroll_callback(_window: *mut GLFWwindow, _xoffset: f64, _yoffset: f64) {
-    //nothing right now
+#[allow(clippy::cast_possible_truncation)]
+extern "C" fn scroll_callback(_window: *mut GLFWwindow, _xoffset: f64, yoffset: f64) {
+    if let Ok(mut data) = SCROLL_QUEUE.lock() {
+        *data = Some(yoffset as f32);
+    }
 }

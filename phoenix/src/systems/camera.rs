@@ -14,13 +14,12 @@ const CAMERA_UP: Vector3<f32> = Vector3 {
 };
 
 pub(super) struct Camera {
-    //aspect_ratio: f32,
-    //near_plane: f32,
-    //far_plane: f32,
-    //field_of_vision: f32,
+    aspect_ratio: f32,
+    near_plane: f32,
+    far_plane: f32,
+    field_of_vision: f32,
     speed: f32,
     position: Point3<f32>,
-    projection: Matrix4<f32>,
 }
 
 pub struct Config {
@@ -32,20 +31,13 @@ pub struct Config {
 impl Camera {
     pub fn new(resolution: &Resolution, camera_config: &Config) -> Self {
         let aspect_ratio = f32::from(resolution.width) / f32::from(resolution.height);
-        let projection = perspective(
-            Deg(camera_config.field_of_vision),
-            aspect_ratio,
-            camera_config.near_plane,
-            camera_config.far_plane,
-        );
         Self {
-            //aspect_ratio,
-            //near_plane: camera_config.near_plane,
-            //far_plane: camera_config.far_plane,
-            //field_of_vision: camera_config.field_of_vision,
+            aspect_ratio,
+            near_plane: camera_config.near_plane,
+            far_plane: camera_config.far_plane,
+            field_of_vision: camera_config.field_of_vision,
             speed: 0.01,
             position: Point3::new(0.0, 0.0, 0.0),
-            projection,
         }
     }
 
@@ -65,9 +57,22 @@ impl Camera {
         self.position += CAMERA_FRONT.cross(CAMERA_UP).normalize() * self.speed;
     }
 
+    pub fn change_fov(&mut self, yoffset: f32) {
+        //dbg!(self.field_of_vision);
+        if self.field_of_vision >= 1.0 && self.field_of_vision <= 45.0 {
+            self.field_of_vision -= yoffset;
+        }
+        self.field_of_vision = self.field_of_vision.clamp(1.0, 45.0);
+    }
+
     #[must_use]
-    pub fn get_projection(&self) -> &Matrix4<f32> {
-        &self.projection
+    pub fn get_projection(&self) -> Matrix4<f32> {
+        perspective(
+            Deg(self.field_of_vision),
+            self.aspect_ratio,
+            self.near_plane,
+            self.far_plane,
+        )
     }
 
     pub fn get_camera_position(&self) -> Matrix4<f32> {

@@ -4,4 +4,5 @@ pub enum Action {
     CameraUpdateBackward,
     CameraUpdateLeft,
     CameraUpdateRight,
+    CameraFov(f32),
 }

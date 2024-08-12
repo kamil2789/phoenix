@@ -102,7 +102,7 @@ impl Scene {
     fn frame(&mut self) -> Result<()> {
         self.renderer.set_background_color(&self.background_color);
 
-        self.handle_key_callbacks();
+        self.handle_user_input_callbacks();
 
         let keys = self.entity_manager.get_keys();
         for key in keys {
@@ -116,7 +116,7 @@ impl Scene {
                 self.renderer
                     .perform_camera_position_transformation(id, &cam.get_camera_position())?;
                 self.renderer
-                    .perform_camera_projection_transformation(id, cam.get_projection())?;
+                    .perform_camera_projection_transformation(id, &cam.get_projection())?;
             }
             self.renderer.draw_entity(id);
         }
@@ -125,14 +125,15 @@ impl Scene {
         Ok(())
     }
 
-    fn handle_key_callbacks(&mut self) {
-        let mut events = self.event_manager.process_key_callbacks();
+    fn handle_user_input_callbacks(&mut self) {
+        let mut events = self.event_manager.process_user_input_callbacks();
         while let Some(action) = events.pop() {
             match action {
                 Action::CameraUpdateForward => self.camera.as_mut().unwrap().move_forward(),
                 Action::CameraUpdateBackward => self.camera.as_mut().unwrap().move_backward(),
                 Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(),
                 Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(),
+                Action::CameraFov(yoffset) => self.camera.as_mut().unwrap().change_fov(yoffset),
             }
         }
     }

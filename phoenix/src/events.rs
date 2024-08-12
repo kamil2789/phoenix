@@ -1,14 +1,14 @@
 pub mod action;
 pub mod condition;
-pub mod keyboard_input;
 pub mod keys_binding;
+pub mod user_input;
 
 use crate::window::Window;
 use action::Action;
 use condition::Condition;
-use keyboard_input::{KeyBinding, KeyboardInput};
 use std::rc::Rc;
 use thiserror::Error;
+use user_input::{ControlBinding, KeyboardInput, MouseInput};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -32,22 +32,26 @@ pub struct Event {
 }
 
 pub struct Manager {
-    key_binding: KeyBinding,
+    control_binding: ControlBinding,
 }
 
 impl Manager {
     #[must_use]
     pub fn new(window: Rc<Window>) -> Self {
         Self {
-            key_binding: KeyBinding::new(window),
+            control_binding: ControlBinding::new(window),
         }
     }
 
     pub fn bind_key(&mut self, keyboard_input: KeyboardInput, action: Action) {
-        self.key_binding.bind_key(keyboard_input, action);
+        self.control_binding.bind_key(keyboard_input, action);
     }
 
-    pub fn process_key_callbacks(&mut self) -> Vec<Action> {
-        self.key_binding.process_key_status()
+    pub fn process_user_input_callbacks(&mut self) -> Vec<Action> {
+        self.control_binding.process_callbacks()
+    }
+
+    pub fn bind_mouse(&mut self, mouse_input: MouseInput, action: Action) {
+        self.control_binding.bind_mouse(mouse_input, action);
     }
 }
