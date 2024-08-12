@@ -36,7 +36,7 @@ impl Camera {
             near_plane: camera_config.near_plane,
             far_plane: camera_config.far_plane,
             field_of_vision: camera_config.field_of_vision,
-            speed: 0.01,
+            speed: 2.5,
             position: Point3::new(0.0, 0.0, 0.0),
             is_first_mouse: true,
             last_x: f32::from(resolution.width) / 2.0,
@@ -47,20 +47,20 @@ impl Camera {
         }
     }
 
-    pub fn move_forward(&mut self) {
-        self.position += self.speed * self.front;
+    pub fn move_forward(&mut self, delta_time: f32) {
+        self.position += self.speed * self.front * delta_time;
     }
 
-    pub fn move_backward(&mut self) {
-        self.position += -(self.speed * self.front);
+    pub fn move_backward(&mut self,delta_time: f32) {
+        self.position += -(self.speed * self.front * delta_time);
     }
 
-    pub fn move_left(&mut self) {
-        self.position += -(self.front.cross(CAMERA_UP).normalize() * self.speed);
+    pub fn move_left(&mut self, delta_time: f32) {
+        self.position += -(self.front.cross(CAMERA_UP).normalize() * self.speed) * delta_time;
     }
 
-    pub fn move_right(&mut self) {
-        self.position += self.front.cross(CAMERA_UP).normalize() * self.speed;
+    pub fn move_right(&mut self, delta_time: f32) {
+        self.position += self.front.cross(CAMERA_UP).normalize() * self.speed * delta_time;
     }
 
     pub fn change_fov(&mut self, yoffset: f32) {

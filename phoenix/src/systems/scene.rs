@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use super::camera::{Camera, Config};
+use super::performance::FpsCounter;
 use crate::components::color::RGBA;
 use crate::entities::entity::{Entity, Manager};
 use crate::events::action::Action;
@@ -27,6 +28,7 @@ pub struct Scene {
     background_color: RGBA,
     camera: Option<Camera>,
     pub event_manager: events::Manager,
+    fps_counter: FpsCounter
 }
 
 impl Scene {
@@ -39,6 +41,7 @@ impl Scene {
             background_color: RGBA::default(),
             camera: None,
             event_manager: events::Manager::new(window),
+            fps_counter: FpsCounter::default(),
         }
     }
 
@@ -100,6 +103,7 @@ impl Scene {
     }
 
     fn frame(&mut self) -> Result<()> {
+        self.fps_counter.update();
         self.renderer.set_background_color(&self.background_color);
 
         self.handle_user_input_callbacks();
@@ -129,10 +133,10 @@ impl Scene {
         let mut events = self.event_manager.process_user_input_callbacks();
         while let Some(action) = events.pop() {
             match action {
-                Action::CameraUpdateForward => self.camera.as_mut().unwrap().move_forward(),
-                Action::CameraUpdateBackward => self.camera.as_mut().unwrap().move_backward(),
-                Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(),
-                Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(),
+                Action::CameraUpdateForward => self.camera.as_mut().unwrap().move_forward(self.fps_counter.get_delta_time()),
+                Action::CameraUpdateBackward => self.camera.as_mut().unwrap().move_backward(self.fps_counter.get_delta_time()),
+                Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(self.fps_counter.get_delta_time()),
+                Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(self.fps_counter.get_delta_time()),
                 Action::CameraFov(yoffset) => self.camera.as_mut().unwrap().change_fov(yoffset),
                 Action::CameraOrientation(xpos, ypos) => self.camera.as_mut().unwrap().change_orientation(xpos, ypos)
             }
