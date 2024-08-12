@@ -43,7 +43,7 @@ impl Camera {
             //near_plane: camera_config.near_plane,
             //far_plane: camera_config.far_plane,
             //field_of_vision: camera_config.field_of_vision,
-            speed: 0.1,
+            speed: 0.01,
             position: Point3::new(0.0, 0.0, 0.0),
             projection,
         }

@@ -1,32 +1,27 @@
 use crate::window::Window;
-use std::{ffi::c_int, rc::Rc, sync::Mutex};
+use std::{ffi::c_int, rc::Rc};
 
 use glfw_sys::glfw_bindings::{
-    glfwSetCursorPosCallback, glfwSetFramebufferSizeCallback, glfwSetKeyCallback,
-    glfwSetScrollCallback, GLFWwindow,
+    glfwGetKey, glfwSetCursorPosCallback, glfwSetFramebufferSizeCallback, glfwSetKeyCallback,
+    glfwSetScrollCallback, GLFWwindow, GLFW_PRESS,
 };
 
 use super::action::Action;
 
-static KEY_CALLBACK_QUEUE: Mutex<Vec<UserInput>> = Mutex::new(Vec::new());
-
 #[derive(Clone, Debug, PartialEq)]
-pub struct UserInput {
+pub struct KeyboardInput {
     key: i32,
-    action: KeyState,
-    mods: i32,
+    state: KeyState,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum KeyState {
     Release = 0,
     Press = 1,
-    Repeat = 2,
-    Hold = 3,
 }
 
 struct KeyEvent {
-    pub user_input: UserInput,
+    pub keyboard_input: KeyboardInput,
     pub action: Action,
 }
 
@@ -35,26 +30,21 @@ pub(super) struct KeyBinding {
     key_binding: Vec<KeyEvent>,
 }
 
-impl UserInput {
+impl KeyboardInput {
     #[must_use]
-    pub fn new(key: i32, action: KeyState, mods: i32) -> Self {
-        Self { key, action, mods }
+    pub fn new(key: i32, state: KeyState) -> Self {
+        Self { key, state }
     }
 
     #[must_use]
-    pub fn new_key_press(key: i32) -> Self {
-        Self::new(key, KeyState::Press, 0)
-    }
-
-    #[must_use]
-    pub fn new_key_hold(key: i32) -> Self {
-        Self::new(key, KeyState::Hold, 0)
+    pub fn new_key(key: i32) -> Self {
+        Self::new(key, KeyState::Press)
     }
 }
 
-impl Default for UserInput {
+impl Default for KeyboardInput {
     fn default() -> Self {
-        Self::new(0, KeyState::Press, 0)
+        Self::new(0, KeyState::Press)
     }
 }
 
@@ -62,7 +52,6 @@ impl From<c_int> for KeyState {
     fn from(action: c_int) -> Self {
         match action {
             0 => Self::Release,
-            2 => Self::Repeat,
             _ => Self::Press,
         }
     }
@@ -77,38 +66,43 @@ impl KeyBinding {
         }
     }
 
-    pub fn get_callback_actions(&mut self) -> Option<Vec<Action>> {
-        if let Ok(mut queue) = KEY_CALLBACK_QUEUE.lock() {
-            let mut result = Vec::new();
-            while let Some(user_input) = queue.pop() {
-                if let Some(action) = self.get_action_from_user_input(&user_input) {
-                    result.push(action);
+    pub fn process_key_status(&mut self) -> Vec<Action> {
+        self.get_keyboard_input()
+    }
+
+    pub fn get_keyboard_input(&self) -> Vec<Action> {
+        let mut results = Vec::new();
+        for key in &self.key_binding {
+            match key.keyboard_input.state {
+                KeyState::Press => {
+                    if self.is_key_pressed(key.keyboard_input.key) {
+                        results.push(key.action.clone());
+                    }
+                }
+                KeyState::Release => {
+                    if !self.is_key_pressed(key.keyboard_input.key) {
+                        results.push(key.action.clone());
+                    }
                 }
             }
-
-            Some(result)
-        } else {
-            None
-        }
-    }
-
-    pub fn bind_key(&mut self, user_input: UserInput, action: Action) {
-        self.key_binding.push(KeyEvent { user_input, action });
-    }
-
-    fn get_action_from_user_input(&self, user_input: &UserInput) -> Option<Action> {
-        for key_event in &self.key_binding {
-            if key_event.user_input == *user_input {
-                return Some(key_event.action.clone());
-            }
         }
 
-        None
+        results
+    }
+
+    pub fn bind_key(&mut self, keyboard_input: KeyboardInput, action: Action) {
+        self.key_binding.push(KeyEvent {
+            keyboard_input,
+            action,
+        });
+    }
+
+    fn is_key_pressed(&self, key: i32) -> bool {
+        unsafe { glfwGetKey(self.window.get_raw_mut_window(), key) == GLFW_PRESS }
     }
 
     fn set_callbacks(window: &Window) {
         unsafe {
-            glfwSetKeyCallback(window.get_raw_mut_window(), Some(key_callback));
             glfwSetFramebufferSizeCallback(
                 window.get_raw_mut_window(),
                 Some(framebuffer_size_callback),
@@ -131,19 +125,6 @@ impl KeyBinding {
 impl Drop for KeyBinding {
     fn drop(&mut self) {
         KeyBinding::unset_callbacks(&self.window);
-    }
-}
-
-extern "C" fn key_callback(
-    _window: *mut GLFWwindow,
-    key: c_int,
-    _scancode: c_int,
-    action: c_int,
-    mods: c_int,
-) {
-    let action = UserInput::new(key, action.into(), mods);
-    if let Ok(mut queue) = KEY_CALLBACK_QUEUE.try_lock() {
-        queue.push(action);
     }
 }
 

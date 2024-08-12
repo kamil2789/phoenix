@@ -126,15 +126,13 @@ impl Scene {
     }
 
     fn handle_key_callbacks(&mut self) {
-        if let Some(mut actions) = self.event_manager.process_key_callbacks() {
-            //write separate module (maybe action interpreter?)
-            if let Some(action) = actions.pop() {
-                match action {
-                    Action::CameraUpdateForward => self.camera.as_mut().unwrap().move_forward(),
-                    Action::CameraUpdateBackward => self.camera.as_mut().unwrap().move_backward(),
-                    Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(),
-                    Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(),
-                }
+        let mut events = self.event_manager.process_key_callbacks();
+        while let Some(action) = events.pop() {
+            match action {
+                Action::CameraUpdateForward => self.camera.as_mut().unwrap().move_forward(),
+                Action::CameraUpdateBackward => self.camera.as_mut().unwrap().move_backward(),
+                Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(),
+                Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(),
             }
         }
     }

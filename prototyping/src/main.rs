@@ -13,8 +13,8 @@ use phoenix::{
     entities::entity::Entity,
     events::{
         action::Action,
+        keyboard_input::KeyboardInput,
         keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W},
-        user_input::UserInput,
     },
     renderer::opengl::OpenGL,
     systems::{camera, scaler::Scaler, scene::Scene},
@@ -44,21 +44,21 @@ fn main() {
 
     let mut scene = Scene::new(window, render);
     scene.event_manager.bind_key(
-        UserInput::new_key_press(KEY_A.into()),
+        KeyboardInput::new_key(KEY_A.into()),
         Action::CameraUpdateLeft,
     );
     scene.event_manager.bind_key(
-        UserInput::new_key_press(KEY_D.into()),
+        KeyboardInput::new_key(KEY_D.into()),
         Action::CameraUpdateRight,
     );
 
     scene.event_manager.bind_key(
-        UserInput::new_key_press(KEY_W.into()),
+        KeyboardInput::new_key(KEY_W.into()),
         Action::CameraUpdateForward,
     );
 
     scene.event_manager.bind_key(
-        UserInput::new_key_press(KEY_S.into()),
+        KeyboardInput::new_key(KEY_S.into()),
         Action::CameraUpdateBackward,
     );
 

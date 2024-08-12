@@ -1,14 +1,14 @@
 pub mod action;
 pub mod condition;
+pub mod keyboard_input;
 pub mod keys_binding;
-pub mod user_input;
 
-use std::rc::Rc;
+use crate::window::Window;
 use action::Action;
 use condition::Condition;
+use keyboard_input::{KeyBinding, KeyboardInput};
+use std::rc::Rc;
 use thiserror::Error;
-use user_input::{KeyBinding, UserInput};
-use crate::window::Window;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -43,11 +43,11 @@ impl Manager {
         }
     }
 
-    pub fn bind_key(&mut self, user_input: UserInput, action: Action) {
-        self.key_binding.bind_key(user_input, action);
+    pub fn bind_key(&mut self, keyboard_input: KeyboardInput, action: Action) {
+        self.key_binding.bind_key(keyboard_input, action);
     }
 
-    pub fn process_key_callbacks(&mut self) -> Option<Vec<Action>> {
-        self.key_binding.get_callback_actions()
+    pub fn process_key_callbacks(&mut self) -> Vec<Action> {
+        self.key_binding.process_key_status()
     }
 }
