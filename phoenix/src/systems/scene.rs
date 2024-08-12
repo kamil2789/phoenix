@@ -134,6 +134,7 @@ impl Scene {
                 Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(),
                 Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(),
                 Action::CameraFov(yoffset) => self.camera.as_mut().unwrap().change_fov(yoffset),
+                Action::CameraOrientation(xpos, ypos) => self.camera.as_mut().unwrap().change_orientation(xpos, ypos)
             }
         }
     }

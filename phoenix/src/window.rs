@@ -1,5 +1,7 @@
 use gl;
 use glfw_sys::glfw_bindings;
+use glfw_sys::glfw_bindings::GLFW_CURSOR_DISABLED;
+use glfw_sys::glfw_bindings::GLFW_CURSOR_NORMAL;
 use std::ffi::c_int;
 use std::ffi::c_void;
 use std::ffi::CString;
@@ -180,6 +182,16 @@ impl Window {
     #[must_use]
     pub fn get_raw_mut_window(&self) -> *mut glfw_bindings::GLFWwindow {
         self.window
+    }
+
+    pub fn set_capture_mouse(&self, capture: bool) {
+        unsafe {
+            if capture {
+                glfw_bindings::glfwSetInputMode(self.window, glfw_bindings::GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            } else {
+                glfw_bindings::glfwSetInputMode(self.window, glfw_bindings::GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
+        }
     }
 
     fn load_gl_functions() -> Result<()> {

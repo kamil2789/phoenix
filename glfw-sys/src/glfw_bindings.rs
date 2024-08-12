@@ -4,6 +4,10 @@ pub static GLFW_CONTEXT_VERSION_MAJOR: c_int = 0x0002_2002;
 pub static GLFW_CONTEXT_VERSION_MINOR: c_int = 0x0002_2003;
 pub static GLFW_OPENGL_PROFILE: c_int = 0x0002_2008;
 pub static GLFW_OPENGL_CORE_PROFILE: c_int = 0x0003_2001;
+pub static GLFW_CURSOR_DISABLED: c_int = 0x0003_4003;
+pub static GLFW_CURSOR: c_int = 0x0003_3001;
+pub static GLFW_CURSOR_NORMAL: c_int = 0x0003_4001;
+
 
 pub static GLFW_TRUE: c_int = 1;
 pub static GLFW_FALSE: c_int = 0;
@@ -41,6 +45,7 @@ extern "C" {
     pub fn glfwGetProcAddress(procname: *const c_uchar) -> GLFWglproc;
 
     //callbacks
+    pub fn glfwSetInputMode(window: *mut GLFWwindow, mode: c_int, value: c_int);
     pub fn glfwSetWindowUserPointer(window: *mut GLFWwindow, pointer: *const c_void);
     pub fn glfwGetWindowUserPointer(window: *mut GLFWwindow) -> *mut c_void;
     pub fn glfwSetKeyCallback(window: *mut GLFWwindow, callback: Option<GLFWkeyfun>);

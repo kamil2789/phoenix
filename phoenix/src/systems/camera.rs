@@ -1,12 +1,6 @@
 use crate::window::Resolution;
 use cgmath::{perspective, Deg, InnerSpace, Matrix4, Point3, Vector3};
 
-// camera
-const CAMERA_FRONT: Vector3<f32> = Vector3 {
-    x: 0.0,
-    y: 0.0,
-    z: -1.0,
-};
 const CAMERA_UP: Vector3<f32> = Vector3 {
     x: 0.0,
     y: 1.0,
@@ -20,6 +14,12 @@ pub(super) struct Camera {
     field_of_vision: f32,
     speed: f32,
     position: Point3<f32>,
+    is_first_mouse: bool,
+    last_x: f32,
+    last_y: f32,
+    yaw: f32,
+    pitch: f32,
+    front: Vector3<f32>,
 }
 
 pub struct Config {
@@ -38,31 +38,60 @@ impl Camera {
             field_of_vision: camera_config.field_of_vision,
             speed: 0.01,
             position: Point3::new(0.0, 0.0, 0.0),
+            is_first_mouse: true,
+            last_x: f32::from(resolution.width) / 2.0,
+            last_y: f32::from(resolution.height) / 2.0,
+            yaw: -90.0,
+            pitch: 0.0,
+            front: Vector3::new(0.0, 0.0, -1.0),
         }
     }
 
     pub fn move_forward(&mut self) {
-        self.position += self.speed * CAMERA_FRONT;
+        self.position += self.speed * self.front;
     }
 
     pub fn move_backward(&mut self) {
-        self.position += -(self.speed * CAMERA_FRONT);
+        self.position += -(self.speed * self.front);
     }
 
     pub fn move_left(&mut self) {
-        self.position += -(CAMERA_FRONT.cross(CAMERA_UP).normalize() * self.speed);
+        self.position += -(self.front.cross(CAMERA_UP).normalize() * self.speed);
     }
 
     pub fn move_right(&mut self) {
-        self.position += CAMERA_FRONT.cross(CAMERA_UP).normalize() * self.speed;
+        self.position += self.front.cross(CAMERA_UP).normalize() * self.speed;
     }
 
     pub fn change_fov(&mut self, yoffset: f32) {
-        //dbg!(self.field_of_vision);
         if self.field_of_vision >= 1.0 && self.field_of_vision <= 45.0 {
             self.field_of_vision -= yoffset;
         }
         self.field_of_vision = self.field_of_vision.clamp(1.0, 45.0);
+    }
+
+    pub fn change_orientation(&mut self, xpos: f32, ypos: f32) {
+        if self.is_first_mouse {
+            self.last_x = xpos;
+            self.last_y = ypos;
+            self.is_first_mouse = false;
+        }
+
+        let sensitivity: f32 = 0.1;
+        let xoffset = (xpos - self.last_x) * sensitivity;
+        let yoffset = (self.last_y - ypos) * sensitivity;
+    
+        self.last_x = xpos;
+        self.last_y = ypos;
+
+        self.yaw += xoffset;
+        self.pitch = (self.pitch + yoffset).clamp(-89.0, 89.0);
+
+        self.front = Vector3 {
+            x: self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
+            y: self.pitch.to_radians().sin(),
+            z: self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
+        }.normalize();
     }
 
     #[must_use]
@@ -76,7 +105,7 @@ impl Camera {
     }
 
     pub fn get_camera_position(&self) -> Matrix4<f32> {
-        Matrix4::look_at_rh(self.position, self.position + CAMERA_FRONT, CAMERA_UP)
+        Matrix4::look_at_rh(self.position, self.position + self.front, CAMERA_UP)
     }
 }
 

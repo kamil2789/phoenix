@@ -8,7 +8,8 @@ use glfw_sys::glfw_bindings::{
 
 use super::action::Action;
 
-static SCROLL_QUEUE: Mutex<Option<f32>> = Mutex::new(Some(0.0));
+static SCROLL_INPUT: Mutex<Option<f32>> = Mutex::new(None);
+static CURSOR_POS_INPUT: Mutex<Option<(f32, f32)>> = Mutex::new(None);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct KeyboardInput {
@@ -107,6 +108,9 @@ impl ControlBinding {
         if let Some(action) = self.get_scroll_data() {
             result.push(action);
         }
+        if let Some(action) = self.get_cursor_pos_data() {
+            result.push(action);
+        }
 
         result
     }
@@ -124,9 +128,20 @@ impl ControlBinding {
 
     fn get_scroll_data(&self) -> Option<Action> {
         if self.mouse_binding.contains_key(&MouseInput::Scroll) {
-            if let Ok(mut data) = SCROLL_QUEUE.try_lock() {
+            if let Ok(mut data) = SCROLL_INPUT.try_lock() {
                 if let Some(value) = data.take() {
                     return Some(Action::CameraFov(value));
+                }
+            }
+        }
+        None
+    }
+
+    fn get_cursor_pos_data(&self) -> Option<Action> {
+        if self.mouse_binding.contains_key(&MouseInput::CursorPos) {
+            if let Ok(mut data) = CURSOR_POS_INPUT.try_lock() {
+                if let Some(value) = data.take() {
+                    return Some(Action::CameraOrientation(value.0, value.1));
                 }
             }
         }
@@ -173,13 +188,16 @@ extern "C" fn framebuffer_size_callback(_window: *mut GLFWwindow, width: c_int, 
     }
 }
 
-extern "C" fn cursor_pos_callback(_window: *mut GLFWwindow, _xpos: f64, _ypos: f64) {
-    //nothing right now
+#[allow(clippy::cast_possible_truncation)]
+extern "C" fn cursor_pos_callback(_window: *mut GLFWwindow, xpos: f64, ypos: f64) {
+    if let Ok(mut data) = CURSOR_POS_INPUT.lock() {
+        *data = Some((xpos as f32, ypos as f32));
+    }
 }
 
 #[allow(clippy::cast_possible_truncation)]
 extern "C" fn scroll_callback(_window: *mut GLFWwindow, _xoffset: f64, yoffset: f64) {
-    if let Ok(mut data) = SCROLL_QUEUE.lock() {
+    if let Ok(mut data) = SCROLL_INPUT.lock() {
         *data = Some(yoffset as f32);
     }
 }

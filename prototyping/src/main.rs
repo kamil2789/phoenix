@@ -37,6 +37,7 @@ fn main() {
     );
 
     window.set_current().unwrap();
+    window.set_capture_mouse(true);
 
     let render = Box::<OpenGL>::default();
     let scaler = Scaler::new(window.get_resolution());
@@ -64,6 +65,10 @@ fn main() {
     scene
         .event_manager
         .bind_mouse(MouseInput::Scroll, Action::CameraFov(0.0));
+
+     scene
+        .event_manager
+        .bind_mouse(MouseInput::CursorPos, Action::CameraOrientation(0.0, 0.0));
 
     let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
 
