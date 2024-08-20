@@ -1,10 +1,10 @@
+mod event_interpreter;
 use std::rc::Rc;
 
 use super::camera::{Camera, Config};
 use super::performance::FpsCounter;
 use crate::components::color::RGBA;
 use crate::entities::entity::{Entity, Manager};
-use crate::events::action::Action;
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
 use crate::{entities, events};
@@ -102,6 +102,10 @@ impl Scene {
         Ok(())
     }
 
+    pub fn get_delta_time(&self) -> f32 {
+        self.fps_counter.get_delta_time()
+    }
+
     fn frame(&mut self) -> Result<()> {
         self.fps_counter.update();
         self.renderer.set_background_color(&self.background_color);
@@ -130,17 +134,7 @@ impl Scene {
     }
 
     fn handle_user_input_callbacks(&mut self) {
-        let mut events = self.event_manager.process_user_input_callbacks();
-        while let Some(action) = events.pop() {
-            match action {
-                Action::CameraUpdateForward => self.camera.as_mut().unwrap().move_forward(self.fps_counter.get_delta_time()),
-                Action::CameraUpdateBackward => self.camera.as_mut().unwrap().move_backward(self.fps_counter.get_delta_time()),
-                Action::CameraUpdateLeft => self.camera.as_mut().unwrap().move_left(self.fps_counter.get_delta_time()),
-                Action::CameraUpdateRight => self.camera.as_mut().unwrap().move_right(self.fps_counter.get_delta_time()),
-                Action::CameraFov(yoffset) => self.camera.as_mut().unwrap().change_fov(yoffset),
-                Action::CameraOrientation(xpos, ypos) => self.camera.as_mut().unwrap().change_orientation(xpos, ypos)
-            }
-        }
+        event_interpreter::process_actions(self.event_manager.process_user_input_callbacks(), self);
     }
 }
 
