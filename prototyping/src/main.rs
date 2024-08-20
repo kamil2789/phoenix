@@ -84,6 +84,12 @@ fn main() {
         Action::ChangeBackgroundColor(RGBA::from_hex(0x00_FF_00_FF)),
     ));
 
+    scene.event_manager.add_event(Event::new(
+        EventLifetime::Once,
+        Condition::OnAction(Action::CameraUpdateRight),
+        Action::PrintFPS(),
+    ));
+
     let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
 
     let texture_config = texture::Config {
