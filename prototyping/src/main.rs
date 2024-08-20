@@ -85,7 +85,7 @@ fn main() {
     ));
 
     scene.event_manager.add_event(Event::new(
-        EventLifetime::Once,
+        EventLifetime::PerFrame,
         Condition::OnAction(Action::CameraUpdateRight),
         Action::PrintFPS(),
     ));

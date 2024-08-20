@@ -35,11 +35,9 @@ impl Scaler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
 
     #[test]
-    #[serial]
-    fn test_radius() {
+    fn test_radius_width_bigger() {
         let scaler = Scaler::new(Resolution {
             width: 800,
             height: 600,
@@ -47,6 +45,36 @@ mod tests {
         let radius = scaler.radius(100.0);
         assert!(radius.width > 74.999);
         assert!(radius.width < 75.001);
+
+        dbg!(radius.height);
+        assert!(radius.height > 99.999);
+        assert!(radius.height < 100.001);
+    }
+
+    #[test]
+    fn test_radius_height_bigger() {
+        let scaler = Scaler::new(Resolution {
+            width: 600,
+            height: 800,
+        });
+        let radius = scaler.radius(100.0);
+        assert!(radius.width > 99.999);
+        assert!(radius.width < 100.001);
+
+        dbg!(radius.height);
+        assert!(radius.height > 74.999);
+        assert!(radius.height < 75.001);
+    }
+
+    #[test]
+    fn test_radius() {
+        let scaler = Scaler::new(Resolution {
+            width: 800,
+            height: 800,
+        });
+        let radius = scaler.radius(100.0);
+        assert!(radius.width > 99.999);
+        assert!(radius.width < 100.001);
 
         dbg!(radius.height);
         assert!(radius.height > 99.999);

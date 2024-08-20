@@ -2,7 +2,7 @@ mod event_interpreter;
 use std::rc::Rc;
 
 use super::camera::{Camera, Config};
-use super::performance::FpsCounter;
+use super::performance::{FpsCounter, GlfwTimer};
 use crate::components::color::RGBA;
 use crate::entities::entity::{Entity, Manager};
 use crate::renderer::{self, Render};
@@ -41,7 +41,7 @@ impl Scene {
             background_color: RGBA::default(),
             camera: None,
             event_manager: events::Manager::new(window),
-            fps_counter: FpsCounter::default(),
+            fps_counter: FpsCounter::new(Box::new(GlfwTimer::default())),
         }
     }
 
