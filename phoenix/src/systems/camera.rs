@@ -51,7 +51,7 @@ impl Camera {
         self.position += self.speed * self.front * delta_time;
     }
 
-    pub fn move_backward(&mut self,delta_time: f32) {
+    pub fn move_backward(&mut self, delta_time: f32) {
         self.position += -(self.speed * self.front * delta_time);
     }
 
@@ -80,7 +80,7 @@ impl Camera {
         let sensitivity: f32 = 0.1;
         let xoffset = (xpos - self.last_x) * sensitivity;
         let yoffset = (self.last_y - ypos) * sensitivity;
-    
+
         self.last_x = xpos;
         self.last_y = ypos;
 
@@ -91,7 +91,8 @@ impl Camera {
             x: self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
             y: self.pitch.to_radians().sin(),
             z: self.yaw.to_radians().sin() * self.pitch.to_radians().cos(),
-        }.normalize();
+        }
+        .normalize();
     }
 
     #[must_use]

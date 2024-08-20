@@ -8,7 +8,6 @@ pub static GLFW_CURSOR_DISABLED: c_int = 0x0003_4003;
 pub static GLFW_CURSOR: c_int = 0x0003_3001;
 pub static GLFW_CURSOR_NORMAL: c_int = 0x0003_4001;
 
-
 pub static GLFW_TRUE: c_int = 1;
 pub static GLFW_FALSE: c_int = 0;
 

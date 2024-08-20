@@ -85,16 +85,16 @@ impl ControlBinding {
 
     pub fn get_keyboard_input(&self) -> Vec<Action> {
         let mut results = Vec::new();
-        for key in &self.key_binding {
-            match key.keyboard_input.state {
+        for event in &self.key_binding {
+            match event.keyboard_input.state {
                 KeyState::Press => {
-                    if self.is_key_pressed(key.keyboard_input.key) {
-                        results.push(key.action.clone());
+                    if self.is_key_pressed(event.keyboard_input.key) {
+                        results.push(event.action.clone());
                     }
                 }
                 KeyState::Release => {
-                    if !self.is_key_pressed(key.keyboard_input.key) {
-                        results.push(key.action.clone());
+                    if !self.is_key_pressed(event.keyboard_input.key) {
+                        results.push(event.action.clone());
                     }
                 }
             }

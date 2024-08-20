@@ -1,6 +1,5 @@
 use glfw_sys::glfw_bindings::glfwGetTime;
 
-
 #[derive(Default)]
 pub struct FpsCounter {
     delta_time: f32,
@@ -8,16 +7,19 @@ pub struct FpsCounter {
 }
 
 impl FpsCounter {
+    #[allow(clippy::cast_possible_truncation)]
     pub fn update(&mut self) {
-        let current_time = unsafe { glfwGetTime() as f32};
+        let current_time = unsafe { glfwGetTime() as f32 };
         self.delta_time = current_time - self.last_time;
         self.last_time = current_time;
     }
 
     #[must_use]
+    #[allow(clippy::cast_sign_loss)]
+    #[allow(clippy::cast_possible_truncation)]
     pub fn get_fps(&self) -> u16 {
         if self.delta_time > 0.0 {
-           (1.0 / self.delta_time) as u16
+            (1.0 / self.delta_time) as u16
         } else {
             0
         }

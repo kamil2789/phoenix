@@ -28,7 +28,7 @@ pub struct Scene {
     background_color: RGBA,
     camera: Option<Camera>,
     pub event_manager: events::Manager,
-    fps_counter: FpsCounter
+    fps_counter: FpsCounter,
 }
 
 impl Scene {
@@ -102,6 +102,7 @@ impl Scene {
         Ok(())
     }
 
+    #[must_use]
     pub fn get_delta_time(&self) -> f32 {
         self.fps_counter.get_delta_time()
     }
@@ -134,7 +135,7 @@ impl Scene {
     }
 
     fn handle_user_input_callbacks(&mut self) {
-        event_interpreter::process_actions(self.event_manager.process_user_input_callbacks(), self);
+        event_interpreter::process_actions(self.event_manager.process_events(), self);
     }
 }
 

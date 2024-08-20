@@ -13,8 +13,10 @@ use phoenix::{
     entities::entity::Entity,
     events::{
         action::Action,
+        condition::Condition,
         keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W},
         user_input::{KeyboardInput, MouseInput},
+        Event, EventLifetime,
     },
     renderer::opengl::OpenGL,
     systems::{camera, scaler::Scaler, scene::Scene},
@@ -66,9 +68,21 @@ fn main() {
         .event_manager
         .bind_mouse(MouseInput::Scroll, Action::CameraFov(0.0));
 
-     scene
+    scene
         .event_manager
         .bind_mouse(MouseInput::CursorPos, Action::CameraOrientation(0.0, 0.0));
+
+    scene.event_manager.add_high_priority_event(Event::new(
+        EventLifetime::PerFrame,
+        Condition::OnAction(Action::CameraUpdateBackward),
+        Action::ChangeBackgroundColor(RGBA::from_hex(0xFF_00_00_FF)),
+    ));
+
+    scene.event_manager.add_event(Event::new(
+        EventLifetime::PerFrame,
+        Condition::OnAction(Action::CameraUpdateRight),
+        Action::ChangeBackgroundColor(RGBA::from_hex(0x00_FF_00_FF)),
+    ));
 
     let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
 

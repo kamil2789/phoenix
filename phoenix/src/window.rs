@@ -187,9 +187,17 @@ impl Window {
     pub fn set_capture_mouse(&self, capture: bool) {
         unsafe {
             if capture {
-                glfw_bindings::glfwSetInputMode(self.window, glfw_bindings::GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                glfw_bindings::glfwSetInputMode(
+                    self.window,
+                    glfw_bindings::GLFW_CURSOR,
+                    GLFW_CURSOR_DISABLED,
+                );
             } else {
-                glfw_bindings::glfwSetInputMode(self.window, glfw_bindings::GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                glfw_bindings::glfwSetInputMode(
+                    self.window,
+                    glfw_bindings::GLFW_CURSOR,
+                    GLFW_CURSOR_NORMAL,
+                );
             }
         }
     }
