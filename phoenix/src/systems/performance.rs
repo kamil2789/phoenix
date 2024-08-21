@@ -5,9 +5,7 @@ pub trait Timer {
 }
 
 #[derive(Default)]
-pub struct GlfwTimer {
-    
-}
+pub struct GlfwTimer {}
 
 pub struct FpsCounter {
     timer: Box<dyn Timer>,
@@ -23,6 +21,7 @@ impl Timer for GlfwTimer {
 }
 
 impl FpsCounter {
+    #[must_use]
     pub fn new(timer: Box<dyn Timer>) -> Self {
         Self {
             timer,
@@ -53,12 +52,12 @@ impl FpsCounter {
 mod tests {
     use std::cell::Cell;
 
-    use crate::systems::performance::FpsCounter;
     use super::Timer;
+    use crate::systems::performance::FpsCounter;
 
     #[derive(Default)]
     struct TestTimer {
-        tick: Cell<u16>
+        tick: Cell<u16>,
     }
 
     //The clock for each update moves one second i.e. one frame lasts one second

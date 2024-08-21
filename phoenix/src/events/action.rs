@@ -9,5 +9,5 @@ pub enum Action {
     CameraFov(f32),
     CameraOrientation(f32, f32),
     ChangeBackgroundColor(RGBA),
-    PrintFPS()
+    PrintFPS(),
 }

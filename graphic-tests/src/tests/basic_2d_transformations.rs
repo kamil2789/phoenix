@@ -122,6 +122,8 @@ pub fn test_2d_triangle_rotation_scale_perspective(window: Rc<Window>, render: B
         near_plane: 0.1,
         far_plane: 100.0,
         field_of_vision: 45.0,
+        speed: 2.5,
+        mouse_sensitivity: 0.1
     });
     scene.start_one_frame().unwrap();
 }
