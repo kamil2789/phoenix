@@ -67,7 +67,13 @@ impl Circle {
 
 #[cfg(test)]
 mod tests {
-    use crate::components::geometry::plane::{Shape, ShapeType, Triangle}; // Import the Shape trait and ShapeType enum.
+    use crate::components::{
+        geometry::{
+            plane::{Circle, Shape, ShapeType, Triangle},
+            Point, Radius,
+        },
+        FillMode,
+    }; // Import the Shape trait and ShapeType enum.
 
     #[test]
     fn test_new_triangle() {
@@ -76,5 +82,39 @@ mod tests {
 
         assert_eq!(triangle.get_vertices(), &vertices);
         assert_eq!(triangle.get_type(), ShapeType::Triangle);
+    }
+
+    #[test]
+    fn test_new_circle() {
+        let center = Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let radius = Radius {
+            width: 0.4,
+            height: 0.4,
+        };
+        let circle = Circle::new(&center, &radius, 6);
+        assert_eq!(circle.get_vertices().len(), 21);
+        assert_eq!(circle.get_type(), ShapeType::Circle);
+        assert_eq!(circle.get_fill_mode(), FillMode::Fan);
+    }
+
+    #[test]
+    fn test_new_circle_with_two_segments() {
+        let center = Point {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+        let radius = Radius {
+            width: 0.4,
+            height: 0.4,
+        };
+        let circle = Circle::new(&center, &radius, 2);
+        assert_eq!(circle.get_vertices().len(), 18);
+        assert_eq!(circle.get_type(), ShapeType::Circle);
+        assert_eq!(circle.get_fill_mode(), FillMode::Fan);
     }
 }

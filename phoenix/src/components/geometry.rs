@@ -33,3 +33,27 @@ impl From<Point> for Vec<f32> {
         vec![point.x, point.y, point.z]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_point_into_vec() {
+        let point = Point {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        };
+        let vec: Vec<f32> = point.into();
+        assert_eq!(vec, vec![1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn test_point_new_normalized() {
+        let point = Point::new_normalized(-0.2, 0.5, 1.8);
+        assert_eq!(point.x, 0.0);
+        assert_eq!(point.y, 0.5);
+        assert_eq!(point.z, 1.0);
+    }
+}

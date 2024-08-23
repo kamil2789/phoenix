@@ -138,7 +138,7 @@ mod tests {
     use std::rc::Rc;
 
     use crate::renderer::opengl::OpenGL;
-    use image::{DynamicImage, Rgb, Rgba};
+    use image::{DynamicImage, Rgba};
     use serial_test::serial;
 
     use super::*;
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_init_texture_with_config() {
+    fn test_init_texture_with_config_one() {
         //setup
         setup_opengl!();
 
@@ -158,25 +158,15 @@ mod tests {
         let img =
             DynamicImage::ImageRgba8(image::ImageBuffer::from_pixel(2, 2, Rgba([0, 0, 0, 0])));
 
-        let config_one = Config {
+        let config = Config {
             wrapping_horizontal: Wrapping::Repeat,
             wrapping_vertical: Wrapping::MirroredRepeat,
             min_filtering: MinFiltering::Filtering(Filtering::Linear),
             max_filtering: Filtering::Linear,
         };
 
-        let config_two = Config {
-            wrapping_horizontal: Wrapping::ClampToEdge,
-            wrapping_vertical: Wrapping::ClampToBorder,
-            min_filtering: MinFiltering::Mipmap(Mipmaps::LinearMipmapNearest),
-            max_filtering: Filtering::Nearest,
-        };
-
-        let texture = Texture::new(Rc::new(img.clone()), config_one);
-        let img2 = DynamicImage::ImageRgb8(image::ImageBuffer::from_pixel(2, 2, Rgb([0, 0, 0])));
-        let texture_two = Texture::new(Rc::new(img2), config_two);
+        let texture = Texture::new(Rc::new(img.clone()), config);
         let id = init_texture(&texture).unwrap();
-        let id_two = init_texture(&texture_two).unwrap();
 
         unsafe {
             //first texture
@@ -194,9 +184,32 @@ mod tests {
 
             gl::GetTexParameteriv(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, &mut param);
             assert_eq!(param as u32, gl::LINEAR);
+        }
+    }
 
-            //second texture
-            bind_texture(id_two);
+    #[test]
+    #[serial]
+    fn test_init_texture_with_config_two() {
+        setup_opengl!();
+
+        //test
+        let img =
+            DynamicImage::ImageRgba8(image::ImageBuffer::from_pixel(2, 2, Rgba([0, 0, 0, 0])));
+
+        let config = Config {
+            wrapping_horizontal: Wrapping::ClampToEdge,
+            wrapping_vertical: Wrapping::ClampToBorder,
+            min_filtering: MinFiltering::Mipmap(Mipmaps::LinearMipmapNearest),
+            max_filtering: Filtering::Nearest,
+        };
+
+        let texture = Texture::new(Rc::new(img.clone()), config);
+        let id = init_texture(&texture).unwrap();
+
+        unsafe {
+            //first texture
+            bind_texture(id);
+            let mut param = 0;
 
             gl::GetTexParameteriv(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, &mut param);
             assert_eq!(param as u32, gl::CLAMP_TO_EDGE);

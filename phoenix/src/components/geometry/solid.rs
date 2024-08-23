@@ -226,7 +226,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_sphere_vertices_count() {
+    fn test_sphere_new() {
         let center = Point {
             x: 0.0,
             y: 0.0,
@@ -237,12 +237,17 @@ mod tests {
             height: 1.0,
         };
         let precision = 10;
-        let sphere = Sphere::new(&center, &radius, precision);
+        let mut sphere = Sphere::new(&center, &radius, precision);
 
         // Calculate expected number of vertices
         let expected_vertices = Sphere::estimate_buffer_len(precision);
 
-        assert_eq!(sphere.vertices.len(), expected_vertices);
+        assert_eq!(sphere.get_vertices().len(), expected_vertices);
+        assert_eq!(sphere.get_type(), ShapeType::Sphere);
+        assert_eq!(sphere.get_fill_mode(), FillMode::Solid);
+
+        sphere.set_fill_mode(FillMode::Lines);
+        assert_eq!(sphere.get_fill_mode(), FillMode::Lines);
     }
 
     #[test]
@@ -264,5 +269,14 @@ mod tests {
         let high_precision_sphere = Sphere::new(&center, &radius, high_precision);
 
         assert!(low_precision_sphere.vertices.len() < high_precision_sphere.vertices.len());
+    }
+
+    #[test]
+    fn test_cube_new() {
+        let center_point = [0.1, 0.2, 0.3];
+        let cube = Cube::new(0.25, center_point);
+
+        assert_eq!(108, cube.get_vertices().len());
+        assert_eq!(ShapeType::Cube, cube.get_type());
     }
 }

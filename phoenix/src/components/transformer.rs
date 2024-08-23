@@ -157,7 +157,7 @@ impl Default for Builder {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{vec3, Matrix4, Vector3, Zero};
+    use cgmath::{assert_relative_eq, vec3, Matrix4, Vector3, Zero};
 
     #[test]
     fn test_new_transformer() {
@@ -173,6 +173,35 @@ mod tests {
         assert_eq!(result.result.translation, Vector3::zero());
         assert_eq!(result.result.rotation, Vector3::zero());
         assert_eq!(result.result.scale, vec3(1.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn test_new_builder_with_custom_axis_rotation_angle() {
+        let transformer = super::Builder::new()
+            .with_custom_axis_rotation_angle(vec3(1.0, 1.5, 3.0), 4.0)
+            .build();
+        let result = transformer.get_rotation_matrix().unwrap();
+        assert_relative_eq!(
+            result,
+            Matrix4::<f32>::new(
+                0.9977629,
+                0.060089543,
+                -0.02929908,
+                0.0,
+                -0.05949299,
+                0.99801147,
+                0.02082525,
+                0.0,
+                0.030492187,
+                -0.01903559,
+                0.9993537,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            )
+        );
     }
 
     #[test]

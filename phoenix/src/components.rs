@@ -30,7 +30,7 @@ pub enum Component {
     Transformer(Transformer),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum FillMode {
     Lines,
     Solid,
@@ -61,7 +61,7 @@ impl Default for FillMode {
 
 #[cfg(test)]
 mod tests {
-    use crate::components::Component;
+    use crate::components::{Component, FillMode};
 
     use std::mem;
     const MEMORY_USAGE_FOR_COMPONENTS_ENUM: usize = 56;
@@ -72,5 +72,10 @@ mod tests {
             MEMORY_USAGE_FOR_COMPONENTS_ENUM,
             mem::size_of::<Component>()
         );
+    }
+
+    #[test]
+    fn test_fill_mode_default() {
+        assert_eq!(FillMode::Solid, FillMode::default());
     }
 }

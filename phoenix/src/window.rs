@@ -207,6 +207,7 @@ impl Drop for Window {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use glfw_bindings::{glfwGetInputMode, GLFW_CURSOR};
     use serial_test::serial;
 
     #[test]
@@ -307,5 +308,34 @@ mod tests {
         let (x, y) = window.get_framebuffer_size();
         assert_eq!(x, 900);
         assert_eq!(y, 600);
+    }
+
+    #[test]
+    #[serial]
+    fn test_window_set_capture_mouse() {
+        let config = GlfwConfig::create().unwrap();
+        let resolution = Resolution {
+            width: 900,
+            height: 600,
+        };
+        let window = config.create_window("test_win_opengl", resolution).unwrap();
+
+        window.set_capture_mouse(true);
+
+        unsafe {
+            assert_eq!(
+                glfwGetInputMode(window.window, GLFW_CURSOR),
+                GLFW_CURSOR_DISABLED
+            );
+        }
+
+        window.set_capture_mouse(false);
+
+        unsafe {
+            assert_eq!(
+                glfwGetInputMode(window.window, GLFW_CURSOR),
+                GLFW_CURSOR_NORMAL
+            );
+        }
     }
 }
