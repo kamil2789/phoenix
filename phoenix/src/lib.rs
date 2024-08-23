@@ -4,3 +4,5 @@ pub mod events;
 pub mod renderer;
 pub mod systems;
 pub mod window;
+#[cfg(test)]
+pub mod testing;

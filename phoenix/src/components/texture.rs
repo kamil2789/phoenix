@@ -48,7 +48,7 @@ pub enum MinMag {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MinFiltering {
-    Mimpmap(Mipmaps),
+    Mipmap(Mipmaps),
     Filtering(Filtering),
 }
 
@@ -146,7 +146,7 @@ mod tests {
         let config2 = Config {
             wrapping_horizontal: Wrapping::ClampToEdge,
             wrapping_vertical: Wrapping::ClampToEdge,
-            min_filtering: MinFiltering::Mimpmap(Mipmaps::LinearMipmapLinear),
+            min_filtering: MinFiltering::Mipmap(Mipmaps::LinearMipmapLinear),
             max_filtering: Filtering::Nearest,
         };
 
