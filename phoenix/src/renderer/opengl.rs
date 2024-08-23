@@ -1,8 +1,10 @@
 use std::collections::HashMap;
+use std::ffi::{c_void, CString};
 use std::rc::Rc;
 
 use cgmath::Matrix4;
 use geometry_rendering::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f};
+use glfw_sys::glfw_bindings;
 
 use super::{Error, Render, ID};
 use crate::components::color::{Color, RGBA};
@@ -12,6 +14,7 @@ use crate::components::transformer::Transformer;
 use crate::components::{FillMode, Shape, ShapeType};
 use crate::entities::entity::View;
 use crate::renderer::Result;
+use crate::window::Window;
 
 mod geometry_rendering;
 mod shader_compiler;
@@ -21,7 +24,7 @@ pub type ShaderID = u32;
 pub type TextureID = u32;
 pub type EntityID = u32;
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct OpenGL {
     shaders_id: HashMap<EntityID, ShaderID>,
     compiled_shaders: HashMap<Rc<ShaderSource>, ShaderID>,
@@ -190,6 +193,22 @@ impl Render for OpenGL {
 }
 
 impl OpenGL {
+    /// # Errors
+    ///
+    /// Will return `Err` when the loading of OpenGL functions failed.
+    pub fn new(window: &Window) -> Result<Self> {
+        window.set_current();
+        OpenGL::load_gl_functions()?;
+        Ok(OpenGL {
+            compiled_shaders: HashMap::new(),
+            buffers: HashMap::new(),
+            shaders_id: HashMap::new(),
+            textures: HashMap::new(),
+            shapes_type: HashMap::new(),
+            shape_fill_mode: HashMap::new(),
+        })
+    }
+
     fn handle_shader(&mut self, shader: Rc<ShaderSource>) -> Result<ShaderID> {
         if let Some(val) = self.compiled_shaders.get(&shader) {
             return Ok(*val); //already compiled
@@ -255,6 +274,26 @@ impl OpenGL {
 
         Ok(())
     }
+
+    fn load_gl_functions() -> Result<()> {
+        gl::load_with(OpenGL::get_proc_address);
+        if gl::DrawBuffer::is_loaded()
+            && gl::GenTextures::is_loaded()
+            && gl::GetVertexArrayIndexediv::is_loaded()
+        {
+            Ok(())
+        } else {
+            Err(Error::RenderingError(String::from(
+                "GL functions were not loaded correctly",
+            )))
+        }
+    }
+
+    fn get_proc_address(func: &str) -> *const c_void {
+        let c_style_name = CString::new(func.as_bytes()).unwrap();
+        let ptr = c_style_name.as_ptr().cast::<u8>();
+        unsafe { glfw_bindings::glfwGetProcAddress(ptr) }
+    }
 }
 
 impl Drop for OpenGL {
@@ -287,7 +326,7 @@ mod tests {
         let window = config
             .create_window("test_opengl_init_entity", Resolution::default())
             .unwrap();
-        window.set_current().unwrap();
+        window.set_current();
 
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
@@ -297,7 +336,7 @@ mod tests {
         ));
         let entity = View::new(1, Some(&color), Some(&vertices), Some(shader), None);
 
-        let mut renderer = OpenGL::default();
+        let mut renderer = OpenGL::new(&window).unwrap();
         let ret = renderer.init_entity(entity);
         assert!(ret.is_ok());
         assert_eq!(renderer.compiled_shaders.len(), 1);
@@ -312,7 +351,7 @@ mod tests {
         let window = config
             .create_window("test_opengl_init_entity", Resolution::default())
             .unwrap();
-        window.set_current().unwrap();
+        window.set_current();
 
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
@@ -324,7 +363,7 @@ mod tests {
 
         let second_entity = View::new(1, None, None, None, None);
 
-        let mut renderer = OpenGL::default();
+        let mut renderer = OpenGL::new(&window).unwrap();
 
         assert!(renderer.init_entity(entity).is_ok());
         assert!(renderer.init_entity(second_entity).is_ok());
@@ -341,7 +380,7 @@ mod tests {
         let window = config
             .create_window("test_opengl_init_entity", Resolution::default())
             .unwrap();
-        window.set_current().unwrap();
+        window.set_current();
 
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
@@ -351,7 +390,7 @@ mod tests {
         ));
         let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None);
 
-        let mut renderer = OpenGL::default();
+        let mut renderer = OpenGL::new(&window).unwrap();
         assert!(renderer.init_entity(entity).is_ok());
 
         let second_entity = View::new(2, Some(&color), Some(&vertices), Some(shader), None);

@@ -38,10 +38,10 @@ fn main() {
             .unwrap(),
     );
 
-    window.set_current().unwrap();
+    window.set_current();
     window.set_capture_mouse(true);
 
-    let render = Box::<OpenGL>::default();
+    let render = Box::new(OpenGL::new(window.as_ref()).unwrap());
     let scaler = Scaler::new(window.get_resolution());
 
     let mut scene = Scene::new(window, render);
@@ -95,7 +95,7 @@ fn main() {
     let texture_config = texture::Config {
         wrapping_horizontal: Wrapping::Repeat,
         wrapping_vertical: Wrapping::Repeat,
-        min_filtering: MinFiltering::Mimpmap(Mipmaps::LinearMipmapLinear),
+        min_filtering: MinFiltering::Mipmap(Mipmaps::LinearMipmapLinear),
         max_filtering: Filtering::Nearest,
     };
 

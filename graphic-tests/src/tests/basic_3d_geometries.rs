@@ -28,7 +28,7 @@ pub fn test_3d_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn
     let texture_config = texture::Config {
         wrapping_horizontal: Wrapping::Repeat,
         wrapping_vertical: Wrapping::Repeat,
-        min_filtering: MinFiltering::Mimpmap(Mipmaps::LinearMipmapLinear),
+        min_filtering: MinFiltering::Mipmap(Mipmaps::LinearMipmapLinear),
         max_filtering: Filtering::Nearest,
     };
 

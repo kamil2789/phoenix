@@ -86,7 +86,7 @@ pub fn are_images_equal(first: &image::DynamicImage, second: &image::DynamicImag
 
 #[cfg(test)]
 mod tests {
-    use phoenix::window::GlfwConfig;
+    use phoenix::{renderer::opengl::OpenGL, window::GlfwConfig};
     use serial_test::serial;
 
     use crate::image::{are_images_equal, read_image_from_file, save_screen_as_img_png};
@@ -103,7 +103,8 @@ mod tests {
         };
 
         let window = config.create_window("test", resolution).unwrap();
-        window.set_current().unwrap();
+        window.set_current();
+        let _renderer = OpenGL::new(&window).unwrap();
 
         let result = save_screen_as_img_png(&window, "test.png");
         assert!(result.is_ok());
@@ -122,7 +123,8 @@ mod tests {
         };
 
         let window = config.create_window("test", resolution).unwrap();
-        window.set_current().unwrap();
+        window.set_current();
+        let _renderer = OpenGL::new(&window).unwrap();
 
         let result = save_screen_as_img_png(&window, "test.png");
         assert!(result.is_ok());
@@ -144,7 +146,9 @@ mod tests {
         };
 
         let window = config.create_window("test", resolution).unwrap();
-        window.set_current().unwrap();
+        window.set_current();
+
+        let _renderer = OpenGL::new(&window).unwrap();
 
         save_screen_as_img_png(&window, "test.png").unwrap();
         assert!(std::path::Path::new("test.png").exists());

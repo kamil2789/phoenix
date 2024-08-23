@@ -89,10 +89,13 @@ fn delete_shader(shader_id: u32) {
 #[cfg(test)]
 mod tests {
     use super::compile;
+    use crate::renderer::opengl::OpenGL;
+    use crate::testing::setup_opengl;
     use crate::window::GlfwConfig;
     use crate::window::Resolution;
-    use crate::window::Window;
     use serial_test::serial;
+
+    use std::rc::Rc;
 
     const VERTEX_SHADER_SRC: &str = r#"
         #version 330 core
@@ -110,26 +113,10 @@ mod tests {
         }
     "#;
 
-    fn set_glfw_window() -> (GlfwConfig, Window) {
-        let config = GlfwConfig::create().unwrap();
-        let window = config
-            .create_window(
-                "Learn OpenGL",
-                Resolution {
-                    width: 800,
-                    height: 600,
-                },
-            )
-            .unwrap();
-
-        window.set_current().unwrap();
-        (config, window)
-    }
-
     #[test]
     #[serial]
     fn test_compile_shader_no_error() {
-        let (_config, _window) = set_glfw_window();
+        setup_opengl!();
 
         let shader_id = compile(VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC);
         assert!(shader_id.is_ok());
@@ -138,7 +125,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_compile_shader_invalid_shaders_src_get_err() {
-        let (_config, _window) = set_glfw_window();
+        setup_opengl!();
 
         let mut shader_id = compile(VERTEX_SHADER_SRC, "Invalidd data");
         assert!(shader_id.is_err());

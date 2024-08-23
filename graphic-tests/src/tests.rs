@@ -99,13 +99,14 @@ static TESTS: [(TestFunction, TestName); 16] = [
 pub fn run() {
     prepare_working_directory();
     let config = create_config();
-    let renderer = Box::<OpenGL>::default();
+    let window = Rc::new(create_window(&config));
+    let renderer = Box::new(OpenGL::new(window.as_ref()).unwrap());
     let mut failed_tests = Vec::new();
     let mut passed_tests = Vec::new();
 
     println!("running opengl tests");
     for test in TESTS {
-        if run_specific_test(&config, renderer.clone(), test.0, test.1) {
+        if run_specific_test(&window, renderer.clone(), test.0, test.1) {
             passed_tests.push(test.1);
         } else {
             failed_tests.push(test.1);
@@ -116,12 +117,11 @@ pub fn run() {
 }
 
 pub fn run_specific_test(
-    config: &GlfwConfig,
+    window: &Rc<Window>,
     renderer: Box<dyn Render>,
     run_test: fn(Rc<Window>, Box<dyn Render>),
     test_name: &str,
 ) -> bool {
-    let window = Rc::new(create_window(config));
     run_test(window.clone(), renderer);
     let result_path = TEST_RESULTS_DIR.to_owned() + test_name + TEST_FILE_EXTENSION;
     let template_path = TEST_TEMPLATE_DIR.to_owned() + test_name + TEST_FILE_EXTENSION;

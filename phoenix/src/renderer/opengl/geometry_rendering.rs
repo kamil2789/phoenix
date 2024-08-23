@@ -244,22 +244,21 @@ fn unbind_buffers() {
 #[cfg(test)]
 mod tests {
     use super::combine_position_with_color;
+    use crate::renderer::opengl::OpenGL;
     use crate::{
         renderer::opengl::geometry_rendering::{
             combine_position_with_color_and_texture, combine_position_with_texture,
         },
+        testing::setup_opengl,
         window::{GlfwConfig, Resolution},
     };
     use serial_test::serial;
+    use std::rc::Rc;
 
     #[test]
     #[serial]
     fn test_init_triangle() {
-        let config = GlfwConfig::create().unwrap();
-        let window = config
-            .create_window("test_win_opengl", Resolution::default())
-            .unwrap();
-        window.set_current().unwrap();
+        setup_opengl!();
 
         let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
         let buffers = super::init_shape(&vertices);

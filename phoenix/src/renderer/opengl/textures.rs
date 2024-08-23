@@ -137,22 +137,27 @@ fn match_wrapping(wrapping: Wrapping) -> u32 {
 mod tests {
     use std::rc::Rc;
 
+    use crate::renderer::opengl::OpenGL;
     use image::{DynamicImage, Rgb, Rgba};
     use serial_test::serial;
 
-    use crate::{components::texture::Config, testing::setup_window, window::{GlfwConfig, Resolution}};
     use super::*;
+    use crate::{
+        components::texture::Config,
+        testing::setup_opengl,
+        window::{GlfwConfig, Resolution},
+    };
 
     #[test]
     #[serial]
     fn test_init_texture_with_config() {
         //setup
-        setup_window!();
+        setup_opengl!();
 
         //test
         let img =
             DynamicImage::ImageRgba8(image::ImageBuffer::from_pixel(2, 2, Rgba([0, 0, 0, 0])));
-    
+
         let config_one = Config {
             wrapping_horizontal: Wrapping::Repeat,
             wrapping_vertical: Wrapping::MirroredRepeat,
@@ -168,8 +173,7 @@ mod tests {
         };
 
         let texture = Texture::new(Rc::new(img.clone()), config_one);
-        let img2 =
-        DynamicImage::ImageRgb8(image::ImageBuffer::from_pixel(2, 2, Rgb([0, 0, 0])));
+        let img2 = DynamicImage::ImageRgb8(image::ImageBuffer::from_pixel(2, 2, Rgb([0, 0, 0])));
         let texture_two = Texture::new(Rc::new(img2), config_two);
         let id = init_texture(&texture).unwrap();
         let id_two = init_texture(&texture_two).unwrap();

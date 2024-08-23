@@ -1,4 +1,4 @@
-macro_rules! setup_window {
+macro_rules! setup_opengl {
     () => {
         let config = GlfwConfig::create().unwrap();
         let window = Rc::new(
@@ -12,8 +12,9 @@ macro_rules! setup_window {
                 )
                 .unwrap(),
         );
-        window.set_current().unwrap();
+        window.set_current();
+        let _renderer = OpenGL::new(&window).unwrap();
     };
 }
 
-pub(crate) use setup_window;
+pub(crate) use setup_opengl;

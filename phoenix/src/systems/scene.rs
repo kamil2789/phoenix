@@ -51,7 +51,7 @@ impl Scene {
     /// Returns Err when rendering in particular frame fails.
     pub fn start(&mut self) -> Result<()> {
         if !self.window.is_current() {
-            self.window.set_current()?;
+            self.window.set_current();
         }
 
         while self.window.is_running() {
@@ -75,7 +75,7 @@ impl Scene {
     /// Returns Err when the window fails to set itself as the current window.
     pub fn start_one_frame(&mut self) -> Result<()> {
         if !self.window.is_current() {
-            self.window.set_current()?;
+            self.window.set_current();
         }
 
         self.frame()
@@ -98,7 +98,7 @@ impl Scene {
     ///
     /// Returns Err when the window fails to set itself as the current window.
     pub fn set_current_window(&self) -> Result<()> {
-        self.window.set_current()?;
+        self.window.set_current();
         Ok(())
     }
 

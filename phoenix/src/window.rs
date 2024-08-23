@@ -1,9 +1,7 @@
-use gl;
 use glfw_sys::glfw_bindings;
 use glfw_sys::glfw_bindings::GLFW_CURSOR_DISABLED;
 use glfw_sys::glfw_bindings::GLFW_CURSOR_NORMAL;
 use std::ffi::c_int;
-use std::ffi::c_void;
 use std::ffi::CString;
 use std::ffi::NulError;
 
@@ -127,15 +125,10 @@ impl Window {
         unsafe { glfw_bindings::glfwWindowShouldClose(self.window) == 0 }
     }
 
-    /// # Errors
-    ///
-    /// Possibly internal error of `gl::load_with`.
-    pub fn set_current(&self) -> Result<()> {
+    pub fn set_current(&self) {
         unsafe {
             glfw_bindings::glfwMakeContextCurrent(self.window);
         }
-        Window::load_gl_functions()?;
-        Ok(())
     }
 
     #[must_use]
@@ -201,26 +194,6 @@ impl Window {
             }
         }
     }
-
-    fn load_gl_functions() -> Result<()> {
-        gl::load_with(Window::get_proc_address);
-        if gl::DrawBuffer::is_loaded()
-            && gl::GenTextures::is_loaded()
-            && gl::GetVertexArrayIndexediv::is_loaded()
-        {
-            Ok(())
-        } else {
-            Err(WinError::RuntimeError(String::from(
-                "GL functions were not loaded correctly",
-            )))
-        }
-    }
-
-    fn get_proc_address(func: &str) -> *const c_void {
-        let c_style_name = CString::new(func.as_bytes()).unwrap();
-        let ptr = c_style_name.as_ptr().cast::<u8>();
-        unsafe { glfw_bindings::glfwGetProcAddress(ptr) }
-    }
 }
 
 impl Drop for Window {
@@ -281,7 +254,7 @@ mod tests {
             height: 600,
         };
         let window = config.create_window("test_win_opengl", resolution).unwrap();
-        window.set_current().unwrap();
+        window.set_current();
         window.swap_buffers();
         assert!(window.is_running());
     }
