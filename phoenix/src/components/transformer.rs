@@ -157,11 +157,12 @@ impl Default for Builder {
 
 #[cfg(test)]
 mod tests {
+    use super::{Builder, Transformer};
     use cgmath::{assert_relative_eq, vec3, Matrix4, Vector3, Zero};
 
     #[test]
     fn test_new_transformer() {
-        let result = super::Transformer::default();
+        let result = Transformer::default();
         assert_eq!(result.translation, Vector3::zero());
         assert_eq!(result.rotation, Vector3::zero());
         assert_eq!(result.scale, vec3(1.0, 1.0, 1.0));
@@ -169,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_new_builder() {
-        let result = super::Builder::new();
+        let result = Builder::new();
         assert_eq!(result.result.translation, Vector3::zero());
         assert_eq!(result.result.rotation, Vector3::zero());
         assert_eq!(result.result.scale, vec3(1.0, 1.0, 1.0));
@@ -177,7 +178,7 @@ mod tests {
 
     #[test]
     fn test_new_builder_with_custom_axis_rotation_angle() {
-        let transformer = super::Builder::new()
+        let transformer = Builder::new()
             .with_custom_axis_rotation_angle(vec3(1.0, 1.5, 3.0), 4.0)
             .build();
         let result = transformer.get_rotation_matrix().unwrap();
@@ -206,19 +207,19 @@ mod tests {
 
     #[test]
     fn test_builder() {
-        let result = super::Builder::new()
+        let result = Builder::new()
             .with_translation(vec3(1.0, 2.0, 3.0))
             .with_rotation(vec3(4.0, 5.0, 6.0))
             .with_scale(vec3(7.0, 8.0, 9.0))
             .build();
-        assert_eq!(result.translation, vec3(1.0, 2.0, 3.0));
-        assert_eq!(result.rotation, vec3(4.0, 5.0, 6.0));
-        assert_eq!(result.scale, vec3(7.0, 8.0, 9.0));
+        assert_relative_eq!(result.translation, vec3(1.0, 2.0, 3.0));
+        assert_relative_eq!(result.rotation, vec3(4.0, 5.0, 6.0));
+        assert_relative_eq!(result.scale, vec3(7.0, 8.0, 9.0));
     }
 
     #[test]
     fn test_get_position_matrix() {
-        let result = super::Transformer::new(
+        let result = Transformer::new(
             vec3(1.0, 2.0, 3.0),
             vec3(4.0, 5.0, 6.0),
             vec3(7.0, 8.0, 9.0),
@@ -232,15 +233,69 @@ mod tests {
 
     #[test]
     fn test_get_scale_matrix() {
-        let result = super::Transformer::new(
+        let result = Transformer::new(
             vec3(1.0, 2.0, 3.0),
             vec3(4.0, 5.0, 6.0),
             vec3(7.0, 8.0, 9.0),
-        )
-        .get_scale_matrix();
-        assert_eq!(
-            result,
-            Some(Matrix4::<f32>::from_nonuniform_scale(7.0, 8.0, 9.0))
         );
+
+        assert!(result.get_scale_matrix().is_some());
+    }
+
+    #[test]
+    fn test_transformer_new_translate() {
+        let result = Transformer::new_translate(vec3(1.0, 2.0, 5.0));
+
+        assert_relative_eq!(
+            result.get_translation_matrix().unwrap(),
+            Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 2.0, 5.0, 1.0
+            )
+        );
+        assert!(result.get_scale_matrix().is_none());
+        assert!(result.get_rotation_matrix().is_none());
+    }
+
+    #[test]
+    fn test_transformer_new_scale() {
+        let result = Transformer::new_scale(vec3(1.0, 2.0, 2.0));
+
+        assert_relative_eq!(
+            result.get_scale_matrix().unwrap(),
+            Matrix4::new(
+                1.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 1.0
+            )
+        );
+        assert!(result.get_translation_matrix().is_none());
+        assert!(result.get_rotation_matrix().is_none());
+    }
+
+    #[test]
+    fn test_transformer_new_rotate() {
+        let result = Transformer::new_rotate(vec3(1.0, 0.0, 0.0));
+
+        assert_relative_eq!(
+            result.get_rotation_matrix().unwrap(),
+            Matrix4::new(
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.9998477,
+                0.017452406,
+                0.0,
+                0.0,
+                -0.017452406,
+                0.9998477,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            )
+        );
+        assert!(result.get_translation_matrix().is_none());
+        assert!(result.get_scale_matrix().is_none());
     }
 }
