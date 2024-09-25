@@ -8,6 +8,7 @@ pub type TexID = u32;
 pub struct Texture {
     data: Rc<DynamicImage>,
     config: Config,
+    vertices: Vec<f32>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -63,7 +64,20 @@ pub fn load(path: &Path) -> Result<Rc<DynamicImage>> {
 impl Texture {
     #[must_use]
     pub fn new(data: Rc<DynamicImage>, config: Config) -> Self {
-        Self { data, config }
+        Self {
+            data,
+            config,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn new_with_vertices(data: Rc<DynamicImage>, config: Config, vertices: Vec<f32>) -> Self {
+        Self {
+            data,
+            config,
+            vertices,
+        }
     }
 
     pub fn set_config(&mut self, config: Config) {
@@ -73,6 +87,11 @@ impl Texture {
     #[must_use]
     pub fn get_config(&self) -> &Config {
         &self.config
+    }
+
+    #[must_use]
+    pub fn get_vertices(&self) -> &[f32] {
+        &self.vertices
     }
 
     #[must_use]
@@ -94,6 +113,15 @@ impl Texture {
     pub fn is_alpha_channel(&self) -> bool {
         matches!(*self.data, DynamicImage::ImageRgba8(_))
     }
+
+    #[must_use]
+    pub fn unpack_vertices(texture: Option<&Texture>) -> Option<&[f32]> {
+        if let Some(val) = texture {
+            Some(val.get_vertices())
+        } else {
+            None
+        }
+    }
 }
 
 impl Default for Texture {
@@ -106,6 +134,7 @@ impl Default for Texture {
                 min_filtering: MinFiltering::Filtering(Filtering::Linear),
                 max_filtering: Filtering::Linear,
             },
+            vertices: vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0],
         }
     }
 }
@@ -131,6 +160,25 @@ mod tests {
         assert_eq!(texture.get_width(), 2);
         assert_eq!(texture.get_height(), 2);
         assert_eq!(texture.get_config(), &config);
+    }
+
+    #[test]
+    fn test_texture_creation_with_vertices() {
+        let img =
+            DynamicImage::ImageRgba8(image::ImageBuffer::from_pixel(2, 2, Rgba([0, 0, 0, 0])));
+        let config = Config {
+            wrapping_horizontal: Wrapping::Repeat,
+            wrapping_vertical: Wrapping::Repeat,
+            min_filtering: MinFiltering::Filtering(Filtering::Linear),
+            max_filtering: Filtering::Linear,
+        };
+        let vertices = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+        let texture = Texture::new_with_vertices(Rc::new(img), config.clone(), vertices.clone());
+
+        assert_eq!(texture.get_width(), 2);
+        assert_eq!(texture.get_height(), 2);
+        assert_eq!(texture.get_config(), &config);
+        assert_eq!(texture.get_vertices(), &vertices);
     }
 
     #[test]

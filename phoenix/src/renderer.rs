@@ -67,4 +67,5 @@ pub trait Render {
     ) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
     fn enable_3d(&self);
+    fn get_last_error_code(&self) -> Option<u32>;
 }

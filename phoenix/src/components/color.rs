@@ -73,6 +73,17 @@ impl Color {
             Type::Uniform(_) => None,
         }
     }
+
+    #[must_use]
+    pub fn unpack_vertices(color: Option<&Color>) -> Option<&[f32]> {
+        if let Some(color) = color {
+            if let Some(val) = color.as_ref_vertices() {
+                return Some(val.as_slice());
+            }
+        }
+
+        None
+    }
 }
 
 impl Default for Color {

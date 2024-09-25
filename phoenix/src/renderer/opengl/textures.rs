@@ -66,7 +66,7 @@ fn generate_texture(texture: &Texture) -> Result<()> {
         );
 
         let error_code = gl::GetError();
-        if error_code == gl::NO_ERROR {
+        if error_code == gl::NO_ERROR || error_code != gl::INVALID_ENUM {
             Ok(())
         } else {
             Err(Error::RenderingError(format!(

@@ -3,7 +3,7 @@ use std::ffi::{c_void, CString};
 use std::rc::Rc;
 
 use cgmath::Matrix4;
-use geometry_rendering::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f};
+use common::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f};
 use glfw_sys::glfw_bindings;
 
 use super::{Error, Render, ID};
@@ -16,6 +16,7 @@ use crate::entities::entity::View;
 use crate::renderer::Result;
 use crate::window::Window;
 
+mod common;
 mod geometry_rendering;
 mod shader_compiler;
 mod textures;
@@ -84,7 +85,7 @@ impl Render for OpenGL {
         }
 
         if let Some(shape) = entity.shape {
-            let buffers = OpenGL::handle_shape(shape, &entity)?;
+            let buffers = OpenGL::handle_shape(shape, entity.color, entity.texture)?;
             self.buffers.insert(entity.entity_id, buffers);
             if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
                 OpenGL::set_uniform_shader_variables(&entity, *shader_id)?;
@@ -190,6 +191,15 @@ impl Render for OpenGL {
             gl::Enable(gl::DEPTH_TEST);
         }
     }
+
+    fn get_last_error_code(&self) -> Option<u32> {
+        let err_code = unsafe { gl::GetError() };
+        if err_code == gl::NO_ERROR {
+            None
+        } else {
+            Some(err_code)
+        }
+    }
 }
 
 impl OpenGL {
@@ -227,39 +237,16 @@ impl OpenGL {
         }
     }
 
-    fn handle_shape(shape: &dyn Shape, entity: &View) -> Result<Buffers> {
-        if entity.texture.is_some() {
-            if let Some(val) = entity.color {
-                if let Some(tmp) = val.as_ref_vertices() {
-                    return Ok(geometry_rendering::init_shape_with_color_and_texture(
-                        shape.get_vertices(),
-                        tmp,
-                    ));
-                }
-            }
-            Ok(geometry_rendering::init_shape_with_texture(
-                shape.get_vertices(),
-            ))
-        } else if let Some(val_color) = entity.color {
-            OpenGL::handle_colored_triangle(shape, val_color)
-        } else {
-            Ok(geometry_rendering::init_shape(shape.get_vertices()))
-        }
-    }
-
-    fn handle_colored_triangle(shape: &dyn Shape, color: &Color) -> Result<Buffers> {
-        if color.as_ref_uniform().is_some() {
-            Ok(geometry_rendering::init_shape(shape.get_vertices()))
-        } else if let Some(vert_color) = color.as_ref_vertices() {
-            Ok(geometry_rendering::init_shape_with_color(
-                shape.get_vertices(),
-                vert_color,
-            ))
-        } else {
-            Err(Error::RenderingError(
-                "Not supported color type".to_string(),
-            ))
-        }
+    fn handle_shape(
+        shape: &dyn Shape,
+        color: Option<&Color>,
+        texture: Option<&Texture>,
+    ) -> Result<Buffers> {
+        geometry_rendering::init_shape(
+            shape.get_vertices(),
+            Color::unpack_vertices(color),
+            Texture::unpack_vertices(texture),
+        )
     }
 
     fn set_uniform_shader_variables(entity: &View, shader_id: u32) -> Result<()> {

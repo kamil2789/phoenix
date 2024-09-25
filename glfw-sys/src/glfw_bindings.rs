@@ -43,6 +43,7 @@ extern "C" {
     pub fn glfwDestroyWindow(window: *mut GLFWwindow);
     pub fn glfwGetProcAddress(procname: *const c_uchar) -> GLFWglproc;
     pub fn glfwGetTime() -> f64;
+    pub fn glfwGetInputMode(window: *mut GLFWwindow, mode: c_int) -> c_int;
 
     //callbacks
     pub fn glfwSetInputMode(window: *mut GLFWwindow, mode: c_int, value: c_int);

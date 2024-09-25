@@ -107,6 +107,11 @@ impl Scene {
         self.fps_counter.get_delta_time()
     }
 
+    #[must_use]
+    pub fn get_last_error_code(&self) -> Option<u32> {
+        self.renderer.get_last_error_code()
+    }
+
     fn frame(&mut self) -> Result<()> {
         self.fps_counter.update();
         self.renderer.set_background_color(&self.background_color);
@@ -218,6 +223,10 @@ mod tests {
             }
 
             fn enable_3d(&self) {
+                todo!()
+            }
+
+            fn get_last_error_code(&self) -> Option<u32> {
                 todo!()
             }
         }

@@ -1,120 +1,116 @@
-use cgmath::Matrix;
-use cgmath::Matrix4;
+use crate::renderer::{Error, Result};
 
-use crate::{
-    components::color::RGBA,
-    renderer::{Error, Result},
-};
-
+use super::common::get_last_error_code;
 use super::Buffers;
-use std::ffi::CString;
 
-//RESULT TYPE SHOULD BE RESULT<T, ERR> - CHECK FOR ERR CASE
-#[must_use]
-pub fn init_shape(vertices: &[f32]) -> Buffers {
-    let buffers = generate_buffers(vertices);
-    bind_buffers(&buffers);
-    send_data_to_cpu_buffer(vertices);
-    //layout 0, 3 vertices and no other attributes 0
-    set_vertex_attribute_pointer(0, 3, 3, 0);
-    unbind_buffers();
-    buffers
+struct VertexAttrPointerArgs {
+    pub layout: u32,
+    pub size: i32,
+    pub stride: usize,
+    pub offset: usize,
 }
 
-pub fn init_shape_with_color(position: &[f32], color: &[f32]) -> Buffers {
-    let buffers = generate_buffers(position);
+pub fn init_shape(
+    vertices: &[f32],
+    color: Option<&[f32]>,
+    texture: Option<&[f32]>,
+) -> Result<Buffers> {
+    let buffers = generate_buffers(vertices.len());
     bind_buffers(&buffers);
-    let vertices = combine_position_with_color(position, color);
-    send_data_to_cpu_buffer(&vertices);
-    //position
-    set_vertex_attribute_pointer(0, 3, 7, 0);
-    //color
-    set_vertex_attribute_pointer(1, 4, 7, 3);
+
+    send_data_to_gpu_buffer(&combine_vertices(vertices, color, texture));
+
+    create_vertex_attribute_pointer_argument_list(color.is_some(), texture.is_some())
+        .into_iter()
+        .for_each(|args| set_vertex_attribute_pointer(&args));
+
     unbind_buffers();
-    buffers
-}
 
-pub fn init_shape_with_texture(position: &[f32]) -> Buffers {
-    let buffers = generate_buffers(position);
-    bind_buffers(&buffers);
-
-    let vertices = if position.len() > 100 {
-        combine_position_with_color_and_texture_for_3d_cube(position)
+    if let Some(err_code) = get_last_error_code() {
+        Err(Error::RenderingError(format!(
+            "OpenGL error code {err_code}"
+        )))
     } else {
-        combine_position_with_texture(position)
-    };
-
-    send_data_to_cpu_buffer(&vertices);
-    //position
-    set_vertex_attribute_pointer(0, 3, 5, 0);
-    //color
-    set_vertex_attribute_pointer(1, 2, 5, 3);
-    unbind_buffers();
-    buffers
-}
-
-pub fn init_shape_with_color_and_texture(position: &[f32], color: &[f32]) -> Buffers {
-    let buffers = generate_buffers(position);
-    bind_buffers(&buffers);
-    let vertices = combine_position_with_color_and_texture(position, color);
-    send_data_to_cpu_buffer(&vertices);
-    //position
-    set_vertex_attribute_pointer(0, 3, 9, 0);
-    //color
-    set_vertex_attribute_pointer(1, 4, 9, 3);
-    //texture
-    set_vertex_attribute_pointer(2, 2, 9, 7);
-    unbind_buffers();
-    buffers
-}
-
-pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
-    let location = get_uniform_variable_location(shader_id, variable_name)?;
-    unsafe {
-        gl::UseProgram(shader_id);
-        gl::Uniform1i(location, 1);
-    };
-    Ok(())
-}
-
-pub fn set_uniform_matrix4f(
-    variable_name: &str,
-    matrix: &Matrix4<f32>,
-    shader_id: u32,
-) -> Result<()> {
-    let location = get_uniform_variable_location(shader_id, variable_name)?;
-    unsafe { gl::UseProgram(shader_id) };
-    unsafe { gl::UniformMatrix4fv(location, 1, gl::FALSE, matrix.as_ptr()) };
-    Ok(())
-}
-
-pub fn set_uniform_color(variable_name: &str, rgba: &RGBA, shader_id: u32) -> Result<()> {
-    let color_location = get_uniform_variable_location(shader_id, variable_name)?;
-    unsafe { gl::UseProgram(shader_id) };
-    let color = rgba.get_as_normalized_f32();
-    unsafe { gl::Uniform4f(color_location, color[0], color[1], color[2], color[3]) };
-    Ok(())
-}
-
-fn get_uniform_variable_location(shader_id: u32, variable_name: &str) -> Result<i32> {
-    if let Ok(name) = CString::new(variable_name) {
-        let location = unsafe { gl::GetUniformLocation(shader_id, name.as_ptr()) };
-        if location == -1 {
-            Err(Error::RenderingError(
-                "Uniform variable location not found".to_string(),
-            ))
-        } else {
-            Ok(location)
-        }
-    } else {
-        Err(Error::RenderingError(
-            "Invalid variable name for uniform searching".to_string(),
-        ))
+        Ok(buffers)
     }
 }
 
-//TODO REMOVE THIS
-fn combine_position_with_color_and_texture_for_3d_cube(position: &[f32]) -> Vec<f32> {
+fn combine_vertices(vertices: &[f32], color: Option<&[f32]>, texture: Option<&[f32]>) -> Vec<f32> {
+    if let Some(color) = color {
+        if let Some(texture) = texture {
+            return combine_position_with_color_and_texture(vertices, color, texture);
+        }
+        return combine_position_with_color(vertices, color);
+    }
+
+    if let Some(texture) = texture {
+        if vertices.len() > 100 {
+            return combine_position_with_texture_for_3d_cube(vertices);
+        }
+        return combine_position_with_texture(vertices, texture);
+    }
+
+    vertices.to_vec()
+}
+
+fn create_vertex_attribute_pointer_argument_list(
+    is_color: bool,
+    is_texture: bool,
+) -> Vec<VertexAttrPointerArgs> {
+    let mut result = Vec::new();
+    let mut stride = 3;
+    if is_color {
+        stride += 4;
+    }
+
+    if is_texture {
+        stride += 2;
+    }
+
+    result.push(VertexAttrPointerArgs {
+        layout: 0,
+        size: 3,
+        stride,
+        offset: 0,
+    });
+
+    if is_color && is_texture {
+        result.push(VertexAttrPointerArgs {
+            layout: 1,
+            size: 4,
+            stride,
+            offset: 3,
+        });
+        result.push(VertexAttrPointerArgs {
+            layout: 2,
+            size: 2,
+            stride,
+            offset: 7,
+        });
+    }
+
+    if is_texture {
+        result.push(VertexAttrPointerArgs {
+            layout: 1,
+            size: 2,
+            stride,
+            offset: 3,
+        });
+    }
+
+    if is_color {
+        result.push(VertexAttrPointerArgs {
+            layout: 1,
+            size: 4,
+            stride,
+            offset: 3,
+        });
+    }
+
+    result
+}
+
+fn combine_position_with_texture_for_3d_cube(position: &[f32]) -> Vec<f32> {
     let texture_vertices: [f32; 72] = [
         0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0,
         1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
@@ -149,14 +145,11 @@ fn combine_position_with_color(position: &[f32], color: &[f32]) -> Vec<f32> {
     result
 }
 
-fn combine_position_with_texture(position: &[f32]) -> Vec<f32> {
-    let texture_vertices = [0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
-    let mut result = Vec::with_capacity(position.len() + texture_vertices.len());
+fn combine_position_with_texture(position: &[f32], texture: &[f32]) -> Vec<f32> {
+    let mut result = Vec::with_capacity(position.len() + texture.len());
     let pos_size = 3;
     let texture_size = 2;
-    let iter = position
-        .chunks(pos_size)
-        .zip(texture_vertices.chunks(texture_size));
+    let iter = position.chunks(pos_size).zip(texture.chunks(texture_size));
 
     for (pos, tex) in iter {
         result.extend_from_slice(pos);
@@ -165,16 +158,19 @@ fn combine_position_with_texture(position: &[f32]) -> Vec<f32> {
     result
 }
 
-fn combine_position_with_color_and_texture(position: &[f32], color: &[f32]) -> Vec<f32> {
-    let texture_vertices = [0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
-    let mut result = Vec::with_capacity(position.len() + color.len() + texture_vertices.len());
+fn combine_position_with_color_and_texture(
+    position: &[f32],
+    color: &[f32],
+    texture: &[f32],
+) -> Vec<f32> {
+    let mut result = Vec::with_capacity(position.len() + color.len() + texture.len());
     let pos_size = 3;
     let color_size = 4;
     let texture_size = 2;
     let iter = position
         .chunks(pos_size)
         .zip(color.chunks(color_size))
-        .zip(texture_vertices.chunks(texture_size));
+        .zip(texture.chunks(texture_size));
 
     for ((pos, col), tex) in iter {
         result.extend_from_slice(pos);
@@ -184,7 +180,7 @@ fn combine_position_with_color_and_texture(position: &[f32], color: &[f32]) -> V
     result
 }
 
-fn generate_buffers(vertices: &[f32]) -> Buffers {
+fn generate_buffers(vertices_count: usize) -> Buffers {
     let mut vertex_array_object = 0;
     let mut vertex_buffer_object = 0;
     unsafe {
@@ -195,7 +191,7 @@ fn generate_buffers(vertices: &[f32]) -> Buffers {
     Buffers::new(
         vertex_array_object,
         vertex_buffer_object,
-        u16::try_from(vertices.len() / 3).unwrap_or(0),
+        u16::try_from(vertices_count / 3).unwrap_or(0),
     )
 }
 
@@ -206,7 +202,7 @@ fn bind_buffers(buffers: &Buffers) {
     }
 }
 
-fn send_data_to_cpu_buffer(vertices: &[f32]) {
+fn send_data_to_gpu_buffer(vertices: &[f32]) {
     let size = std::mem::size_of_val(vertices);
     unsafe {
         gl::BufferData(
@@ -218,19 +214,19 @@ fn send_data_to_cpu_buffer(vertices: &[f32]) {
     }
 }
 
-fn set_vertex_attribute_pointer(layout: u32, size: i32, stride: usize, offset: usize) {
-    let stride = stride * std::mem::size_of::<f32>();
-    let offset = offset * std::mem::size_of::<f32>();
+fn set_vertex_attribute_pointer(args: &VertexAttrPointerArgs) {
+    let stride = args.stride * std::mem::size_of::<f32>();
+    let offset = args.offset * std::mem::size_of::<f32>();
     unsafe {
         gl::VertexAttribPointer(
-            layout,
-            size,
+            args.layout,
+            args.size,
             gl::FLOAT,
             gl::FALSE,
             stride.try_into().unwrap_or(0),
             offset as *const std::ffi::c_void,
         );
-        gl::EnableVertexAttribArray(layout);
+        gl::EnableVertexAttribArray(args.layout);
     }
 }
 
@@ -244,6 +240,8 @@ fn unbind_buffers() {
 #[cfg(test)]
 mod tests {
     use super::combine_position_with_color;
+    use crate::components::geometry::solid::Cube;
+    use crate::components::Shape;
     use crate::renderer::opengl::OpenGL;
     use crate::{
         renderer::opengl::geometry_rendering::{
@@ -257,11 +255,69 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_init_triangle() {
+    fn test_init_shape() {
         setup_opengl!();
 
         let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
-        let buffers = super::init_shape(&vertices);
+        let buffers = super::init_shape(&vertices, None, None).unwrap();
+        assert_ne!(buffers.vertex_array_object, 0);
+        assert_ne!(buffers.vertex_buffer_object, 0);
+    }
+
+    #[test]
+    #[serial]
+    fn test_init_shape_with_texture() {
+        setup_opengl!();
+
+        let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+        let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+        let buffers = super::init_shape(&vertices, Some(&texture), None).unwrap();
+        assert_ne!(buffers.vertex_array_object, 0);
+        assert_ne!(buffers.vertex_buffer_object, 0);
+    }
+
+    #[test]
+    #[serial]
+    fn test_init_shape_with_color() {
+        setup_opengl!();
+
+        let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+        let color = vec![
+            0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32,
+            0.5_f32, 0.5_f32, 0.5_f32,
+        ];
+
+        let buffers = super::init_shape(&vertices, None, Some(&color)).unwrap();
+        assert_ne!(buffers.vertex_array_object, 0);
+        assert_ne!(buffers.vertex_buffer_object, 0);
+    }
+
+    #[test]
+    #[serial]
+    fn test_init_shape_3d_cube() {
+        setup_opengl!();
+
+        let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
+        let texture = vec![];
+
+        let buffers = super::init_shape(cube.get_vertices(), None, Some(&texture)).unwrap();
+        assert_ne!(buffers.vertex_array_object, 0);
+        assert_ne!(buffers.vertex_buffer_object, 0);
+    }
+
+    #[test]
+    #[serial]
+    fn test_init_shape_with_color_and_texture() {
+        setup_opengl!();
+
+        let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+        let color = vec![
+            0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32,
+            0.5_f32, 0.5_f32, 0.5_f32,
+        ];
+        let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+
+        let buffers = super::init_shape(&vertices, Some(&texture), Some(&color)).unwrap();
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
     }
@@ -294,7 +350,9 @@ mod tests {
             1_f32, 2_f32, 3_f32, 4_f32, 5_f32, 6_f32, 7_f32, 8_f32, 9_f32,
         ];
 
-        let result = combine_position_with_texture(&position);
+        let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+
+        let result = combine_position_with_texture(&position, &texture);
         assert_eq!(
             result,
             vec![
@@ -314,7 +372,9 @@ mod tests {
             0.5_f32, 0.5_f32, 0.5_f32,
         ];
 
-        let result = combine_position_with_color_and_texture(&position, &color);
+        let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+
+        let result = combine_position_with_color_and_texture(&position, &color, &texture);
 
         assert_eq!(
             result,
