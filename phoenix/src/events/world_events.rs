@@ -1,4 +1,4 @@
-use crate::events::EventLifetime;
+use crate::{common::IdGarbageCollector, events::EventLifetime};
 use std::collections::HashMap;
 
 use super::{action::Action, condition::Condition, Event};
@@ -10,12 +10,6 @@ pub struct WorldEvents {
     events: HashMap<ID, Event>,
     high_priority_events: HashMap<ID, Event>,
     id_gc: IdGarbageCollector,
-}
-
-#[derive(Default)]
-struct IdGarbageCollector {
-    num_pool: u32,
-    renewable_ids: Vec<ID>,
 }
 
 impl WorldEvents {
@@ -66,20 +60,5 @@ impl WorldEvents {
 
     fn remove_event(&mut self, id: ID) {
         self.events.remove(&id);
-    }
-}
-
-impl IdGarbageCollector {
-    pub fn create_id(&mut self) -> ID {
-        if let Some(id) = self.renewable_ids.pop() {
-            id
-        } else {
-            self.num_pool += 1;
-            self.num_pool
-        }
-    }
-
-    pub fn remove_id(&mut self, id: ID) {
-        self.renewable_ids.push(id);
     }
 }

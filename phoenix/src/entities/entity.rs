@@ -6,6 +6,7 @@ use crate::components::shaders::ShaderBase;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
 use crate::components::{shaders::ShaderSource, Component, Shape};
+use crate::common::IdGarbageCollector;
 pub type ID = u32;
 
 ///Only one component of specific type can be added to the entity.
@@ -33,12 +34,6 @@ pub struct View<'a> {
     pub shape: Option<&'a dyn Shape>,
     pub shader_src: Option<Rc<ShaderSource>>,
     pub texture: Option<&'a Texture>,
-}
-
-#[derive(Default)]
-struct IdGarbageCollector {
-    num_pool: u32,
-    renewable_ids: Vec<ID>,
 }
 
 impl Entity {
@@ -173,21 +168,6 @@ impl<'a> View<'a> {
             shader_src,
             texture,
         }
-    }
-}
-
-impl IdGarbageCollector {
-    pub fn create_id(&mut self) -> ID {
-        if let Some(id) = self.renewable_ids.pop() {
-            id
-        } else {
-            self.num_pool += 1;
-            self.num_pool
-        }
-    }
-
-    pub fn remove_id(&mut self, id: ID) {
-        self.renewable_ids.push(id);
     }
 }
 
@@ -332,7 +312,7 @@ mod tests {
     }
 
     #[test]
-    fn test_id_garbage_collector() {
+    fn test_entity_id_garbage_collector() {
         let mut entity_manager = Manager::default();
         let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
 
@@ -354,16 +334,16 @@ mod tests {
 
         let id = entity_manager.add_entity(entity);
         assert_eq!(id, 1);
-        assert_eq!(entity_manager.id_gc.num_pool, 1);
+        assert_eq!(entity_manager.id_gc.get_num_pool(), 1);
         entity_manager.remove_entity(id);
-        assert_eq!(entity_manager.id_gc.renewable_ids.len(), 1);
-        assert_eq!(entity_manager.id_gc.num_pool, 1);
+        assert_eq!(entity_manager.id_gc.get_renewable_ids_num(), 1);
+        assert_eq!(entity_manager.id_gc.get_num_pool(), 1);
 
         let second_id = entity_manager.add_entity(second_entity);
         assert_eq!(second_id, 1);
-        assert_eq!(entity_manager.id_gc.renewable_ids.len(), 0);
+        assert_eq!(entity_manager.id_gc.get_renewable_ids_num(), 0);
         entity_manager.remove_entity(second_id);
-        assert_eq!(entity_manager.id_gc.num_pool, 1);
+        assert_eq!(entity_manager.id_gc.get_num_pool(), 1);
     }
 
     #[test]
