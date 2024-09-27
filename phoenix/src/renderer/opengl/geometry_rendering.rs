@@ -26,7 +26,7 @@ pub fn init_shape(
 
     unbind_buffers();
 
-    if let Some(err_code) = get_last_error_code() {
+    if let Some(err_code) = get_last_error_code(true) {
         Err(Error::RenderingError(format!(
             "OpenGL error code {err_code}"
         )))

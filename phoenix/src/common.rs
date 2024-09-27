@@ -1,4 +1,3 @@
-
 pub type ID = u32;
 
 #[derive(Default)]
@@ -25,8 +24,8 @@ impl IdGarbageCollector {
 
     #[must_use]
     #[allow(dead_code)]
-    pub fn get_renewable_ids_num(&self) -> u32 {
-        self.renewable_ids.len() as u32
+    pub fn get_renewable_ids_num(&self) -> usize {
+        self.renewable_ids.len()
     }
 
     pub fn remove_id(&mut self, id: ID) {

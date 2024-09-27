@@ -1,12 +1,12 @@
 use std::mem;
 use std::{collections::HashMap, rc::Rc};
 
+use crate::common::IdGarbageCollector;
 use crate::components::color::Color;
 use crate::components::shaders::ShaderBase;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
 use crate::components::{shaders::ShaderSource, Component, Shape};
-use crate::common::IdGarbageCollector;
 pub type ID = u32;
 
 ///Only one component of specific type can be added to the entity.

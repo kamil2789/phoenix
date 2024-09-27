@@ -73,7 +73,7 @@ fn main() {
         .bind_mouse(MouseInput::CursorPos, Action::CameraOrientation(0.0, 0.0));
 
     scene.event_manager.add_high_priority_event(Event::new(
-        EventLifetime::PerFrame,
+        EventLifetime::Once,
         Condition::OnAction(Action::CameraUpdateBackward),
         Action::ChangeBackgroundColor(RGBA::from_hex(0xFF_00_00_FF)),
     ));
@@ -86,7 +86,7 @@ fn main() {
 
     scene.event_manager.add_event(Event::new(
         EventLifetime::PerFrame,
-        Condition::OnAction(Action::CameraUpdateRight),
+        Condition::None,
         Action::PrintFPS(),
     ));
 

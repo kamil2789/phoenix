@@ -1,4 +1,4 @@
-use super::{Error, Result};
+use super::{common::get_last_error_code, Error, Result};
 use crate::components::texture::{Filtering, MinFiltering, Mipmaps, Texture, Wrapping};
 
 pub fn init_texture(texture: &Texture) -> Result<u32> {
@@ -66,7 +66,7 @@ fn generate_texture(texture: &Texture) -> Result<()> {
         );
 
         let error_code = gl::GetError();
-        if error_code == gl::NO_ERROR || error_code != gl::INVALID_ENUM {
+        if get_last_error_code(true).is_none() {
             Ok(())
         } else {
             Err(Error::RenderingError(format!(

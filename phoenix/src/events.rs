@@ -9,10 +9,17 @@ use action::Action;
 use condition::Condition;
 use std::rc::Rc;
 use thiserror::Error;
-use user_input::{ControlBinding, KeyboardInput, MouseInput};
+use user_input::{ControlBinding, GlfwUserInputHandler, KeyState, KeyboardInput, MouseInput};
 use world_events::WorldEvents;
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+trait UserInput {
+    #[allow(dead_code)]
+    fn is_key_pressed(&self, key: i32) -> bool;
+    fn get_key_state(&self, key: i32) -> KeyState;
+    fn set_callbacks(&self);
+}
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -23,7 +30,6 @@ pub enum Error {
 #[derive(Clone, Debug, PartialEq)]
 pub enum EventLifetime {
     Once,
-    //Until,
     PerFrame,
 }
 
@@ -43,7 +49,7 @@ impl Manager {
     #[must_use]
     pub fn new(window: Rc<Window>) -> Self {
         Self {
-            control_binding: ControlBinding::new(window),
+            control_binding: ControlBinding::new(Box::new(GlfwUserInputHandler { window })),
             world_events: WorldEvents::default(),
         }
     }
@@ -61,7 +67,7 @@ impl Manager {
     }
 
     pub fn add_high_priority_event(&mut self, event: Event) {
-        self.world_events.add(event);
+        self.world_events.add_high_priority(event);
     }
 
     pub fn process_events(&mut self) -> Vec<Action> {
@@ -70,11 +76,11 @@ impl Manager {
     }
 
     fn process_user_input_callbacks(&mut self) -> Vec<Action> {
-        self.control_binding.process_callbacks()
+        self.control_binding.collect_user_actions()
     }
 
     fn process_world_events(&mut self, actions: &mut Vec<Action>) -> Vec<Action> {
-        self.world_events.process_events(actions)
+        self.world_events.collect_world_events(actions)
     }
 }
 
@@ -88,10 +94,3 @@ impl Event {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-
-    
-}
-

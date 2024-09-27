@@ -6,11 +6,12 @@ use crate::{
     renderer::{Error, Result},
 };
 
-pub fn get_last_error_code() -> Option<u32> {
+pub fn get_last_error_code(ignore_value_err: bool) -> Option<u32> {
     let error_code = unsafe { gl::GetError() };
-    if error_code == gl::NO_ERROR {
+    if error_code == gl::NO_ERROR || (error_code == gl::INVALID_VALUE && ignore_value_err) {
         None
     } else {
+        dbg!("DUPA");
         Some(error_code)
     }
 }
