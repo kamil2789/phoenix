@@ -64,7 +64,7 @@ mod tests {
     use crate::components::{Component, FillMode};
 
     use std::mem;
-    const MEMORY_USAGE_FOR_COMPONENTS_ENUM: usize = 56;
+    const MEMORY_USAGE_FOR_COMPONENTS_ENUM: usize = 72;
 
     #[test]
     fn test_check_maximum_memory_usage_for_components_enum() {

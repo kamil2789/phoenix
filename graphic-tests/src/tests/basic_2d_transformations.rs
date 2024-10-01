@@ -105,6 +105,12 @@ pub fn test_2d_triangle_rotation_scale_perspective(window: Rc<Window>, render: B
     let texture = Texture::new(texture_data, texture_config);
 
     scene.set_background_color(RGBA::from_hex(0xFF_A5_90_FF));
+
+    let x = Builder::new()
+        .with_rotation(vec3(-55.0, 0.0, 0.0))
+        .with_translation(vec3(0.0, 0.0, -3.0))
+        .build();
+
     let entity = Entity::new(vec![
         Component::Geometry(Box::new(triangle)),
         Component::Color(Color::from_vertices(colors)),
@@ -116,6 +122,8 @@ pub fn test_2d_triangle_rotation_scale_perspective(window: Rc<Window>, render: B
                 .build(),
         ),
     ]);
+
+    dbg!(x.get_matrix());
 
     scene.add_entity(entity);
     scene.register_camera(&camera::Config {

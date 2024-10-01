@@ -146,16 +146,8 @@ impl Render for OpenGL {
         transformation: &Transformer,
     ) -> Result<()> {
         if let Some(shader) = self.shaders_id.get(&entity_id) {
-            if let Some(translation) = transformation.get_translation_matrix() {
-                set_uniform_matrix4f("translation", &translation, *shader)?;
-            }
-            if let Some(rotation) = transformation.get_rotation_matrix() {
-                set_uniform_matrix4f("rotation", &rotation, *shader)?;
-            }
-            if let Some(scale) = transformation.get_scale_matrix() {
-                set_uniform_matrix4f("scale", &scale, *shader)?;
-            }
-            Ok(())
+            let transformation_matrix = transformation.get_matrix();
+            set_uniform_matrix4f("model", &transformation_matrix, *shader)
         } else {
             Err(Error::TransformationError(format!(
                 "No shader found for entity {entity_id}"
