@@ -87,18 +87,14 @@ fn create_vertex_attribute_pointer_argument_list(
             stride,
             offset: 7,
         });
-    }
-
-    if is_texture {
+    } else if is_texture {
         result.push(VertexAttrPointerArgs {
-            layout: 1,
+            layout: 2,
             size: 2,
             stride,
             offset: 3,
         });
-    }
-
-    if is_color {
+    } else if is_color {
         result.push(VertexAttrPointerArgs {
             layout: 1,
             size: 4,
