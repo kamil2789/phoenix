@@ -16,6 +16,15 @@ pub fn get_last_error_code(ignore_value_err: bool) -> Option<u32> {
     }
 }
 
+pub fn unset_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
+    let location = get_uniform_variable_location(shader_id, variable_name)?;
+    unsafe {
+        gl::UseProgram(shader_id);
+        gl::Uniform1i(location, 0);
+    };
+    Ok(())
+}
+
 pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
     let location = get_uniform_variable_location(shader_id, variable_name)?;
     unsafe {

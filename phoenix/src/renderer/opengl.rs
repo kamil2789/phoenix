@@ -3,7 +3,7 @@ use std::ffi::{c_void, CString};
 use std::rc::Rc;
 
 use cgmath::Matrix4;
-use common::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f};
+use common::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f, unset_uniform_bool};
 use glfw_sys::glfw_bindings;
 
 use super::{Error, Render, ID};
@@ -242,6 +242,7 @@ impl OpenGL {
     }
 
     fn set_uniform_shader_variables(entity: &View, shader_id: u32) -> Result<()> {
+        Self::reset_uniforms_shader_variables(shader_id)?;
         if let Some(color) = entity.color {
             if color.is_vertices() {
                 set_uniform_bool("is_color_vert", shader_id)?;
@@ -254,6 +255,12 @@ impl OpenGL {
             set_uniform_bool("is_texture_vert", shader_id)?;
         }
 
+        Ok(())
+    }
+
+    fn reset_uniforms_shader_variables(shader_id: u32) -> Result<()> {
+        unset_uniform_bool("is_color_vert", shader_id)?;
+        unset_uniform_bool("is_texture_vert", shader_id)?;
         Ok(())
     }
 
