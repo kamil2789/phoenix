@@ -8,12 +8,21 @@ uniform mat4 model = mat4(1.0);
 uniform mat4 camera_pos = mat4(1.0);
 uniform mat4 projection = mat4(1.0);
 
+uniform int is_texture_vert = 0;
+uniform int is_color_vert = 0;
+
 out vec2 text_coord;
 out vec4 vertex_color;
 
 void main()
 {
     gl_Position = projection * camera_pos * model * vec4(position, 1.0);
-    text_coord = in_texture_coord;
-    vertex_color = in_color;
+
+    if (is_texture_vert == 1) {
+        text_coord = in_texture_coord;
+    }
+
+    if (is_color_vert == 1) {
+        vertex_color = in_color;
+    }
 }

@@ -243,12 +243,15 @@ impl OpenGL {
 
     fn set_uniform_shader_variables(entity: &View, shader_id: u32) -> Result<()> {
         if let Some(color) = entity.color {
-            if let Some(value) = color.as_ref_uniform() {
+            if color.is_vertices() {
+                set_uniform_bool("is_color_vert", shader_id)?;
+            } else if let Some(value) = color.as_ref_uniform() {
                 set_uniform_color("color", value, shader_id)?;
-                if entity.texture.is_some() {
-                    set_uniform_bool("isUniformColor", shader_id)?;
-                }
             }
+        }
+
+        if entity.texture.is_some() {
+            set_uniform_bool("is_texture_vert", shader_id)?;
         }
 
         Ok(())
@@ -289,12 +292,12 @@ mod tests {
 
     use super::OpenGL;
     use crate::components::color::Color;
-    use crate::renderer::shaders::UNIFORM_TRIANGLE_FRAG;
+    use crate::renderer::shaders::BASIC_SHAPES_FRAG;
     use crate::window::{GlfwConfig, Resolution};
     use crate::{
         components::{geometry::plane::Triangle, shaders::ShaderSource},
         entities::entity::View,
-        renderer::{shaders::UNIFORM_TRIANGLE_VERT, Render},
+        renderer::{shaders::BASIC_SHAPES_VERT, Render},
     };
     use serial_test::serial;
 
@@ -309,10 +312,7 @@ mod tests {
 
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
-        let shader = Rc::new(ShaderSource::new(
-            UNIFORM_TRIANGLE_VERT,
-            UNIFORM_TRIANGLE_FRAG,
-        ));
+        let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
         let entity = View::new(1, Some(&color), Some(&vertices), Some(shader), None);
 
         let mut renderer = OpenGL::new(&window).unwrap();
@@ -334,10 +334,7 @@ mod tests {
 
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
-        let shader = Rc::new(ShaderSource::new(
-            UNIFORM_TRIANGLE_VERT,
-            UNIFORM_TRIANGLE_FRAG,
-        ));
+        let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
         let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None);
 
         let second_entity = View::new(1, None, None, None, None);
@@ -363,10 +360,7 @@ mod tests {
 
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
-        let shader = Rc::new(ShaderSource::new(
-            UNIFORM_TRIANGLE_VERT,
-            UNIFORM_TRIANGLE_FRAG,
-        ));
+        let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
         let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None);
 
         let mut renderer = OpenGL::new(&window).unwrap();

@@ -159,7 +159,7 @@ impl RGBA {
 
 impl Default for RGBA {
     fn default() -> Self {
-        RGBA::from_hex(0xFF_FF_FF_FF)
+        RGBA::from_hex(0x00_00_00_00)
     }
 }
 
@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn test_new_color_default() {
         let color = RGBA::default();
-        assert_eq!((255, 255, 255, 1_f32), color.get_rgba());
+        assert_eq!((0, 0, 0, 0.0), color.get_rgba());
     }
 
     #[test]
