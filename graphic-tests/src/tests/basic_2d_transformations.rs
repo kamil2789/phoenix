@@ -45,6 +45,60 @@ pub fn test_2d_triangle_translation(window: Rc<Window>, render: Box<dyn Render>)
     scene.start_one_frame().unwrap();
 }
 
+pub fn test_2d_multiple_triangle_translation(window: Rc<Window>, render: Box<dyn Render>) {
+    let mut scene = Scene::new(window, render);
+
+    let vertices: [f32; 9] = [
+        -0.3, -0.3, 0.0, // left
+        0.3, -0.3, 0.0, // right
+        0.0, 0.3, 0.0, // top
+    ];
+
+    let colors = vec![
+        1.0, 0.0, 0.0, 1.0, // left
+        0.0, 1.0, 0.0, 1.0, // right
+        0.0, 0.0, 1.0, 1.0, // top
+    ];
+
+    scene.set_background_color(RGBA::from_hex(0xFF_A5_90_FF));
+    let position = Triangle::new(vertices);
+    let triangle = Entity::new(vec![
+        Component::Geometry(Box::new(position)),
+        Component::Color(Color::from_vertices(colors.clone())),
+        Component::Transformer(Builder::new().with_translation(vec3(0.5, 0.5, 0.0)).build()),
+    ]);
+
+    let sec_vertices: [f32; 9] = [
+        -0.1, -0.1, 0.0, // left
+        0.1, -0.1, 0.0, // right
+        0.0, 0.1, 0.0, // top
+    ];
+
+    let position = Triangle::new(sec_vertices);
+    let sec_triangle = Entity::new(vec![
+        Component::Geometry(Box::new(position)),
+        Component::Color(Color::from_vertices(colors.clone())),
+    ]);
+
+    let third_vertices: [f32; 9] = [
+        -0.1, -0.1, 0.0, // left
+        0.1, -0.1, 0.0, // right
+        0.0, 0.1, 0.0, // top
+    ];
+
+    let position = Triangle::new(third_vertices);
+    let third_triangle = Entity::new(vec![
+        Component::Geometry(Box::new(position)),
+        Component::Color(Color::from_vertices(colors)),
+        Component::Transformer(Builder::new().with_translation(vec3(-0.5, -0.5, 0.0)).build()),
+    ]);
+
+    scene.add_entity(triangle);
+    scene.add_entity(sec_triangle);
+    scene.add_entity(third_triangle);
+    scene.start_one_frame().unwrap();
+}
+
 pub fn test_2d_triangle_rotation_and_scale(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
 

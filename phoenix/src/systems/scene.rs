@@ -123,15 +123,9 @@ impl Scene {
             let id = self
                 .renderer
                 .init_entity(self.entity_manager.as_ref_entity(key))?;
-            if let Some(transformer) = self.entity_manager.as_ref_transformers(key) {
-                self.renderer.perform_transformations(id, transformer)?;
-            }
-            if let Some(cam) = &self.camera {
-                self.renderer
-                    .perform_camera_position_transformation(id, &cam.get_camera_position())?;
-                self.renderer
-                    .perform_camera_projection_transformation(id, &cam.get_projection())?;
-            }
+
+            self.handle_camera(key)?;
+            self.renderer.update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
             self.renderer.draw_entity(id);
         }
         self.window.swap_buffers();
@@ -141,6 +135,17 @@ impl Scene {
 
     fn handle_user_input_callbacks(&mut self) {
         event_interpreter::process_actions(self.event_manager.process_events(), self);
+    }
+
+    fn handle_camera(&self, entity_id: u32) -> Result<()> {
+        if let Some(cam) = &self.camera {
+            self.renderer
+                .perform_camera_position_transformation(entity_id, &cam.get_camera_position())?;
+            self.renderer
+                .perform_camera_projection_transformation(entity_id, &cam.get_projection())?;
+        }
+
+        Ok(())
     }
 }
 
@@ -199,7 +204,7 @@ mod tests {
             }
 
             fn perform_transformations(
-                &mut self,
+                &self,
                 _entity_id: ID,
                 _transformation: &crate::components::transformer::Transformer,
             ) -> crate::renderer::Result<()> {
@@ -207,7 +212,7 @@ mod tests {
             }
 
             fn perform_camera_projection_transformation(
-                &mut self,
+                &self,
                 _entity_id: ID,
                 _camera_matrix: &Matrix4<f32>,
             ) -> crate::renderer::Result<()> {
@@ -215,11 +220,15 @@ mod tests {
             }
 
             fn perform_camera_position_transformation(
-                &mut self,
+                &self,
                 _entity_id: ID,
                 _camera_matrix: &Matrix4<f32>,
             ) -> crate::renderer::Result<()> {
                 todo!()
+            }
+
+            fn update_default_shader_uniform_variables(&self, _entity: &View) -> crate::renderer::Result<()> {
+                Ok(())
             }
 
             fn enable_3d(&self) {

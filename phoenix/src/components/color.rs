@@ -114,6 +114,11 @@ impl RGBA {
     }
 
     #[must_use]
+    pub fn new_white() -> Self {
+        RGBA::new(255, 255, 255, 1.0)
+    }
+
+    #[must_use]
     pub fn from_hex(color: u32) -> Self {
         let bytes = color.to_be_bytes();
         RGBA {

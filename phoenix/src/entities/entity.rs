@@ -34,6 +34,7 @@ pub struct View<'a> {
     pub shape: Option<&'a dyn Shape>,
     pub shader_src: Option<Rc<ShaderSource>>,
     pub texture: Option<&'a Texture>,
+    pub transformer: Option<&'a Transformer>,
 }
 
 impl Entity {
@@ -143,6 +144,7 @@ impl Manager {
             shape,
             shader,
             self.textures.get(&key),
+            self.transformers.get(&key),
         )
     }
 
@@ -160,6 +162,7 @@ impl<'a> View<'a> {
         shape: Option<&'a dyn Shape>,
         shader_src: Option<Rc<ShaderSource>>,
         texture: Option<&'a Texture>,
+        transformer: Option<&'a Transformer>,
     ) -> Self {
         Self {
             entity_id,
@@ -167,6 +170,7 @@ impl<'a> View<'a> {
             shape,
             shader_src,
             texture,
+            transformer
         }
     }
 }

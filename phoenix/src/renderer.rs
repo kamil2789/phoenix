@@ -45,7 +45,7 @@ pub trait Render {
     ///
     /// Will return `Err` when transformation failed or cannot be applied.
     fn perform_transformations(
-        &mut self,
+        &self,
         entity_id: ID,
         transformation: &Transformer,
     ) -> Result<()>;
@@ -53,7 +53,7 @@ pub trait Render {
     ///
     /// Will return `Err` when transformation failed or cannot be applied.
     fn perform_camera_projection_transformation(
-        &mut self,
+        &self,
         entity_id: ID,
         camera_matrix: &Matrix4<f32>,
     ) -> Result<()>;
@@ -61,10 +61,14 @@ pub trait Render {
     ///
     /// Will return `Err` when transformation failed or cannot be applied.
     fn perform_camera_position_transformation(
-        &mut self,
+        &self,
         entity_id: ID,
         camera_matrix: &Matrix4<f32>,
     ) -> Result<()>;
+    /// # Errors
+    ///
+    /// Will return `Err` when uniform variables cannot be set.
+    fn update_default_shader_uniform_variables(&self, entity: &View) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
     fn enable_3d(&self);
     fn get_last_error_code(&self) -> Option<u32>;

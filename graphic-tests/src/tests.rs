@@ -14,8 +14,7 @@ use basic_2d_textures::{
     test_2d_two_brick_wall_triangle,
 };
 use basic_2d_transformations::{
-    test_2d_triangle_rotation_and_scale, test_2d_triangle_rotation_scale_perspective,
-    test_2d_triangle_translation,
+    test_2d_multiple_triangle_translation, test_2d_triangle_rotation_and_scale, test_2d_triangle_rotation_scale_perspective, test_2d_triangle_translation
 };
 use basic_3d_geometries::{
     test_3d_gold_cube_on_green_background, test_3d_red_sphere_on_green_screen,
@@ -35,7 +34,7 @@ pub mod basic_3d_geometries;
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 16] = [
+static TESTS: [(TestFunction, TestName); 17] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -93,7 +92,7 @@ static TESTS: [(TestFunction, TestName); 16] = [
     (
         test_3d_red_sphere_on_green_screen,
         "test_3d_red_sphere_on_green_screen",
-    ),
+    ), (test_2d_multiple_triangle_translation, "test_2d_multiple_triangle_translation"),
 ];
 
 pub fn run() {

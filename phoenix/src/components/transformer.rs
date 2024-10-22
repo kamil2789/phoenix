@@ -93,6 +93,13 @@ impl Transformer {
     }
 
     #[must_use]
+    pub fn new_identity() -> Self {
+        Self {
+            matrix: Matrix4::<f32>::identity(),
+        }
+    }
+
+    #[must_use]
     pub fn new_rotate(rotation: Vector3<f32>) -> Self {
         Self {
             matrix: Self::apply_rotation(&rotation, None),

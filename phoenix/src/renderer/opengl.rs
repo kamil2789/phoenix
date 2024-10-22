@@ -87,9 +87,6 @@ impl Render for OpenGL {
         if let Some(shape) = entity.shape {
             let buffers = OpenGL::handle_shape(shape, entity.color, entity.texture)?;
             self.buffers.insert(entity.entity_id, buffers);
-            if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
-                OpenGL::set_uniform_shader_variables(&entity, *shader_id)?;
-            }
 
             self.shapes_type.insert(entity.entity_id, shape.get_type());
             self.shape_fill_mode.insert(
@@ -141,7 +138,7 @@ impl Render for OpenGL {
     }
 
     fn perform_transformations(
-        &mut self,
+        &self,
         entity_id: ID,
         transformation: &Transformer,
     ) -> Result<()> {
@@ -156,7 +153,7 @@ impl Render for OpenGL {
     }
 
     fn perform_camera_projection_transformation(
-        &mut self,
+        &self,
         entity_id: ID,
         camera_matrix: &Matrix4<f32>,
     ) -> Result<()> {
@@ -167,13 +164,27 @@ impl Render for OpenGL {
     }
 
     fn perform_camera_position_transformation(
-        &mut self,
+        &self,
         entity_id: ID,
         camera_matrix: &Matrix4<f32>,
     ) -> Result<()> {
         if let Some(shader) = self.shaders_id.get(&entity_id) {
             set_uniform_matrix4f("camera_pos", camera_matrix, *shader)?;
         }
+        Ok(())
+    }
+
+    fn update_default_shader_uniform_variables(&self, entity: &View) -> Result<()> {
+        if let Some(transformer) = entity.transformer {
+            self.perform_transformations(entity.entity_id, transformer)?;
+        } else {
+            self.perform_transformations(entity.entity_id, &Transformer::new_identity())?;
+        }
+
+        if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
+            OpenGL::set_uniform_shader_variables(entity, *shader_id)?;
+        }
+
         Ok(())
     }
 
@@ -249,6 +260,8 @@ impl OpenGL {
             } else if let Some(value) = color.as_ref_uniform() {
                 set_uniform_color("color", value, shader_id)?;
             }
+        } else {
+            set_uniform_color("color", &RGBA::new_white(), shader_id)?;
         }
 
         if entity.texture.is_some() {
@@ -320,7 +333,7 @@ mod tests {
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader), None);
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader), None, None);
 
         let mut renderer = OpenGL::new(&window).unwrap();
         let ret = renderer.init_entity(entity);
@@ -342,9 +355,9 @@ mod tests {
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None);
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None, None);
 
-        let second_entity = View::new(1, None, None, None, None);
+        let second_entity = View::new(1, None, None, None, None, None);
 
         let mut renderer = OpenGL::new(&window).unwrap();
 
@@ -368,12 +381,12 @@ mod tests {
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None);
+        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None, None);
 
         let mut renderer = OpenGL::new(&window).unwrap();
         assert!(renderer.init_entity(entity).is_ok());
 
-        let second_entity = View::new(2, Some(&color), Some(&vertices), Some(shader), None);
+        let second_entity = View::new(2, Some(&color), Some(&vertices), Some(shader), None, None);
 
         assert!(renderer.init_entity(second_entity).is_ok());
         assert_eq!(renderer.compiled_shaders.len(), 1);
