@@ -3,6 +3,12 @@ use crate::renderer::{Error, Result};
 use super::common::get_last_error_code;
 use super::Buffers;
 
+const POSITION_LAYOUT: u32 = 0;
+const NORMAL_LAYOUT: u32 = 1;
+const COLOR_LAYOUT: u32 = 2;
+const TEXTURE_LAYOUT: u32 = 3;
+
+#[derive(Debug)]
 struct VertexAttrPointerArgs {
     pub layout: u32,
     pub size: i32,
@@ -18,9 +24,10 @@ pub fn init_shape(
     let buffers = generate_buffers(vertices.len());
     bind_buffers(&buffers);
 
-    send_data_to_gpu_buffer(&combine_vertices(vertices, color, texture));
+    allocate_gpu_buffer(vertices, None, color, texture);
+    send_data_to_gpu_buffer(vertices, None, color, texture);
 
-    create_vertex_attribute_pointer_argument_list(color.is_some(), texture.is_some())
+    create_vertex_attribute_pointer_argument_list(vertices, None, color, texture)
         .into_iter()
         .for_each(|args| set_vertex_attribute_pointer(&args));
 
@@ -35,144 +42,52 @@ pub fn init_shape(
     }
 }
 
-fn combine_vertices(vertices: &[f32], color: Option<&[f32]>, texture: Option<&[f32]>) -> Vec<f32> {
-    if let Some(color) = color {
-        if let Some(texture) = texture {
-            return combine_position_with_color_and_texture(vertices, color, texture);
-        }
-        return combine_position_with_color(vertices, color);
-    }
-
-    if let Some(texture) = texture {
-        if vertices.len() > 100 {
-            return combine_position_with_texture_for_3d_cube(vertices);
-        }
-        return combine_position_with_texture(vertices, texture);
-    }
-
-    vertices.to_vec()
-}
-
 fn create_vertex_attribute_pointer_argument_list(
-    is_color: bool,
-    is_texture: bool,
+    positions: &[f32],
+    normals: Option<&[f32]>,
+    color: Option<&[f32]>,
+    texture: Option<&[f32]>,
 ) -> Vec<VertexAttrPointerArgs> {
     let mut result = Vec::new();
-    let mut stride = 3;
-    if is_color {
-        stride += 4;
-    }
-
-    if is_texture {
-        stride += 2;
-    }
+    let mut offset = 0;
 
     result.push(VertexAttrPointerArgs {
-        layout: 0,
+        layout: POSITION_LAYOUT,
         size: 3,
-        stride,
-        offset: 0,
+        stride: 3,
+        offset,
     });
+    offset += std::mem::size_of_val(positions);
 
-    if is_color && is_texture {
+    if let Some(val) = normals {
         result.push(VertexAttrPointerArgs {
-            layout: 1,
+            layout: NORMAL_LAYOUT,
+            size: 3,
+            stride: 3,
+            offset,
+        });
+        offset += std::mem::size_of_val(val);
+    }
+
+    if let Some(val) = color {
+        result.push(VertexAttrPointerArgs {
+            layout: COLOR_LAYOUT,
             size: 4,
-            stride,
-            offset: 3,
+            stride: 4,
+            offset,
         });
+        offset += std::mem::size_of_val(val);
+    }
+
+    if texture.is_some() {
         result.push(VertexAttrPointerArgs {
-            layout: 2,
+            layout: TEXTURE_LAYOUT,
             size: 2,
-            stride,
-            offset: 7,
-        });
-    } else if is_texture {
-        result.push(VertexAttrPointerArgs {
-            layout: 2,
-            size: 2,
-            stride,
-            offset: 3,
-        });
-    } else if is_color {
-        result.push(VertexAttrPointerArgs {
-            layout: 1,
-            size: 4,
-            stride,
-            offset: 3,
+            stride: 2,
+            offset,
         });
     }
 
-    result
-}
-
-fn combine_position_with_texture_for_3d_cube(position: &[f32]) -> Vec<f32> {
-    let texture_vertices: [f32; 72] = [
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0,
-        1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-        1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
-        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-    ];
-
-    let mut result = Vec::with_capacity(position.len() + texture_vertices.len());
-    let pos_size = 3;
-    let texture_size = 2;
-    let iter = position
-        .chunks(pos_size)
-        .zip(texture_vertices.chunks(texture_size));
-
-    for (pos, tex) in iter {
-        result.extend_from_slice(pos);
-        result.extend_from_slice(tex);
-    }
-    result
-}
-
-fn combine_position_with_color(position: &[f32], color: &[f32]) -> Vec<f32> {
-    let mut result = Vec::with_capacity(position.len() + color.len());
-    let pos_stride = 3;
-    let color_stride = 4;
-    let iter = position.chunks(pos_stride).zip(color.chunks(color_stride));
-
-    for (pos, col) in iter {
-        result.extend_from_slice(pos);
-        result.extend_from_slice(col);
-    }
-    result
-}
-
-fn combine_position_with_texture(position: &[f32], texture: &[f32]) -> Vec<f32> {
-    let mut result = Vec::with_capacity(position.len() + texture.len());
-    let pos_size = 3;
-    let texture_size = 2;
-    let iter = position.chunks(pos_size).zip(texture.chunks(texture_size));
-
-    for (pos, tex) in iter {
-        result.extend_from_slice(pos);
-        result.extend_from_slice(tex);
-    }
-    result
-}
-
-fn combine_position_with_color_and_texture(
-    position: &[f32],
-    color: &[f32],
-    texture: &[f32],
-) -> Vec<f32> {
-    let mut result = Vec::with_capacity(position.len() + color.len() + texture.len());
-    let pos_size = 3;
-    let color_size = 4;
-    let texture_size = 2;
-    let iter = position
-        .chunks(pos_size)
-        .zip(color.chunks(color_size))
-        .zip(texture.chunks(texture_size));
-
-    for ((pos, col), tex) in iter {
-        result.extend_from_slice(pos);
-        result.extend_from_slice(col);
-        result.extend_from_slice(tex);
-    }
     result
 }
 
@@ -198,21 +113,71 @@ fn bind_buffers(buffers: &Buffers) {
     }
 }
 
-fn send_data_to_gpu_buffer(vertices: &[f32]) {
-    let size = std::mem::size_of_val(vertices);
+fn allocate_gpu_buffer(
+    positions: &[f32],
+    normals: Option<&[f32]>,
+    color: Option<&[f32]>,
+    texture: Option<&[f32]>,
+) {
+    let mut size = std::mem::size_of_val(positions);
+    if let Some(val) = normals {
+        size += std::mem::size_of_val(val);
+    }
+
+    if let Some(val) = color {
+        size += std::mem::size_of_val(val);
+    }
+
+    if let Some(val) = texture {
+        size += std::mem::size_of_val(val);
+    }
+
     unsafe {
         gl::BufferData(
             gl::ARRAY_BUFFER,
             size.try_into().unwrap(),
-            vertices.as_ptr().cast::<std::ffi::c_void>(),
+            std::ptr::null(),
             gl::STATIC_DRAW,
         );
     }
 }
 
+fn send_data_to_gpu_buffer(
+    positions: &[f32],
+    normals: Option<&[f32]>,
+    color: Option<&[f32]>,
+    texture: Option<&[f32]>,
+) {
+    let mut offset = 0;
+    offset = copy_buffer_to_gpu(positions, offset);
+    if let Some(normals) = normals {
+        offset = copy_buffer_to_gpu(normals, offset);
+    }
+
+    if let Some(color) = color {
+        offset = copy_buffer_to_gpu(color, offset);
+    }
+
+    if let Some(texture) = texture {
+        copy_buffer_to_gpu(texture, offset);
+    }
+}
+
+fn copy_buffer_to_gpu(buffer: &[f32], offset: isize) -> isize {
+    let size: isize = std::mem::size_of_val(buffer).try_into().unwrap();
+    unsafe {
+        gl::BufferSubData(
+            gl::ARRAY_BUFFER,
+            offset,
+            size,
+            buffer.as_ptr().cast::<std::ffi::c_void>(),
+        );
+    }
+    offset + size
+}
+
 fn set_vertex_attribute_pointer(args: &VertexAttrPointerArgs) {
     let stride = args.stride * std::mem::size_of::<f32>();
-    let offset = args.offset * std::mem::size_of::<f32>();
     unsafe {
         gl::VertexAttribPointer(
             args.layout,
@@ -220,7 +185,7 @@ fn set_vertex_attribute_pointer(args: &VertexAttrPointerArgs) {
             gl::FLOAT,
             gl::FALSE,
             stride.try_into().unwrap_or(0),
-            offset as *const std::ffi::c_void,
+            args.offset as *const std::ffi::c_void,
         );
         gl::EnableVertexAttribArray(args.layout);
     }
@@ -235,14 +200,10 @@ fn unbind_buffers() {
 
 #[cfg(test)]
 mod tests {
-    use super::combine_position_with_color;
     use crate::components::geometry::solid::Cube;
     use crate::components::Shape;
     use crate::renderer::opengl::OpenGL;
     use crate::{
-        renderer::opengl::geometry_rendering::{
-            combine_position_with_color_and_texture, combine_position_with_texture,
-        },
         testing::setup_opengl,
         window::{GlfwConfig, Resolution},
     };
@@ -316,69 +277,5 @@ mod tests {
         let buffers = super::init_shape(&vertices, Some(&texture), Some(&color)).unwrap();
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
-    }
-
-    #[test]
-    fn test_combine_position_with_color() {
-        let position = vec![
-            1_f32, 2_f32, 3_f32, 4_f32, 5_f32, 6_f32, 7_f32, 8_f32, 9_f32,
-        ];
-
-        let color = vec![
-            0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32,
-            0.5_f32, 0.5_f32, 0.5_f32,
-        ];
-
-        let result = combine_position_with_color(&position, &color);
-        assert_eq!(
-            result,
-            vec![
-                1_f32, 2_f32, 3_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 4_f32, 5_f32, 6_f32,
-                0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 7_f32, 8_f32, 9_f32, 0.5_f32, 0.5_f32, 0.5_f32,
-                0.5_f32
-            ]
-        );
-    }
-
-    #[test]
-    fn test_combine_position_with_texture() {
-        let position = vec![
-            1_f32, 2_f32, 3_f32, 4_f32, 5_f32, 6_f32, 7_f32, 8_f32, 9_f32,
-        ];
-
-        let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
-
-        let result = combine_position_with_texture(&position, &texture);
-        assert_eq!(
-            result,
-            vec![
-                1_f32, 2_f32, 3_f32, 0.0, 0.0, 4_f32, 5_f32, 6_f32, 1.0, 0.0, 7_f32, 8_f32, 9_f32,
-                0.5, 1.0
-            ]
-        );
-    }
-
-    #[test]
-    fn test_combine_position_with_color_and_texture() {
-        let position = vec![
-            1_f32, 2_f32, 3_f32, 4_f32, 5_f32, 6_f32, 7_f32, 8_f32, 9_f32,
-        ];
-        let color = vec![
-            0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32,
-            0.5_f32, 0.5_f32, 0.5_f32,
-        ];
-
-        let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
-
-        let result = combine_position_with_color_and_texture(&position, &color, &texture);
-
-        assert_eq!(
-            result,
-            vec![
-                1_f32, 2_f32, 3_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.0, 0.0, 4_f32, 5_f32,
-                6_f32, 0.5_f32, 0.5_f32, 0.5_f32, 0.5_f32, 1.0, 0.0, 7_f32, 8_f32, 9_f32, 0.5_f32,
-                0.5_f32, 0.5_f32, 0.5_f32, 0.5, 1.0
-            ]
-        );
     }
 }

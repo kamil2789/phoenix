@@ -44,11 +44,7 @@ pub trait Render {
     /// # Errors
     ///
     /// Will return `Err` when transformation failed or cannot be applied.
-    fn perform_transformations(
-        &self,
-        entity_id: ID,
-        transformation: &Transformer,
-    ) -> Result<()>;
+    fn perform_transformations(&self, entity_id: ID, transformation: &Transformer) -> Result<()>;
     /// # Errors
     ///
     /// Will return `Err` when transformation failed or cannot be applied.

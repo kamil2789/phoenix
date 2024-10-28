@@ -125,7 +125,8 @@ impl Scene {
                 .init_entity(self.entity_manager.as_ref_entity(key))?;
 
             self.handle_camera(key)?;
-            self.renderer.update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
+            self.renderer
+                .update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
             self.renderer.draw_entity(id);
         }
         self.window.swap_buffers();
@@ -227,7 +228,10 @@ mod tests {
                 todo!()
             }
 
-            fn update_default_shader_uniform_variables(&self, _entity: &View) -> crate::renderer::Result<()> {
+            fn update_default_shader_uniform_variables(
+                &self,
+                _entity: &View,
+            ) -> crate::renderer::Result<()> {
                 Ok(())
             }
 

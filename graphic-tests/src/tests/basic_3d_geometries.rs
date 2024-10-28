@@ -8,7 +8,10 @@ use phoenix::{
             solid::{Cube, Sphere},
             Point,
         },
-        texture::{self, load, Filtering, MinFiltering, Mipmaps, Texture, Wrapping},
+        texture::{
+            self, generate_default_vertices_for_cube, load, Filtering, MinFiltering, Mipmaps,
+            Texture, Wrapping,
+        },
         transformer::Builder,
         Component, FillMode,
     },
@@ -34,7 +37,11 @@ pub fn test_3d_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn
 
     let path = TEST_TEXTURE_DIR.to_owned() + "brickwall.jpg";
     let texture_data = load(Path::new(&path)).unwrap();
-    let texture = Texture::new(texture_data, texture_config);
+    let texture = Texture::new_with_vertices(
+        texture_data,
+        texture_config,
+        generate_default_vertices_for_cube(),
+    );
 
     let mut entity = Entity::default();
     entity.add_component(Component::Geometry(Box::new(cube)));

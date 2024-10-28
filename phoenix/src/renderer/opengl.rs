@@ -137,11 +137,7 @@ impl Render for OpenGL {
         textures::init_texture(texture)
     }
 
-    fn perform_transformations(
-        &self,
-        entity_id: ID,
-        transformation: &Transformer,
-    ) -> Result<()> {
+    fn perform_transformations(&self, entity_id: ID, transformation: &Transformer) -> Result<()> {
         if let Some(shader) = self.shaders_id.get(&entity_id) {
             let transformation_matrix = transformation.get_matrix();
             set_uniform_matrix4f("model", &transformation_matrix, *shader)
@@ -355,7 +351,14 @@ mod tests {
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None, None);
+        let entity = View::new(
+            1,
+            Some(&color),
+            Some(&vertices),
+            Some(shader.clone()),
+            None,
+            None,
+        );
 
         let second_entity = View::new(1, None, None, None, None, None);
 
@@ -381,7 +384,14 @@ mod tests {
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader.clone()), None, None);
+        let entity = View::new(
+            1,
+            Some(&color),
+            Some(&vertices),
+            Some(shader.clone()),
+            None,
+            None,
+        );
 
         let mut renderer = OpenGL::new(&window).unwrap();
         assert!(renderer.init_entity(entity).is_ok());

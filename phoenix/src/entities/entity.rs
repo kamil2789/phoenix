@@ -170,7 +170,7 @@ impl<'a> View<'a> {
             shape,
             shader_src,
             texture,
-            transformer
+            transformer,
         }
     }
 }
