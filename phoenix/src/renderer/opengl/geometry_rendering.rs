@@ -18,16 +18,17 @@ struct VertexAttrPointerArgs {
 
 pub fn init_shape(
     vertices: &[f32],
+    normals: Option<&[f32]>,
     color: Option<&[f32]>,
     texture: Option<&[f32]>,
 ) -> Result<Buffers> {
     let buffers = generate_buffers(vertices.len());
     bind_buffers(&buffers);
 
-    allocate_gpu_buffer(vertices, None, color, texture);
-    send_data_to_gpu_buffer(vertices, None, color, texture);
+    allocate_gpu_buffer(vertices, normals, color, texture);
+    send_data_to_gpu_buffer(vertices, normals, color, texture);
 
-    create_vertex_attribute_pointer_argument_list(vertices, None, color, texture)
+    create_vertex_attribute_pointer_argument_list(vertices, normals, color, texture)
         .into_iter()
         .for_each(|args| set_vertex_attribute_pointer(&args));
 
@@ -216,7 +217,7 @@ mod tests {
         setup_opengl!();
 
         let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
-        let buffers = super::init_shape(&vertices, None, None).unwrap();
+        let buffers = super::init_shape(&vertices, None, None, None).unwrap();
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
     }
@@ -228,7 +229,7 @@ mod tests {
 
         let vertices = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
         let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
-        let buffers = super::init_shape(&vertices, Some(&texture), None).unwrap();
+        let buffers = super::init_shape(&vertices, None, Some(&texture), None).unwrap();
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
     }
@@ -244,7 +245,7 @@ mod tests {
             0.5_f32, 0.5_f32, 0.5_f32,
         ];
 
-        let buffers = super::init_shape(&vertices, None, Some(&color)).unwrap();
+        let buffers = super::init_shape(&vertices, None, None, Some(&color)).unwrap();
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
     }
@@ -257,7 +258,7 @@ mod tests {
         let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
         let texture = vec![];
 
-        let buffers = super::init_shape(cube.get_vertices(), None, Some(&texture)).unwrap();
+        let buffers = super::init_shape(cube.get_vertices(), None, None, Some(&texture)).unwrap();
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
     }
@@ -274,7 +275,7 @@ mod tests {
         ];
         let texture = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
 
-        let buffers = super::init_shape(&vertices, Some(&texture), Some(&color)).unwrap();
+        let buffers = super::init_shape(&vertices, None, Some(&texture), Some(&color)).unwrap();
         assert_ne!(buffers.vertex_array_object, 0);
         assert_ne!(buffers.vertex_buffer_object, 0);
     }

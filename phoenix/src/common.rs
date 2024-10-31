@@ -1,9 +1,33 @@
+use cgmath::{InnerSpace, Vector3};
+
+use crate::components::Shape;
+
 pub type ID = u32;
 
 #[derive(Default)]
 pub struct IdGarbageCollector {
     num_pool: u32,
     renewable_ids: Vec<ID>,
+}
+
+pub fn calculate_normal_vec_for_shape(shape: &dyn Shape) -> Vec<f32> {
+    let mut result = Vec::with_capacity(shape.get_vertices().len() / 3);
+    for triangle in shape.get_vertices().chunks(9) {
+        let normal = calculate_normal_vec(triangle);
+        result.extend_from_slice(&normal);
+    }
+    result
+}
+
+fn calculate_normal_vec(vertices: &[f32]) -> [f32; 3] {
+    let vector_one = Vector3::new(vertices[0], vertices[1], vertices[2]);
+    let vector_two = Vector3::new(vertices[3], vertices[4], vertices[5]);
+    let vector_three = Vector3::new(vertices[6], vertices[7], vertices[8]);
+
+    let edge_one = vector_two - vector_one;
+    let edge_two = vector_three - vector_one;
+
+    edge_one.cross(edge_two).normalize().into()
 }
 
 impl IdGarbageCollector {

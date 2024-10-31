@@ -7,6 +7,7 @@ use common::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f, unset_un
 use glfw_sys::glfw_bindings;
 
 use super::{Error, Render, ID};
+use crate::common::calculate_normal_vec_for_shape;
 use crate::components::color::{Color, RGBA};
 use crate::components::shaders::ShaderSource;
 use crate::components::texture::Texture;
@@ -241,8 +242,11 @@ impl OpenGL {
         color: Option<&Color>,
         texture: Option<&Texture>,
     ) -> Result<Buffers> {
+        //TODO move it to the data logic in the future
+        let normal_vectors = calculate_normal_vec_for_shape(shape);
         geometry_rendering::init_shape(
             shape.get_vertices(),
+            Some(&normal_vectors),
             Color::unpack_vertices(color),
             Texture::unpack_vertices(texture),
         )
