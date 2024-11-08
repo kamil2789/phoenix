@@ -14,11 +14,13 @@ use basic_2d_textures::{
     test_2d_two_brick_wall_triangle,
 };
 use basic_2d_transformations::{
-    test_2d_multiple_triangle_translation, test_2d_triangle_rotation_and_scale, test_2d_triangle_rotation_scale_perspective, test_2d_triangle_translation
+    test_2d_multiple_triangle_translation, test_2d_triangle_rotation_and_scale,
+    test_2d_triangle_rotation_scale_perspective, test_2d_triangle_translation,
 };
 use basic_3d_geometries::{
     test_3d_gold_cube_on_green_background, test_3d_red_sphere_on_green_screen,
 };
+use basic_3d_lights::test_3d_gold_cube_with_basic_light;
 use colored::Colorize;
 use phoenix::{
     renderer::{opengl::OpenGL, Render},
@@ -30,11 +32,12 @@ pub mod basic_2d_geometries;
 pub mod basic_2d_textures;
 pub mod basic_2d_transformations;
 pub mod basic_3d_geometries;
+pub mod basic_3d_lights;
 
 type TestFunction = fn(Rc<Window>, Box<dyn Render>);
 type TestName = &'static str;
 
-static TESTS: [(TestFunction, TestName); 17] = [
+static TESTS: [(TestFunction, TestName); 18] = [
     (
         test_2d_red_triangle_on_green_background,
         "test_2d_red_triangle_on_green_background",
@@ -92,7 +95,15 @@ static TESTS: [(TestFunction, TestName); 17] = [
     (
         test_3d_red_sphere_on_green_screen,
         "test_3d_red_sphere_on_green_screen",
-    ), (test_2d_multiple_triangle_translation, "test_2d_multiple_triangle_translation"),
+    ),
+    (
+        test_2d_multiple_triangle_translation,
+        "test_2d_multiple_triangle_translation",
+    ),
+    (
+        test_3d_gold_cube_with_basic_light,
+        "test_3d_gold_cube_with_basic_light",
+    ),
 ];
 
 pub fn run() {

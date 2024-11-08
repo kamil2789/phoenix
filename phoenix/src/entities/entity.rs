@@ -103,6 +103,9 @@ impl Manager {
                 Component::Transformer(transformer) => {
                     self.transformers.insert(id, transformer);
                 }
+                Component::Light(_light) => {
+                    
+                }
             }
         }
 

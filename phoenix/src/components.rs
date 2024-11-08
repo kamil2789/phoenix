@@ -1,4 +1,5 @@
 use color::Color;
+use light::Light;
 use texture::Texture;
 use transformer::Transformer;
 
@@ -6,6 +7,7 @@ use self::shaders::ShaderSource;
 
 pub mod color;
 pub mod geometry;
+pub mod light;
 pub mod shaders;
 pub mod texture;
 pub mod transformer;
@@ -28,6 +30,7 @@ pub enum Component {
     ShaderProgram(ShaderSource),
     Texture(Texture),
     Transformer(Transformer),
+    Light(Light),
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
