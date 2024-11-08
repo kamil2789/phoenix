@@ -26,7 +26,7 @@ fn compile_shader(shader_src: &str, shader_type: u32) -> Result<u32> {
 fn check_compile_status(shader_id: u32) -> Result<u32> {
     let mut status = i32::from(gl::TRUE);
     let info_length: usize = 512;
-    let mut info_log: Vec<u8> = Vec::with_capacity(info_length - 1);
+    let mut info_log: Vec<u8> = vec![0; info_length];
     unsafe { gl::GetShaderiv(shader_id, gl::COMPILE_STATUS, &mut status) };
     if status == i32::from(gl::TRUE) {
         Ok(shader_id)
@@ -40,7 +40,7 @@ fn check_compile_status(shader_id: u32) -> Result<u32> {
             );
         };
         Err(Error::CompilationError(String::from(
-            std::str::from_utf8(&info_log).unwrap(),
+            std::str::from_utf8(&info_log).unwrap().trim_end_matches('\0')
         )))
     }
 }
@@ -61,7 +61,7 @@ fn link_program(shader_id: u32, vertex_id: u32, fragment_id: u32) -> Result<()> 
 fn check_link_status(shader_id: u32) -> Result<()> {
     let mut status = i32::from(gl::TRUE);
     let info_length: usize = 512;
-    let mut info_log: Vec<u8> = Vec::with_capacity(info_length - 1);
+    let mut info_log: Vec<u8> = vec![0; info_length];
     unsafe { gl::GetProgramiv(shader_id, gl::LINK_STATUS, &mut status) };
     if status == i32::from(gl::TRUE) {
         Ok(())
@@ -75,7 +75,7 @@ fn check_link_status(shader_id: u32) -> Result<()> {
             );
         };
         Err(Error::LinkError(String::from(
-            std::str::from_utf8(&info_log).unwrap(),
+            std::str::from_utf8(&info_log).unwrap().trim_end_matches('\0')
         )))
     }
 }
@@ -127,10 +127,10 @@ mod tests {
     fn test_compile_shader_invalid_shaders_src_get_err() {
         setup_opengl!();
 
-        let mut shader_id = compile(VERTEX_SHADER_SRC, "Invalidd data");
+        let mut shader_id = compile(VERTEX_SHADER_SRC, "Invalid data");
         assert!(shader_id.is_err());
 
-        shader_id = compile("Invalidd data", FRAGMENT_SHADER_SRC);
+        shader_id = compile("Invalid data", FRAGMENT_SHADER_SRC);
         assert!(shader_id.is_err());
 
         shader_id = compile("", "");
