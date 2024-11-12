@@ -8,7 +8,7 @@ use crate::{
     components::{color::RGBA, shaders::ShaderSource, texture::Texture, transformer::Transformer},
     entities::entity::View,
 };
-use cgmath::Matrix4;
+use cgmath::{Matrix4, Vector3, Vector4};
 use thiserror::Error;
 
 pub type ID = u32;
@@ -65,6 +65,12 @@ pub trait Render {
     ///
     /// Will return `Err` when uniform variables cannot be set.
     fn update_default_shader_uniform_variables(&self, entity: &View) -> Result<()>;
+    fn update_light_uniform_variables(
+        &self,
+        camera_pos: &Vector3<f32>,
+        light_pos: &Vector3<f32>,
+        light_color: &Vector4<f32>,
+    );
     fn draw_entity(&self, entity_id: ID);
     fn enable_3d(&self);
     fn get_last_error_code(&self) -> Option<u32>;

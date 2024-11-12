@@ -172,13 +172,12 @@ impl Render for OpenGL {
     }
 
     fn update_default_shader_uniform_variables(&self, entity: &View) -> Result<()> {
-        if let Some(transformer) = entity.transformer {
-            self.perform_transformations(entity.entity_id, transformer)?;
-        } else {
-            self.perform_transformations(entity.entity_id, &Transformer::new_identity())?;
-        }
-
         if let Some(shader_id) = self.shaders_id.get(&entity.entity_id) {
+            if entity.light.is_some() {
+                if let Some(rgba) = Color::unpack_rgba(entity.color) {
+                    return OpenGL::set_uniform_light_shader_variable(rgba, *shader_id);
+                }
+            }
             OpenGL::set_uniform_shader_variables(entity, *shader_id)?;
         }
 
@@ -199,6 +198,15 @@ impl Render for OpenGL {
         } else {
             Some(err_code)
         }
+    }
+
+    fn update_light_uniform_variables(
+        &self,
+        camera_pos: &cgmath::Vector3<f32>,
+        light_pos: &cgmath::Vector3<f32>,
+        light_color: &cgmath::Vector4<f32>,
+    ) {
+        
     }
 }
 
@@ -250,6 +258,10 @@ impl OpenGL {
             Color::unpack_vertices(color),
             Texture::unpack_vertices(texture),
         )
+    }
+
+    fn set_uniform_light_shader_variable(color: &RGBA, shader_id: u32) -> Result<()> {
+        set_uniform_color("color", color, shader_id)
     }
 
     fn set_uniform_shader_variables(entity: &View, shader_id: u32) -> Result<()> {
@@ -333,7 +345,15 @@ mod tests {
         let color = Color::default();
         let vertices = Triangle::new([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
         let shader = Rc::new(ShaderSource::new(BASIC_SHAPES_VERT, BASIC_SHAPES_FRAG));
-        let entity = View::new(1, Some(&color), Some(&vertices), Some(shader), None, None);
+        let entity = View::new(
+            1,
+            Some(&color),
+            Some(&vertices),
+            Some(shader),
+            None,
+            None,
+            None,
+        );
 
         let mut renderer = OpenGL::new(&window).unwrap();
         let ret = renderer.init_entity(entity);
@@ -362,9 +382,10 @@ mod tests {
             Some(shader.clone()),
             None,
             None,
+            None,
         );
 
-        let second_entity = View::new(1, None, None, None, None, None);
+        let second_entity = View::new(1, None, None, None, None, None, None);
 
         let mut renderer = OpenGL::new(&window).unwrap();
 
@@ -395,12 +416,21 @@ mod tests {
             Some(shader.clone()),
             None,
             None,
+            None,
         );
 
         let mut renderer = OpenGL::new(&window).unwrap();
         assert!(renderer.init_entity(entity).is_ok());
 
-        let second_entity = View::new(2, Some(&color), Some(&vertices), Some(shader), None, None);
+        let second_entity = View::new(
+            2,
+            Some(&color),
+            Some(&vertices),
+            Some(shader),
+            None,
+            None,
+            None,
+        );
 
         assert!(renderer.init_entity(second_entity).is_ok());
         assert_eq!(renderer.compiled_shaders.len(), 1);

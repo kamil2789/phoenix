@@ -84,6 +84,15 @@ impl Color {
 
         None
     }
+
+    #[must_use]
+    pub fn unpack_rgba(color: Option<&Color>) -> Option<&RGBA> {
+        if let Some(color) = color {
+            color.as_ref_uniform()
+        } else {
+            None
+        }
+    }
 }
 
 impl Default for Color {

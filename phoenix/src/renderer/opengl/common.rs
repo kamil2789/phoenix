@@ -58,14 +58,14 @@ fn get_uniform_variable_location(shader_id: u32, variable_name: &str) -> Result<
         let location = unsafe { gl::GetUniformLocation(shader_id, name.as_ptr()) };
         if location == -1 {
             Err(Error::RenderingError(
-                "Uniform variable location not found".to_string(),
+                "Uniform variable location not found: ".to_string() + variable_name,
             ))
         } else {
             Ok(location)
         }
     } else {
         Err(Error::RenderingError(
-            "Invalid variable name for uniform searching".to_string(),
+            "Invalid variable name for uniform searching: ".to_string() + variable_name,
         ))
     }
 }

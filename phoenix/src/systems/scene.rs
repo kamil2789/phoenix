@@ -1,10 +1,14 @@
 mod event_interpreter;
 use std::rc::Rc;
 
+use cgmath::{Vector3, Vector4};
+
 use super::camera::{Camera, Config};
 use super::performance::{FpsCounter, GlfwTimer};
-use crate::components::color::RGBA;
-use crate::entities::entity::{Entity, Manager};
+use crate::components::color::{Color, RGBA};
+use crate::components::transformer::Transformer;
+use crate::components::Shape;
+use crate::entities::entity::{Entity, Manager, View};
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
 use crate::{entities, events};
@@ -118,17 +122,34 @@ impl Scene {
 
         self.handle_user_input_callbacks();
 
+        //light variable should be updated before handling shapes
+        if let Some(light_entity) = self.entity_manager.get_light_entity() {
+            light_entity.shape.unwrap();
+            let camera_pos = self.camera.as_ref().map_or_else(
+                || Vector3::new(0.0, 0.0, 0.0),
+                |cam| cam.get_camera_vec_pos(),
+            );
+            self.renderer.update_light_uniform_variables(
+                &camera_pos,
+                &self.get_light_pos(light_entity.shape.unwrap()),
+                &self.get_light_color(light_entity.color.unwrap()),
+            );
+        }
+
         let keys = self.entity_manager.get_keys();
         for key in keys {
-            let id = self
-                .renderer
-                .init_entity(self.entity_manager.as_ref_entity(key))?;
+            let entity_view = self.entity_manager.as_ref_entity(key);
+            let id = self.renderer.init_entity(entity_view.clone())?; //TODO make it a ref
 
-            self.handle_camera(key)?;
+            self.handle_entity_transformation(entity_view.clone())?;
+            self.handle_camera(key)?; //out of loop?
             self.renderer
                 .update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
+
+            //final step to draw the entity
             self.renderer.draw_entity(id);
         }
+
         self.window.swap_buffers();
         Window::poll_events();
         Ok(())
@@ -136,6 +157,28 @@ impl Scene {
 
     fn handle_user_input_callbacks(&mut self) {
         event_interpreter::process_actions(self.event_manager.process_events(), self);
+    }
+
+    fn get_light_pos(&self, shape: &dyn Shape) -> Vector3<f32> {
+        let data = shape.get_vertices();
+        Vector3::new(data[0], data[1], data[2])
+    }
+
+    fn get_light_color(&self, color: &Color) -> Vector4<f32> {
+        let rgba = color.as_ref_uniform().unwrap().get_rgba();
+        Vector4::new(rgba.0.into(), rgba.1.into(), rgba.2.into(), rgba.3)
+    }
+
+    fn handle_entity_transformation(&self, entity: View) -> Result<()> {
+        if let Some(transformer) = entity.transformer {
+            self.renderer
+                .perform_transformations(entity.entity_id, transformer)?;
+        } else {
+            self.renderer
+                .perform_transformations(entity.entity_id, &Transformer::new_identity())?;
+        }
+
+        Ok(())
     }
 
     fn handle_camera(&self, entity_id: u32) -> Result<()> {
@@ -240,6 +283,15 @@ mod tests {
             }
 
             fn get_last_error_code(&self) -> Option<u32> {
+                todo!()
+            }
+
+            fn update_light_uniform_variables(
+                &self,
+                camera_pos: &cgmath::Vector3<f32>,
+                light_pos: &cgmath::Vector3<f32>,
+                light_color: &cgmath::Vector4<f32>,
+            ) {
                 todo!()
             }
         }
