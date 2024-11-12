@@ -1,4 +1,4 @@
-use cgmath::{Matrix, Matrix4};
+use cgmath::{Array, Matrix, Matrix4, Vector3};
 use std::ffi::CString;
 
 use crate::{
@@ -11,7 +11,6 @@ pub fn get_last_error_code(ignore_value_err: bool) -> Option<u32> {
     if error_code == gl::NO_ERROR || (error_code == gl::INVALID_VALUE && ignore_value_err) {
         None
     } else {
-        dbg!("DUPA");
         Some(error_code)
     }
 }
@@ -31,6 +30,13 @@ pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
         gl::UseProgram(shader_id);
         gl::Uniform1i(location, 1);
     };
+    Ok(())
+}
+
+pub fn set_uniform_vec3(variable_name: &str, vector: &Vector3<f32>, shader_id: u32) -> Result<()> {
+    let location = get_uniform_variable_location(shader_id, variable_name)?;
+    unsafe { gl::UseProgram(shader_id) };
+    unsafe { gl::Uniform3fv(location, 1, vector.as_ptr())};
     Ok(())
 }
 

@@ -67,10 +67,11 @@ pub trait Render {
     fn update_default_shader_uniform_variables(&self, entity: &View) -> Result<()>;
     fn update_light_uniform_variables(
         &self,
+        entity_id: ID,
         camera_pos: &Vector3<f32>,
         light_pos: &Vector3<f32>,
-        light_color: &Vector4<f32>,
-    );
+        light_color: &Vector3<f32>,
+    ) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
     fn enable_3d(&self);
     fn get_last_error_code(&self) -> Option<u32>;

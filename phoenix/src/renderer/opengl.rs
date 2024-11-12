@@ -3,7 +3,7 @@ use std::ffi::{c_void, CString};
 use std::rc::Rc;
 
 use cgmath::Matrix4;
-use common::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f, unset_uniform_bool};
+use common::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f, set_uniform_vec3, unset_uniform_bool};
 use glfw_sys::glfw_bindings;
 
 use super::{Error, Render, ID};
@@ -202,11 +202,23 @@ impl Render for OpenGL {
 
     fn update_light_uniform_variables(
         &self,
+        entity_id: u32,
         camera_pos: &cgmath::Vector3<f32>,
         light_pos: &cgmath::Vector3<f32>,
-        light_color: &cgmath::Vector4<f32>,
-    ) {
-        
+        light_color: &cgmath::Vector3<f32>,
+    ) -> Result<()> {
+        dbg!(camera_pos);
+        dbg!(light_pos);
+        dbg!(light_color);
+        if let Some(shader_id) = self.shaders_id.get(&entity_id) {
+            set_uniform_bool("is_light", *shader_id)?;
+            set_uniform_vec3("camera_pos", camera_pos, *shader_id)?;
+            set_uniform_vec3("light_pos", light_pos, *shader_id)?;
+            set_uniform_vec3("light_color", light_color, *shader_id)?;
+            return Ok(());
+        }
+
+        Err(Error::RenderingError("No existing shader id".to_string()))
     }
 }
 
@@ -284,6 +296,7 @@ impl OpenGL {
     }
 
     fn reset_uniforms_shader_variables(shader_id: u32) -> Result<()> {
+        unset_uniform_bool("is_light", shader_id)?;
         unset_uniform_bool("is_color_vert", shader_id)?;
         unset_uniform_bool("is_texture_vert", shader_id)?;
         Ok(())

@@ -27,7 +27,7 @@ fn calculate_normal_vec(vertices: &[f32]) -> [f32; 3] {
     let edge_one = vector_two - vector_one;
     let edge_two = vector_three - vector_one;
 
-    edge_one.cross(edge_two).normalize().into()
+    edge_one.cross(edge_two).into()
 }
 
 impl IdGarbageCollector {

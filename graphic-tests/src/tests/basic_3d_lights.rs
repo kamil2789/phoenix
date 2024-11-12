@@ -34,7 +34,7 @@ pub fn test_3d_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Re
     let light = Light {};
     let lamp = Entity::new(vec![
         Component::Geometry(Box::new(sphere)),
-        Component::Color(Color::from_hex(0xFF_00_00_FF)),
+        Component::Color(Color::from_hex(0xaa_00_00_00)),
         Component::Transformer(
             Builder::new()
                 .with_translation(vec3(1.0, 1.0, -4.0))

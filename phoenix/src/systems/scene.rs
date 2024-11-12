@@ -7,7 +7,7 @@ use super::camera::{Camera, Config};
 use super::performance::{FpsCounter, GlfwTimer};
 use crate::components::color::{Color, RGBA};
 use crate::components::transformer::Transformer;
-use crate::components::Shape;
+use crate::components::{light, Shape};
 use crate::entities::entity::{Entity, Manager, View};
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
@@ -33,6 +33,12 @@ pub struct Scene {
     camera: Option<Camera>,
     pub event_manager: events::Manager,
     fps_counter: FpsCounter,
+}
+
+struct TMP_light_entity {
+    pub camera_pos: Vector3<f32>,
+    pub light_pos: Vector3<f32>,
+    pub light_color: Vector3<f32>,
 }
 
 impl Scene {
@@ -122,19 +128,7 @@ impl Scene {
 
         self.handle_user_input_callbacks();
 
-        //light variable should be updated before handling shapes
-        if let Some(light_entity) = self.entity_manager.get_light_entity() {
-            light_entity.shape.unwrap();
-            let camera_pos = self.camera.as_ref().map_or_else(
-                || Vector3::new(0.0, 0.0, 0.0),
-                |cam| cam.get_camera_vec_pos(),
-            );
-            self.renderer.update_light_uniform_variables(
-                &camera_pos,
-                &self.get_light_pos(light_entity.shape.unwrap()),
-                &self.get_light_color(light_entity.color.unwrap()),
-            );
-        }
+        let light_calc = self.TMP_calculate_light();
 
         let keys = self.entity_manager.get_keys();
         for key in keys {
@@ -145,6 +139,12 @@ impl Scene {
             self.handle_camera(key)?; //out of loop?
             self.renderer
                 .update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
+ 
+            if let Some(light) = light_calc.as_ref() {
+                if entity_view.light.is_none() {
+                    self.renderer.update_light_uniform_variables(entity_view.entity_id, &light.camera_pos, &light.light_pos, &light.light_color)?;  
+                }
+            }
 
             //final step to draw the entity
             self.renderer.draw_entity(id);
@@ -153,6 +153,26 @@ impl Scene {
         self.window.swap_buffers();
         Window::poll_events();
         Ok(())
+    }
+
+    fn TMP_calculate_light(&self) -> Option<TMP_light_entity> {
+        if let Some(light_entity) = self.entity_manager.get_light_entity() {
+            light_entity.shape.unwrap();
+            let camera_pos = self.camera.as_ref().map_or_else(
+                || Vector3::new(0.0, 0.0, 0.0),
+                |cam| cam.get_camera_vec_pos(),
+            );
+            let light_pos = self.get_light_pos(light_entity.shape.unwrap());
+            let light_color = self.get_light_color(light_entity.color.unwrap());
+
+            Some(TMP_light_entity {
+                camera_pos,
+                light_pos,
+                light_color,
+            })
+        } else {
+            None
+        }
     }
 
     fn handle_user_input_callbacks(&mut self) {
@@ -164,9 +184,9 @@ impl Scene {
         Vector3::new(data[0], data[1], data[2])
     }
 
-    fn get_light_color(&self, color: &Color) -> Vector4<f32> {
-        let rgba = color.as_ref_uniform().unwrap().get_rgba();
-        Vector4::new(rgba.0.into(), rgba.1.into(), rgba.2.into(), rgba.3)
+    fn get_light_color(&self, color: &Color) -> Vector3<f32> {
+        let rgba = color.as_ref_uniform().unwrap().get_as_normalized_f32();
+        Vector3::new(rgba[0], rgba[1], rgba[2])
     }
 
     fn handle_entity_transformation(&self, entity: View) -> Result<()> {
@@ -288,10 +308,11 @@ mod tests {
 
             fn update_light_uniform_variables(
                 &self,
+                _entity_id: u32,
                 camera_pos: &cgmath::Vector3<f32>,
                 light_pos: &cgmath::Vector3<f32>,
-                light_color: &cgmath::Vector4<f32>,
-            ) {
+                light_color: &cgmath::Vector3<f32>,
+            ) -> crate::renderer::Result<()> {
                 todo!()
             }
         }
