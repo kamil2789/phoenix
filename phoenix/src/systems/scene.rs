@@ -162,7 +162,7 @@ impl Scene {
                 || Vector3::new(0.0, 0.0, 0.0),
                 |cam| cam.get_camera_vec_pos(),
             );
-            let light_pos = self.get_light_pos(light_entity.shape.unwrap());
+            let light_pos = self.get_light_pos(light_entity.shape.unwrap(), light_entity.transformer);
             let light_color = self.get_light_color(light_entity.color.unwrap());
 
             Some(TMP_light_entity {
@@ -179,9 +179,15 @@ impl Scene {
         event_interpreter::process_actions(self.event_manager.process_events(), self);
     }
 
-    fn get_light_pos(&self, shape: &dyn Shape) -> Vector3<f32> {
+    fn get_light_pos(&self, shape: &dyn Shape, transformation: Option<&Transformer>) -> Vector3<f32> {
         let data = shape.get_vertices();
-        Vector3::new(data[0], data[1], data[2])
+        let vec = Vector3::new(data[0], data[1], data[2]);
+        if let Some(val) = transformation {
+            let multiply = val.get_matrix() * Vector4::new(vec.x, vec.y, vec.z, 1.0); 
+            return Vector3::new(multiply[0], multiply[1], multiply[2]); 
+        }
+
+        vec
     }
 
     fn get_light_color(&self, color: &Color) -> Vector3<f32> {

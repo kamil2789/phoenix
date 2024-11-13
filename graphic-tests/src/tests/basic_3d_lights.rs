@@ -12,34 +12,27 @@ use phoenix::{
     },
     entities::entity::Entity,
     renderer::Render,
-    systems::{camera, scaler::Scaler, scene::Scene},
+    systems::{camera, scene::Scene},
     window::Window,
 };
 use std::rc::Rc;
 pub fn test_3d_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Render>) {
-    let scaler = Scaler::new(window.get_resolution());
     let mut scene = Scene::new(window, render);
-    let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
+    let cube = Cube::new(1.0, [0.0, 0.0, 0.0]);
     let mut entity = Entity::default();
     entity.add_component(Component::Geometry(Box::new(cube)));
     entity.add_component(Component::Color(Color::from_hex(0xFF_D7_00_FF)));
     entity.add_component(Component::Transformer(
         Builder::new()
-            .with_translation(vec3(0.0, 0.0, -3.0))
-            .with_custom_axis_rotation_angle(vec3(0.5, 1.0, 0.0), 60.0)
+            .with_translation(vec3(0.0, 0.0, -6.0))
+            .with_rotation(vec3(45.0, 45.0, 0.0))
             .build(),
     ));
-    let radius = scaler.radius(0.1);
-    let sphere = Sphere::new(&Point::new_normalized(0.3, -0.3, 0.0), &radius, 16);
+    let cube_two = Cube::new(0.15, [-0.7, 0.3, -3.0]);
     let light = Light {};
     let lamp = Entity::new(vec![
-        Component::Geometry(Box::new(sphere)),
-        Component::Color(Color::from_hex(0xaa_00_00_00)),
-        Component::Transformer(
-            Builder::new()
-                .with_translation(vec3(1.0, 1.0, -4.0))
-                .build(),
-        ),
+        Component::Geometry(Box::new(cube_two)),
+        Component::Color(Color::from_hex(0xff_ff_ff_00)),
         Component::Light(light),
     ]);
     scene.add_entity(entity);

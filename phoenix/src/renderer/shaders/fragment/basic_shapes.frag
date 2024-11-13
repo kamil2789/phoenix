@@ -41,7 +41,7 @@ void main()
 }
 
 vec3 calculate_light() {
-    float ambient_strength = 0.1;
+    float ambient_strength = 0.05;
     vec3 ambient = ambient_strength * light_color;
 
     // diffuse
