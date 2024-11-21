@@ -25,6 +25,7 @@ pub struct Manager {
     shapes: HashMap<ID, Box<dyn Shape>>,
     textures: HashMap<ID, Texture>,
     transformers: HashMap<ID, Transformer>,
+    #[allow(clippy::zero_sized_map_values)]
     lights: HashMap<ID, Light>,
     id_gc: IdGarbageCollector,
     shader_base: ShaderBase,
@@ -116,12 +117,13 @@ impl Manager {
         id
     }
 
+    //For now only one source of the light is supported
     #[must_use]
     pub fn get_light_entity(&self) -> Option<View> {
-        let keys = self.lights.keys();
-        for key in keys {
+        if let Some(key) = self.lights.keys().next() {
             return Some(self.as_ref_entity(*key));
         }
+
         None
     }
 

@@ -25,9 +25,6 @@ pub fn init_shape(
     let buffers = generate_buffers(vertices.len());
     bind_buffers(&buffers);
 
-    //dbg!(normals.unwrap());
-    //dbg!(vertices);
-
     allocate_gpu_buffer(vertices, normals, color, texture);
     send_data_to_gpu_buffer(vertices, normals, color, texture);
 
@@ -36,8 +33,6 @@ pub fn init_shape(
         .for_each(|args| set_vertex_attribute_pointer(&args));
 
     unbind_buffers();
-
-    return Ok(buffers);
 
     if let Some(err_code) = get_last_error_code(true) {
         Err(Error::RenderingError(format!(

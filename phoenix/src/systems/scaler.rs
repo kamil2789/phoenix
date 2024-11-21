@@ -46,7 +46,6 @@ mod tests {
         assert!(radius.width > 74.999);
         assert!(radius.width < 75.001);
 
-        dbg!(radius.height);
         assert!(radius.height > 99.999);
         assert!(radius.height < 100.001);
     }
@@ -61,7 +60,6 @@ mod tests {
         assert!(radius.width > 99.999);
         assert!(radius.width < 100.001);
 
-        dbg!(radius.height);
         assert!(radius.height > 74.999);
         assert!(radius.height < 75.001);
     }
@@ -76,7 +74,6 @@ mod tests {
         assert!(radius.width > 99.999);
         assert!(radius.width < 100.001);
 
-        dbg!(radius.height);
         assert!(radius.height > 99.999);
         assert!(radius.height < 100.001);
     }

@@ -1,3 +1,5 @@
+use cgmath::Vector3;
+
 #[derive(PartialEq, Debug)]
 pub struct Color {
     color: Type,
@@ -168,6 +170,13 @@ impl RGBA {
         }
 
         number
+    }
+}
+
+impl From<RGBA> for Vector3<f32> {
+    fn from(color: RGBA) -> Self {
+        let rgba = color.get_as_normalized_f32();
+        Vector3::new(rgba[0], rgba[1], rgba[2])
     }
 }
 

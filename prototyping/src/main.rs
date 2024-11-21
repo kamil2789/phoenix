@@ -1,24 +1,26 @@
 use cgmath::vec3;
 use phoenix::{
     components::{
-        color::{Color, RGBA}, geometry::{
+        color::{Color, RGBA},
+        geometry::{
             solid::{Cube, Sphere},
             Point,
-        }, light::Light, texture::{self, load, Filtering, MinFiltering, Mipmaps, Texture, Wrapping}, transformer::Builder, Component, FillMode
+        },
+        light::Light,
+        transformer::Builder,
+        Component,
     },
     entities::entity::Entity,
     events::{
         action::Action,
-        condition::Condition,
         keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W},
         user_input::{KeyboardInput, MouseInput},
-        Event, EventLifetime,
     },
     renderer::opengl::OpenGL,
     systems::{camera, scaler::Scaler, scene::Scene},
     window::{GlfwConfig, Resolution},
 };
-use std::{path::Path, rc::Rc};
+use std::rc::Rc;
 
 fn main() {
     let config = GlfwConfig::create().unwrap();
@@ -87,7 +89,7 @@ fn main() {
     ]);
 
     let radius = scaler.radius(0.25);
-    let sphere = Sphere::new(&Point::new_normalized(0.0, 0.0, 0.0), &radius, 16);
+    let sphere = Sphere::new(&Point::new_normalized(0.0, 0.0, 0.0), &radius, 48);
 
     let mut sphere_ent = Entity::default();
     sphere_ent.add_component(Component::Geometry(Box::new(sphere)));

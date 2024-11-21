@@ -1,19 +1,18 @@
 mod event_interpreter;
 use std::rc::Rc;
 
-use cgmath::{Vector3, Vector4};
-
 use super::camera::{Camera, Config};
+use super::lighting::{calculate_light, LightConfig};
 use super::performance::{FpsCounter, GlfwTimer};
-use crate::components::color::{Color, RGBA};
+use crate::components::color::RGBA;
 use crate::components::transformer::Transformer;
-use crate::components::{light, Shape};
 use crate::entities::entity::{Entity, Manager, View};
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
 use crate::{entities, events};
 
 pub type Result<T> = std::result::Result<T, Error>;
+pub type ID = u32;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -33,12 +32,6 @@ pub struct Scene {
     camera: Option<Camera>,
     pub event_manager: events::Manager,
     fps_counter: FpsCounter,
-}
-
-struct TMP_light_entity {
-    pub camera_pos: Vector3<f32>,
-    pub light_pos: Vector3<f32>,
-    pub light_color: Vector3<f32>,
 }
 
 impl Scene {
@@ -128,21 +121,23 @@ impl Scene {
 
         self.handle_user_input_callbacks();
 
-        let light_calc = self.TMP_calculate_light();
+        let light_config = self.handle_light_source();
 
         let keys = self.entity_manager.get_keys();
         for key in keys {
             let entity_view = self.entity_manager.as_ref_entity(key);
-            let id = self.renderer.init_entity(entity_view.clone())?; //TODO make it a ref
+            let id = self.renderer.init_entity(&entity_view)?;
 
-            self.handle_entity_transformation(entity_view.clone())?;
-            self.handle_camera(key)?; //out of loop?
+            //shader part
+            self.handle_entity_transformation(&entity_view)?;
+            self.handle_camera(key)?;
             self.renderer
                 .update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
- 
-            if let Some(light) = light_calc.as_ref() {
+
+            if let Some(light_config) = light_config.as_ref() {
                 if entity_view.light.is_none() {
-                    self.renderer.update_light_uniform_variables(entity_view.entity_id, &light.camera_pos, &light.light_pos, &light.light_color)?;  
+                    self.renderer
+                        .update_light_uniform_variables(entity_view.entity_id, light_config)?;
                 }
             }
 
@@ -155,47 +150,21 @@ impl Scene {
         Ok(())
     }
 
-    fn TMP_calculate_light(&self) -> Option<TMP_light_entity> {
-        if let Some(light_entity) = self.entity_manager.get_light_entity() {
-            light_entity.shape.unwrap();
-            let camera_pos = self.camera.as_ref().map_or_else(
-                || Vector3::new(0.0, 0.0, 0.0),
-                |cam| cam.get_camera_vec_pos(),
-            );
-            let light_pos = self.get_light_pos(light_entity.shape.unwrap(), light_entity.transformer);
-            let light_color = self.get_light_color(light_entity.color.unwrap());
-
-            Some(TMP_light_entity {
-                camera_pos,
-                light_pos,
-                light_color,
-            })
-        } else {
-            None
+    fn handle_light_source(&self) -> Option<LightConfig> {
+        if let Some(entity) = self.entity_manager.get_light_entity() {
+            if let Some(camera) = self.camera.as_ref() {
+                return calculate_light(&entity, camera.get_camera_vec_pos()).ok();
+            }
         }
+
+        None
     }
 
     fn handle_user_input_callbacks(&mut self) {
         event_interpreter::process_actions(self.event_manager.process_events(), self);
     }
 
-    fn get_light_pos(&self, shape: &dyn Shape, transformation: Option<&Transformer>) -> Vector3<f32> {
-        let data = shape.get_vertices();
-        let vec = Vector3::new(data[0], data[1], data[2]);
-        if let Some(val) = transformation {
-            let multiply = val.get_matrix() * Vector4::new(vec.x, vec.y, vec.z, 1.0); 
-            return Vector3::new(multiply[0], multiply[1], multiply[2]); 
-        }
-
-        vec
-    }
-
-    fn get_light_color(&self, color: &Color) -> Vector3<f32> {
-        let rgba = color.as_ref_uniform().unwrap().get_as_normalized_f32();
-        Vector3::new(rgba[0], rgba[1], rgba[2])
-    }
-
-    fn handle_entity_transformation(&self, entity: View) -> Result<()> {
+    fn handle_entity_transformation(&self, entity: &View) -> Result<()> {
         if let Some(transformer) = entity.transformer {
             self.renderer
                 .perform_transformations(entity.entity_id, transformer)?;
@@ -255,7 +224,7 @@ mod tests {
         impl Render for MockRenderer {
             fn set_background_color(&self, _color: &RGBA) {}
 
-            fn init_entity(&mut self, _entity: View) -> Result<u32, Error> {
+            fn init_entity(&mut self, _entity: &View) -> Result<u32, Error> {
                 self.entities += 1;
                 Ok(self.entities)
             }
@@ -315,9 +284,7 @@ mod tests {
             fn update_light_uniform_variables(
                 &self,
                 _entity_id: u32,
-                camera_pos: &cgmath::Vector3<f32>,
-                light_pos: &cgmath::Vector3<f32>,
-                light_color: &cgmath::Vector3<f32>,
+                _light_config: &crate::systems::lighting::LightConfig,
             ) -> crate::renderer::Result<()> {
                 todo!()
             }

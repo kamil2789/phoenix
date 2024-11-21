@@ -1,4 +1,4 @@
-use cgmath::{Array, InnerSpace, Vector3, Zero};
+use cgmath::{InnerSpace, Vector3, Zero};
 
 use crate::components::Shape;
 
@@ -21,7 +21,8 @@ pub fn calculate_normal_vec_for_shape(shape: &dyn Shape) -> Vec<f32> {
         let vector_three = Vector3::new(triangle[6], triangle[7], triangle[8]);
 
         let normal = calculate_normal_vec(&vector_one, &vector_two, &vector_three);
-        let slice: [f32; 3] = check_normal_direction(vector_one, vector_two, vector_three, centroid, normal).into();
+        let slice: [f32; 3] =
+            check_normal_direction(vector_one, vector_two, vector_three, centroid, normal).into();
         result.extend_from_slice(&slice);
         result.extend_from_slice(&slice);
         result.extend_from_slice(&slice);
@@ -29,13 +30,14 @@ pub fn calculate_normal_vec_for_shape(shape: &dyn Shape) -> Vec<f32> {
     result
 }
 
-fn calculate_normal_vec(a: &Vector3<f32>, b: &Vector3<f32>, c: &Vector3<f32>) -> Vector3<f32> { 
+fn calculate_normal_vec(a: &Vector3<f32>, b: &Vector3<f32>, c: &Vector3<f32>) -> Vector3<f32> {
     let edge_one = b - a;
     let edge_two = c - a;
-    
+
     edge_one.cross(edge_two)
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn calculate_centroid(vertices: &[f32]) -> Vector3<f32> {
     let mut result = Vector3::zero();
     for triangle in vertices.chunks(3) {
@@ -44,10 +46,16 @@ fn calculate_centroid(vertices: &[f32]) -> Vector3<f32> {
         result.z += triangle[2];
     }
 
-    result / (vertices.len() as f32)
+    result / vertices.len() as f32
 }
 
-fn check_normal_direction(a: Vector3<f32>, b: Vector3<f32>, c: Vector3<f32>, centroid: Vector3<f32>, normal: Vector3<f32>) -> Vector3<f32> {
+fn check_normal_direction(
+    a: Vector3<f32>,
+    b: Vector3<f32>,
+    c: Vector3<f32>,
+    centroid: Vector3<f32>,
+    normal: Vector3<f32>,
+) -> Vector3<f32> {
     let face_center = (a + b + c) / 3.0;
     let direction_to_face = face_center - centroid;
     let dot_product = normal.dot(direction_to_face);
@@ -115,8 +123,9 @@ mod tests {
 
     #[test]
     fn test_calculate_centroid() {
-        let vertices = vec![1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0];
+        let vertices = vec![
+            1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0,
+        ];
         assert_eq!(calculate_centroid(&vertices), Vector3::new(0.0, 0.0, 0.0));
     }
-
 }

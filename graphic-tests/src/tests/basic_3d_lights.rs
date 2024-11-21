@@ -2,10 +2,7 @@ use cgmath::vec3;
 use phoenix::{
     components::{
         color::{Color, RGBA},
-        geometry::{
-            solid::{Cube, Sphere},
-            Point,
-        },
+        geometry::solid::Cube,
         light::Light,
         transformer::Builder,
         Component,

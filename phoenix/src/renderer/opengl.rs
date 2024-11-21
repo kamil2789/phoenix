@@ -3,7 +3,9 @@ use std::ffi::{c_void, CString};
 use std::rc::Rc;
 
 use cgmath::Matrix4;
-use common::{set_uniform_bool, set_uniform_color, set_uniform_matrix4f, set_uniform_vec3, unset_uniform_bool};
+use common::{
+    set_uniform_bool, set_uniform_color, set_uniform_matrix4f, set_uniform_vec3, unset_uniform_bool,
+};
 use glfw_sys::glfw_bindings;
 
 use super::{Error, Render, ID};
@@ -15,6 +17,7 @@ use crate::components::transformer::Transformer;
 use crate::components::{FillMode, Shape, ShapeType};
 use crate::entities::entity::View;
 use crate::renderer::Result;
+use crate::systems::lighting::LightConfig;
 use crate::window::Window;
 
 mod common;
@@ -75,7 +78,7 @@ impl Render for OpenGL {
     }
 
     /// Return the ID of the initialized entity
-    fn init_entity(&mut self, entity: View) -> Result<ID> {
+    fn init_entity(&mut self, entity: &View) -> Result<ID> {
         if self.buffers.contains_key(&entity.entity_id) {
             return Ok(entity.entity_id); //already initialized
         }
@@ -203,18 +206,14 @@ impl Render for OpenGL {
     fn update_light_uniform_variables(
         &self,
         entity_id: u32,
-        camera_pos: &cgmath::Vector3<f32>,
-        light_pos: &cgmath::Vector3<f32>,
-        light_color: &cgmath::Vector3<f32>,
+        light_config: &LightConfig,
     ) -> Result<()> {
-        dbg!(camera_pos);
-        dbg!(light_pos);
-        dbg!(light_color);
+        let light_color_vec = light_config.light_color.clone().into();
         if let Some(shader_id) = self.shaders_id.get(&entity_id) {
             set_uniform_bool("is_light", *shader_id)?;
-            set_uniform_vec3("camera_pos", camera_pos, *shader_id)?;
-            set_uniform_vec3("light_pos", light_pos, *shader_id)?;
-            set_uniform_vec3("light_color", light_color, *shader_id)?;
+            set_uniform_vec3("camera_pos", &light_config.camera_pos, *shader_id)?;
+            set_uniform_vec3("light_pos", &light_config.light_pos, *shader_id)?;
+            set_uniform_vec3("light_color", &light_color_vec, *shader_id)?;
             return Ok(());
         }
 
@@ -369,7 +368,7 @@ mod tests {
         );
 
         let mut renderer = OpenGL::new(&window).unwrap();
-        let ret = renderer.init_entity(entity);
+        let ret = renderer.init_entity(&entity);
         assert!(ret.is_ok());
         assert_eq!(renderer.compiled_shaders.len(), 1);
         assert_eq!(renderer.buffers.len(), 1);
@@ -402,8 +401,8 @@ mod tests {
 
         let mut renderer = OpenGL::new(&window).unwrap();
 
-        assert!(renderer.init_entity(entity).is_ok());
-        assert!(renderer.init_entity(second_entity).is_ok());
+        assert!(renderer.init_entity(&entity).is_ok());
+        assert!(renderer.init_entity(&second_entity).is_ok());
 
         assert_eq!(renderer.compiled_shaders.len(), 1);
         assert_eq!(renderer.buffers.len(), 1);
@@ -433,7 +432,7 @@ mod tests {
         );
 
         let mut renderer = OpenGL::new(&window).unwrap();
-        assert!(renderer.init_entity(entity).is_ok());
+        assert!(renderer.init_entity(&entity).is_ok());
 
         let second_entity = View::new(
             2,
@@ -445,7 +444,7 @@ mod tests {
             None,
         );
 
-        assert!(renderer.init_entity(second_entity).is_ok());
+        assert!(renderer.init_entity(&second_entity).is_ok());
         assert_eq!(renderer.compiled_shaders.len(), 1);
         assert_eq!(renderer.buffers.len(), 2);
         assert_eq!(renderer.shaders_id.len(), 2);
