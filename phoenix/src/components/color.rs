@@ -1,3 +1,5 @@
+use cgmath::Vector3;
+
 #[derive(PartialEq, Debug)]
 pub struct Color {
     color: Type,
@@ -84,6 +86,15 @@ impl Color {
 
         None
     }
+
+    #[must_use]
+    pub fn unpack_rgba(color: Option<&Color>) -> Option<&RGBA> {
+        if let Some(color) = color {
+            color.as_ref_uniform()
+        } else {
+            None
+        }
+    }
 }
 
 impl Default for Color {
@@ -159,6 +170,13 @@ impl RGBA {
         }
 
         number
+    }
+}
+
+impl From<RGBA> for Vector3<f32> {
+    fn from(color: RGBA) -> Self {
+        let rgba = color.get_as_normalized_f32();
+        Vector3::new(rgba[0], rgba[1], rgba[2])
     }
 }
 

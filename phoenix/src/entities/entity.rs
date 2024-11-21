@@ -3,6 +3,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::common::IdGarbageCollector;
 use crate::components::color::Color;
+use crate::components::light::Light;
 use crate::components::shaders::ShaderBase;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
@@ -24,10 +25,13 @@ pub struct Manager {
     shapes: HashMap<ID, Box<dyn Shape>>,
     textures: HashMap<ID, Texture>,
     transformers: HashMap<ID, Transformer>,
+    #[allow(clippy::zero_sized_map_values)]
+    lights: HashMap<ID, Light>,
     id_gc: IdGarbageCollector,
     shader_base: ShaderBase,
 }
 
+#[derive(Clone)]
 pub struct View<'a> {
     pub entity_id: ID,
     pub color: Option<&'a Color>,
@@ -35,6 +39,7 @@ pub struct View<'a> {
     pub shader_src: Option<Rc<ShaderSource>>,
     pub texture: Option<&'a Texture>,
     pub transformer: Option<&'a Transformer>,
+    pub light: Option<&'a Light>,
 }
 
 impl Entity {
@@ -103,10 +108,23 @@ impl Manager {
                 Component::Transformer(transformer) => {
                     self.transformers.insert(id, transformer);
                 }
+                Component::Light(light) => {
+                    self.lights.insert(id, light);
+                }
             }
         }
 
         id
+    }
+
+    //For now only one source of the light is supported
+    #[must_use]
+    pub fn get_light_entity(&self) -> Option<View> {
+        if let Some(key) = self.lights.keys().next() {
+            return Some(self.as_ref_entity(*key));
+        }
+
+        None
     }
 
     #[must_use]
@@ -145,6 +163,7 @@ impl Manager {
             shader,
             self.textures.get(&key),
             self.transformers.get(&key),
+            self.lights.get(&key),
         )
     }
 
@@ -163,6 +182,7 @@ impl<'a> View<'a> {
         shader_src: Option<Rc<ShaderSource>>,
         texture: Option<&'a Texture>,
         transformer: Option<&'a Transformer>,
+        light: Option<&'a Light>,
     ) -> Self {
         Self {
             entity_id,
@@ -171,6 +191,7 @@ impl<'a> View<'a> {
             shader_src,
             texture,
             transformer,
+            light,
         }
     }
 }

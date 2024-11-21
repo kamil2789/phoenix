@@ -40,7 +40,9 @@ fn check_compile_status(shader_id: u32) -> Result<u32> {
             );
         };
         Err(Error::CompilationError(String::from(
-            std::str::from_utf8(&info_log).unwrap().trim_end_matches('\0')
+            std::str::from_utf8(&info_log)
+                .unwrap()
+                .trim_end_matches('\0'),
         )))
     }
 }
@@ -75,7 +77,9 @@ fn check_link_status(shader_id: u32) -> Result<()> {
             );
         };
         Err(Error::LinkError(String::from(
-            std::str::from_utf8(&info_log).unwrap().trim_end_matches('\0')
+            std::str::from_utf8(&info_log)
+                .unwrap()
+                .trim_end_matches('\0'),
         )))
     }
 }

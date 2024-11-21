@@ -36,7 +36,7 @@ pub fn init_shape(
 
     if let Some(err_code) = get_last_error_code(true) {
         Err(Error::RenderingError(format!(
-            "OpenGL error code {err_code}"
+            "Geometry rendering: OpenGL error code {err_code}"
         )))
     } else {
         Ok(buffers)

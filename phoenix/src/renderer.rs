@@ -7,6 +7,7 @@ use std::rc::Rc;
 use crate::{
     components::{color::RGBA, shaders::ShaderSource, texture::Texture, transformer::Transformer},
     entities::entity::View,
+    systems::lighting::LightConfig,
 };
 use cgmath::Matrix4;
 use thiserror::Error;
@@ -36,7 +37,7 @@ pub trait Render {
     /// # Errors
     ///
     /// Will return `Err` when shader compilation failed.
-    fn init_entity(&mut self, entity: View) -> Result<ID>;
+    fn init_entity(&mut self, entity: &View) -> Result<ID>;
     /// # Errors
     ///
     /// Will return `Err` when texture initialization failed.
@@ -65,6 +66,14 @@ pub trait Render {
     ///
     /// Will return `Err` when uniform variables cannot be set.
     fn update_default_shader_uniform_variables(&self, entity: &View) -> Result<()>;
+    /// # Errors
+    ///
+    /// Will return `Err` when uniform variables cannot be set.
+    fn update_light_uniform_variables(
+        &self,
+        entity_id: ID,
+        light_config: &LightConfig,
+    ) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
     fn enable_3d(&self);
     fn get_last_error_code(&self) -> Option<u32>;

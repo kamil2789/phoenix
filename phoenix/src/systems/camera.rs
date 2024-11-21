@@ -141,6 +141,14 @@ impl Camera {
             CAMERA_UP,
         )
     }
+
+    pub fn get_camera_vec_pos(&self) -> Vector3<f32> {
+        Vector3::new(
+            self.movement.position.x,
+            self.movement.position.y,
+            self.movement.position.z,
+        )
+    }
 }
 
 impl Default for Config {

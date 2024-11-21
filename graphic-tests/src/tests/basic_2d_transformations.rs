@@ -90,7 +90,11 @@ pub fn test_2d_multiple_triangle_translation(window: Rc<Window>, render: Box<dyn
     let third_triangle = Entity::new(vec![
         Component::Geometry(Box::new(position)),
         Component::Color(Color::from_vertices(colors)),
-        Component::Transformer(Builder::new().with_translation(vec3(-0.5, -0.5, 0.0)).build()),
+        Component::Transformer(
+            Builder::new()
+                .with_translation(vec3(-0.5, -0.5, 0.0))
+                .build(),
+        ),
     ]);
 
     scene.add_entity(triangle);

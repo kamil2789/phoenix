@@ -2,14 +2,17 @@ mod event_interpreter;
 use std::rc::Rc;
 
 use super::camera::{Camera, Config};
+use super::lighting::{calculate_light, LightConfig};
 use super::performance::{FpsCounter, GlfwTimer};
 use crate::components::color::RGBA;
-use crate::entities::entity::{Entity, Manager};
+use crate::components::transformer::Transformer;
+use crate::entities::entity::{Entity, Manager, View};
 use crate::renderer::{self, Render};
 use crate::window::{WinError, Window};
 use crate::{entities, events};
 
 pub type Result<T> = std::result::Result<T, Error>;
+pub type ID = u32;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -118,24 +121,59 @@ impl Scene {
 
         self.handle_user_input_callbacks();
 
+        let light_config = self.handle_light_source();
+
         let keys = self.entity_manager.get_keys();
         for key in keys {
-            let id = self
-                .renderer
-                .init_entity(self.entity_manager.as_ref_entity(key))?;
+            let entity_view = self.entity_manager.as_ref_entity(key);
+            let id = self.renderer.init_entity(&entity_view)?;
 
+            //shader part
+            self.handle_entity_transformation(&entity_view)?;
             self.handle_camera(key)?;
             self.renderer
                 .update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
+
+            if let Some(light_config) = light_config.as_ref() {
+                if entity_view.light.is_none() {
+                    self.renderer
+                        .update_light_uniform_variables(entity_view.entity_id, light_config)?;
+                }
+            }
+
+            //final step to draw the entity
             self.renderer.draw_entity(id);
         }
+
         self.window.swap_buffers();
         Window::poll_events();
         Ok(())
     }
 
+    fn handle_light_source(&self) -> Option<LightConfig> {
+        if let Some(entity) = self.entity_manager.get_light_entity() {
+            if let Some(camera) = self.camera.as_ref() {
+                return calculate_light(&entity, camera.get_camera_vec_pos()).ok();
+            }
+        }
+
+        None
+    }
+
     fn handle_user_input_callbacks(&mut self) {
         event_interpreter::process_actions(self.event_manager.process_events(), self);
+    }
+
+    fn handle_entity_transformation(&self, entity: &View) -> Result<()> {
+        if let Some(transformer) = entity.transformer {
+            self.renderer
+                .perform_transformations(entity.entity_id, transformer)?;
+        } else {
+            self.renderer
+                .perform_transformations(entity.entity_id, &Transformer::new_identity())?;
+        }
+
+        Ok(())
     }
 
     fn handle_camera(&self, entity_id: u32) -> Result<()> {
@@ -186,7 +224,7 @@ mod tests {
         impl Render for MockRenderer {
             fn set_background_color(&self, _color: &RGBA) {}
 
-            fn init_entity(&mut self, _entity: View) -> Result<u32, Error> {
+            fn init_entity(&mut self, _entity: &View) -> Result<u32, Error> {
                 self.entities += 1;
                 Ok(self.entities)
             }
@@ -240,6 +278,14 @@ mod tests {
             }
 
             fn get_last_error_code(&self) -> Option<u32> {
+                todo!()
+            }
+
+            fn update_light_uniform_variables(
+                &self,
+                _entity_id: u32,
+                _light_config: &crate::systems::lighting::LightConfig,
+            ) -> crate::renderer::Result<()> {
                 todo!()
             }
         }
