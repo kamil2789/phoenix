@@ -211,7 +211,7 @@ impl Render for OpenGL {
         let light_color_vec = light_config.light_color.clone().into();
         if let Some(shader_id) = self.shaders_id.get(&entity_id) {
             set_uniform_bool("is_light", *shader_id)?;
-            set_uniform_vec3("camera_pos", &light_config.camera_pos, *shader_id)?;
+            set_uniform_vec3("view_pos", &light_config.camera_pos, *shader_id)?;
             set_uniform_vec3("light_pos", &light_config.light_pos, *shader_id)?;
             set_uniform_vec3("light_color", &light_color_vec, *shader_id)?;
             return Ok(());
