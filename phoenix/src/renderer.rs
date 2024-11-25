@@ -27,6 +27,12 @@ pub enum Error {
     TransformationError(String),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Api {
+    OpenGL,
+    Vulkan,
+}
+
 pub trait Render {
     /// # Errors
     ///
@@ -34,6 +40,7 @@ pub trait Render {
     /// The correct vertex and fragment shader should be given to this func.
     fn compile_shader_program(&mut self, shader_program: Rc<ShaderSource>) -> Result<ID>;
     fn set_background_color(&self, color: &RGBA);
+    fn get_api(&self) -> Api;
     /// # Errors
     ///
     /// Will return `Err` when shader compilation failed.

@@ -47,7 +47,7 @@ pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(||
     tests
 });
 
-pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| vec![]);
+pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new);
 
 pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![

@@ -1,4 +1,4 @@
-use std::{path::Path, rc::Rc};
+use std::{collections::HashMap, path::Path, rc::Rc, sync::LazyLock};
 
 use cgmath::vec3;
 use phoenix::{
@@ -17,6 +17,40 @@ use phoenix::{
 };
 
 use crate::workspace::TEST_TEXTURE_DIR;
+
+use super::TestFunction;
+
+pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
+    let mut tests: HashMap<String, TestFunction> = HashMap::new();
+    tests.insert(
+        "test_2d_triangle_translation".to_string(),
+        test_2d_triangle_translation,
+    );
+    tests.insert(
+        "test_2d_multiple_triangle_translation".to_string(),
+        test_2d_multiple_triangle_translation,
+    );
+    tests.insert(
+        "test_2d_triangle_rotation_and_scale".to_string(),
+        test_2d_triangle_rotation_and_scale,
+    );
+    tests.insert(
+        "test_2d_triangle_rotation_scale_perspective".to_string(),
+        test_2d_triangle_rotation_scale_perspective,
+    );
+    tests
+});
+
+pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new);
+
+pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
+    vec![
+        "test_2d_triangle_translation".into(),
+        "test_2d_multiple_triangle_translation".into(),
+        "test_2d_triangle_rotation_and_scale".into(),
+        "test_2d_triangle_rotation_scale_perspective".into(),
+    ]
+});
 
 pub fn test_2d_triangle_translation(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);

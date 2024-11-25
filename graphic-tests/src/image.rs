@@ -1,5 +1,5 @@
-use image::{error, io::Reader as ImageReader, GenericImageView};
-use phoenix::window::{Resolution, Window};
+use image::{error, GenericImageView, ImageReader};
+use phoenix::window::Resolution;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -11,11 +11,10 @@ pub enum Error {
     ImageError(#[from] error::ImageError),
 }
 
-pub fn save_screen_as_img_png(window: &Window, image_name: &str) -> Result<()> {
-    let resolution = window.get_resolution();
-    let buffer = read_pixels_from_front_buffer(&resolution);
-    let flipped_buffer = flipped_buffer(&buffer, &resolution);
-    save_png(&flipped_buffer, &resolution, image_name)
+pub fn save_screen_as_img_png(resolution: &Resolution, image_name: &str) -> Result<()> {
+    let buffer = read_pixels_from_front_buffer(resolution);
+    let flipped_buffer = flipped_buffer(&buffer, resolution);
+    save_png(&flipped_buffer, resolution, image_name)
 }
 
 fn read_pixels_from_front_buffer(resolution: &Resolution) -> Vec<u8> {
@@ -106,7 +105,7 @@ mod tests {
         window.set_current();
         let _renderer = OpenGL::new(&window).unwrap();
 
-        let result = save_screen_as_img_png(&window, "test.png");
+        let result = save_screen_as_img_png(&window.get_resolution(), "test.png");
         assert!(result.is_ok());
         assert!(std::path::Path::new("test.png").exists());
         std::fs::remove_file("test.png").unwrap();
@@ -126,7 +125,7 @@ mod tests {
         window.set_current();
         let _renderer = OpenGL::new(&window).unwrap();
 
-        let result = save_screen_as_img_png(&window, "test.png");
+        let result = save_screen_as_img_png(&window.get_resolution(), "test.png");
         assert!(result.is_ok());
         assert!(std::path::Path::new("test.png").exists());
 
@@ -150,10 +149,10 @@ mod tests {
 
         let _renderer = OpenGL::new(&window).unwrap();
 
-        save_screen_as_img_png(&window, "test.png").unwrap();
+        save_screen_as_img_png(&window.get_resolution(), "test.png").unwrap();
         assert!(std::path::Path::new("test.png").exists());
 
-        save_screen_as_img_png(&window, "test_two.png").unwrap();
+        save_screen_as_img_png(&window.get_resolution(), "test_two.png").unwrap();
         assert!(std::path::Path::new("test_two.png").exists());
 
         let image = read_image_from_file("test.png").unwrap();

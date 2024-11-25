@@ -22,6 +22,7 @@ pub mod basic_3d_geometries;
 pub mod basic_3d_lights;
 
 pub type TestFunction = fn(Rc<Window>, Box<dyn Render>);
+#[allow(clippy::module_name_repetitions)]
 pub type TestsList = HashMap<String, TestFunction>;
 
 pub enum TestResult {
@@ -32,21 +33,21 @@ pub enum TestResult {
 impl From<bool> for TestResult {
     fn from(value: bool) -> Self {
         if value {
-            TestResult::Passed
+            Self::Passed
         } else {
-            TestResult::Failed
+            Self::Failed
         }
     }
 }
 
-pub fn run(args: Args) {
+pub fn run(args: &Args) {
     prepare_working_directory();
     let config = create_config();
     let window = Rc::new(create_window(&config));
-    dispatch_tests(window, args);
+    dispatch_tests(&window, args);
 }
 
-fn dispatch_tests(window: Rc<Window>, args: Args) {
+fn dispatch_tests(window: &Rc<Window>, args: &Args) {
     let tests = if args.test_name == "All" {
         TestCollector::new()
     } else {
@@ -54,12 +55,12 @@ fn dispatch_tests(window: Rc<Window>, args: Args) {
     };
 
     if args.graphic_api == GraphicApi::All {
-        run_tests(&tests, &window, Api::OpenGL);
-        run_tests(&tests, &window, Api::Vulkan);
+        run_tests(&tests, window, Api::OpenGL);
+        run_tests(&tests, window, Api::Vulkan);
     } else if args.graphic_api == GraphicApi::Opengl {
-        run_tests(&tests, &window, Api::OpenGL);
+        run_tests(&tests, window, Api::OpenGL);
     } else if args.graphic_api == GraphicApi::Vulkan {
-        run_tests(&tests, &window, Api::Vulkan);
+        run_tests(&tests, window, Api::Vulkan);
     }
 }
 
@@ -69,11 +70,11 @@ fn run_tests(tests: &TestCollector, window: &Rc<Window>, api: Api) {
     let mut failed_tests: Vec<String> = Vec::new();
     let mut passed_tests: Vec<String> = Vec::new();
 
-    let message = format!("Running tests for API: {:?}", api).blue();
-    println!("{}", message);
-    for (test_name, test_func) in tests.get_api_tests(api).iter() {
-        let renderer = create_renderer(window.clone(), api);
-        let result = run_specific_test(&window, renderer, *test_func, test_name);
+    let message = format!("Running tests for API: {api:?}").blue();
+    println!("{message}");
+    for (test_name, test_func) in tests.get_api_tests(api) {
+        let renderer = create_renderer(window, api);
+        let result = run_specific_test(window.clone(), renderer, *test_func, test_name);
         match result {
             TestResult::Failed => failed_tests.push(test_name.clone()),
             TestResult::Passed => passed_tests.push(test_name.clone()),
@@ -87,35 +88,40 @@ fn run_tests(tests: &TestCollector, window: &Rc<Window>, api: Api) {
     );
 }
 
-fn create_renderer(window: Rc<Window>, api: Api) -> Box<dyn Render> {
+fn create_renderer(window: &Window, api: Api) -> Box<dyn Render> {
     match api {
-        Api::OpenGL => Box::new(OpenGL::new(&window).unwrap()),
+        Api::OpenGL => Box::new(OpenGL::new(window).unwrap()),
         Api::Vulkan => Box::new(Vulkan::new()),
     }
 }
 
 pub fn run_specific_test(
-    window: &Rc<Window>,
+    window: Rc<Window>,
     renderer: Box<dyn Render>,
     run_test: fn(Rc<Window>, Box<dyn Render>),
     test_name: &str,
 ) -> TestResult {
-    run_test(window.clone(), renderer);
+    let resolution = window.get_resolution();
+    run_test(window, renderer);
     let result_path = TEST_RESULTS_DIR.to_owned() + test_name + TEST_FILE_EXTENSION;
     let template_path = TEST_TEMPLATE_DIR.to_owned() + test_name + TEST_FILE_EXTENSION;
-    save_screen_as_img_png(window.as_ref(), &result_path).unwrap();
+    save_screen_as_img_png(&resolution, &result_path).unwrap();
 
-    if let Ok(result_image) = read_image_from_file(&result_path) {
-        if let Ok(template_image) = read_image_from_file(&template_path) {
-            are_images_equal(&result_image, &template_image).into()
-        } else {
-            println!("Failed to read test template image from path: {template_path}");
+    read_image_from_file(&result_path).map_or_else(
+        |_| {
+            println!("Failed to read test result image from path: {result_path}");
             TestResult::Failed
-        }
-    } else {
-        println!("Failed to read test result image from path: {result_path}");
-        TestResult::Failed
-    }
+        },
+        |result_image| {
+            read_image_from_file(&template_path).map_or_else(
+                |_| {
+                    println!("Failed to read test template image from path: {template_path}");
+                    TestResult::Failed
+                },
+                |template_image| are_images_equal(&result_image, &template_image).into(),
+            )
+        },
+    )
 }
 
 fn print_tests_status(
@@ -124,13 +130,13 @@ fn print_tests_status(
     not_supported: &Vec<String>,
 ) {
     for test in failed_tests {
-        println!("test {} {}", test, "FAILED".red());
+        println!("{} {}", test, "FAILED".red());
     }
     for test in passed_tests {
-        println!("test {} {}", test, "PASSED".green());
+        println!("{} {}", test, "PASSED".green());
     }
     for test in not_supported {
-        println!("test {} {}", test, "NOT SUPPORTED".yellow());
+        println!("{} {}", test, "NOT SUPPORTED".yellow());
     }
 }
 

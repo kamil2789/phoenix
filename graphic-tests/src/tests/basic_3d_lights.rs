@@ -12,7 +12,24 @@ use phoenix::{
     systems::{camera, scene::Scene},
     window::Window,
 };
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc, sync::LazyLock};
+
+use super::TestFunction;
+
+pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
+    let mut tests: HashMap<String, TestFunction> = HashMap::new();
+    tests.insert(
+        "test_3d_gold_cube_with_basic_light".to_string(),
+        test_3d_gold_cube_with_basic_light,
+    );
+    tests
+});
+
+pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new);
+
+pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> =
+    LazyLock::new(|| vec!["test_3d_gold_cube_with_basic_light".into()]);
+
 pub fn test_3d_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
     let cube = Cube::new(1.0, [0.0, 0.0, 0.0]);

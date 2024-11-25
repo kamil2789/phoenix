@@ -14,7 +14,7 @@ pub struct Args {
     pub graphic_api: GraphicApi,
 }
 
-#[derive(ValueEnum, Clone, Debug, PartialEq)]
+#[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
 pub enum GraphicApi {
     All,
     Opengl,

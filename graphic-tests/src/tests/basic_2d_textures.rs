@@ -1,4 +1,4 @@
-use std::{path::Path, rc::Rc};
+use std::{collections::HashMap, path::Path, rc::Rc, sync::LazyLock};
 
 use phoenix::{
     components::{
@@ -14,6 +14,45 @@ use phoenix::{
 };
 
 use crate::workspace::TEST_TEXTURE_DIR;
+
+use super::TestFunction;
+
+pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
+    let mut tests: HashMap<String, TestFunction> = HashMap::new();
+    tests.insert(
+        "test_2d_brick_wall_triangle".to_string(),
+        test_2d_brick_wall_triangle,
+    );
+    tests.insert(
+        "test_2d_two_brick_wall_triangle".to_string(),
+        test_2d_two_brick_wall_triangle,
+    );
+    tests.insert(
+        "test_2d_brick_wall_uniform_red_triangle".to_string(),
+        test_2d_brick_wall_uniform_red_triangle,
+    );
+    tests.insert(
+        "test_2d_brick_wall_disco_triangle".to_string(),
+        test_2d_brick_wall_disco_triangle,
+    );
+    tests.insert(
+        "test_2d_happy_face_linear_texture".to_string(),
+        test_2d_happy_face_linear_texture,
+    );
+    tests
+});
+
+pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new);
+
+pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
+    vec![
+        "test_2d_brick_wall_triangle".into(),
+        "test_2d_two_brick_wall_triangle".into(),
+        "test_2d_brick_wall_uniform_red_triangle".into(),
+        "test_2d_brick_wall_disco_triangle".into(),
+        "test_2d_happy_face_linear_texture".into(),
+    ]
+});
 
 pub fn test_2d_brick_wall_triangle(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);

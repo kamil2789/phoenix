@@ -8,7 +8,7 @@ use common::{
 };
 use glfw_sys::glfw_bindings;
 
-use super::{Error, Render, ID};
+use super::{Api, Error, Render, ID};
 use crate::common::calculate_normal_vec_for_shape;
 use crate::components::color::{Color, RGBA};
 use crate::components::shaders::ShaderSource;
@@ -218,6 +218,10 @@ impl Render for OpenGL {
         }
 
         Err(Error::RenderingError("No existing shader id".to_string()))
+    }
+
+    fn get_api(&self) -> Api {
+        Api::OpenGL
     }
 }
 

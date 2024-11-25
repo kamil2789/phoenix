@@ -75,7 +75,7 @@ impl Manager {
         self.process_world_events(&mut actions)
     }
 
-    fn process_user_input_callbacks(&mut self) -> Vec<Action> {
+    fn process_user_input_callbacks(&self) -> Vec<Action> {
         self.control_binding.collect_user_actions()
     }
 
