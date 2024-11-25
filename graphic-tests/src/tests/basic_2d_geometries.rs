@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use phoenix::{
     components::{
         color::{Color, RGBA},
@@ -14,6 +12,53 @@ use phoenix::{
     systems::{scaler::Scaler, scene::Scene},
     window::Window,
 };
+use std::collections::HashMap;
+use std::rc::Rc;
+use std::sync::LazyLock;
+
+use super::TestFunction;
+
+pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
+    let mut tests: HashMap<String, TestFunction> = HashMap::new();
+    tests.insert(
+        "test_2d_red_triangle_on_green_background".to_string(),
+        test_2d_red_triangle_on_green_background,
+    );
+    tests.insert(
+        "test_2d_default_color_on_default_background".to_string(),
+        test_2d_default_color_on_default_background,
+    );
+    tests.insert(
+        "test_2d_two_triangles_green_blue".to_string(),
+        test_2d_two_triangles_green_blue,
+    );
+    tests.insert(
+        "test_2d_triangle_with_colored_vertices".to_string(),
+        test_2d_triangle_with_colored_vertices,
+    );
+    tests.insert(
+        "test_2d_three_triangles_colors_uniform_vertex".to_string(),
+        test_2d_three_triangles_colors_uniform_vertex,
+    );
+    tests.insert(
+        "test_2d_blue_circle_on_green_background".to_string(),
+        test_2d_blue_circle_on_green_background,
+    );
+    tests
+});
+
+pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| vec![]);
+
+pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
+    vec![
+        "test_2d_red_triangle_on_green_background".into(),
+        "test_2d_default_color_on_default_background".into(),
+        "test_2d_two_triangles_green_blue".into(),
+        "test_2d_triangle_with_colored_vertices".into(),
+        "test_2d_three_triangles_colors_uniform_vertex".into(),
+        "test_2d_blue_circle_on_green_background".into(),
+    ]
+});
 
 pub fn test_2d_red_triangle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
