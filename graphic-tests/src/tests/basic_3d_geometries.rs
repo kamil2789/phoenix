@@ -1,4 +1,4 @@
-use std::{path::Path, rc::Rc};
+use std::{collections::HashMap, path::Path, rc::Rc, sync::LazyLock};
 
 use cgmath::vec3;
 use phoenix::{
@@ -22,6 +22,30 @@ use phoenix::{
 };
 
 use crate::workspace::TEST_TEXTURE_DIR;
+
+use super::TestFunction;
+
+pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
+    let mut tests: HashMap<String, TestFunction> = HashMap::new();
+    tests.insert(
+        "test_3d_gold_cube_on_green_background".to_string(),
+        test_3d_gold_cube_on_green_background,
+    );
+    tests.insert(
+        "test_3d_red_sphere_on_green_screen".to_string(),
+        test_3d_red_sphere_on_green_screen,
+    );
+    tests
+});
+
+pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new);
+
+pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
+    vec![
+        "test_3d_gold_cube_on_green_background".into(),
+        "test_3d_red_sphere_on_green_screen".into(),
+    ]
+});
 
 pub fn test_3d_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);

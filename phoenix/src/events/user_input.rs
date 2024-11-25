@@ -113,7 +113,7 @@ impl ControlBinding {
         }
     }
 
-    pub fn collect_user_actions(&mut self) -> Vec<Action> {
+    pub fn collect_user_actions(&self) -> Vec<Action> {
         let mut result = self.collect_keyboard_actions();
         result.append(&mut self.get_mouse_input());
         result
