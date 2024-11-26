@@ -89,7 +89,7 @@ fn main() {
     ]);
 
     let radius = scaler.radius(0.25);
-    let sphere = Sphere::new(&Point::new_normalized(0.0, 0.0, 0.0), &radius, 48);
+    let sphere = Sphere::new(&Point::new_normalized(0.0, 0.0, 0.0), &radius, 16);
 
     let mut sphere_ent = Entity::default();
     sphere_ent.add_component(Component::Geometry(Box::new(sphere)));
