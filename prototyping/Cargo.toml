@@ -8,3 +8,4 @@ glfw-sys = { path = "../glfw-sys" }
 phoenix = { path = "../phoenix" }
 gl = "0.14.0"
 cgmath = "0.18.0"
+clap = { version = "4.2.7", features = ["derive"] }
