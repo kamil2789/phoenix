@@ -167,7 +167,7 @@ impl Default for Builder {
 #[cfg(test)]
 mod tests {
     use super::{Builder, Transformer};
-    use cgmath::{assert_relative_eq, vec3, Matrix4, SquareMatrix, Vector3};
+    use cgmath::{assert_relative_eq, vec3, vec4, Matrix4, SquareMatrix, Vector3, Vector4};
 
     #[test]
     fn test_new_transformer() {
@@ -307,5 +307,16 @@ mod tests {
                 1.0
             )
         );
+    }
+
+    #[test]
+    fn test_transformer_x_axis_rotation_30_degrees() {
+        let trasformator = Transformer::new_rotate(vec3(30.0, 0.0, 0.0));
+        let matrix = trasformator.get_matrix();
+
+        let vertex = Vector4::<f32>::new(2.0, 3.0, 4.0, 1.0);
+
+        let result = matrix * vertex;
+        assert_relative_eq!(result, vec4(2.0, 0.5980761, 4.964102, 1.0));
     }
 }
