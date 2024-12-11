@@ -5,11 +5,13 @@ pub mod vulkan;
 use std::rc::Rc;
 
 use crate::{
-    components::{color::RGBA, shaders::ShaderSource, texture::Texture, transformer::Transformer},
+    components::{
+        color::RGBA, light::Light, material::Material, shaders::ShaderSource, texture::Texture,
+        transformer::Transformer,
+    },
     entities::entity::View,
-    systems::lighting::LightConfig,
 };
-use cgmath::Matrix4;
+use cgmath::{Matrix4, Vector3};
 use thiserror::Error;
 
 pub type ID = u32;
@@ -76,10 +78,23 @@ pub trait Render {
     /// # Errors
     ///
     /// Will return `Err` when uniform variables cannot be set.
-    fn update_light_uniform_variables(
+    fn update_light_uniform_struct(
         &self,
         entity_id: ID,
-        light_config: &LightConfig,
+        light: &Light,
+        light_position: &Vector3<f32>,
+    ) -> Result<()>;
+    /// # Errors
+    ///
+    /// Will return `Err` when uniform variables cannot be set.
+    fn update_material_uniform_struct(&self, entity_id: ID, material: &Material) -> Result<()>;
+    /// # Errors
+    ///
+    /// Will return `Err` when uniform variables cannot be set.
+    fn update_camera_position_vec(
+        &self,
+        entity_id: ID,
+        camera_position: &Vector3<f32>,
     ) -> Result<()>;
     fn draw_entity(&self, entity_id: ID);
     fn enable_3d(&self);

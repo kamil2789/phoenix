@@ -85,7 +85,7 @@ pub fn start_demo() {
             .build(),
     ));
     let cube_two = Cube::new(0.15, [-0.7, 0.3, -3.0]);
-    let light = Light {};
+    let light = Light::default();
     let lamp = Entity::new(vec![
         Component::Geometry(Box::new(cube_two)),
         Component::Color(Color::from_hex(0xff_ff_ff_00)),

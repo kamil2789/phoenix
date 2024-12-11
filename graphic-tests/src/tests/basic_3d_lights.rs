@@ -1,14 +1,10 @@
-use cgmath::vec3;
+use cgmath::{vec3, Vector3};
 use phoenix::{
     components::{
-        color::{Color, RGBA},
-        geometry::{
+        color::{Color, RGBA}, geometry::{
             solid::{Cube, Sphere},
             Point,
-        },
-        light::Light,
-        transformer::Builder,
-        Component,
+        }, light::Light, material::Material, transformer::Builder, Component
     },
     entities::entity::Entity,
     renderer::Render,
@@ -52,6 +48,7 @@ pub fn test_3d_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Re
     let mut entity = Entity::default();
     entity.add_component(Component::Geometry(Box::new(cube)));
     entity.add_component(Component::Color(Color::from_hex(0xFF_D7_00_FF)));
+    entity.add_component(Component::Material(Material::default()));
     entity.add_component(Component::Transformer(
         Builder::new()
             .with_translation(vec3(0.0, 0.0, -6.0))
@@ -59,10 +56,9 @@ pub fn test_3d_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Re
             .build(),
     ));
     let cube_two = Cube::new(0.15, [-0.7, 0.3, -3.0]);
-    let light = Light {};
+    let light = Light::default();
     let lamp = Entity::new(vec![
         Component::Geometry(Box::new(cube_two)),
-        Component::Color(Color::from_hex(0xff_ff_ff_00)),
         Component::Light(light),
     ]);
     scene.add_entity(entity);
@@ -84,6 +80,7 @@ pub fn test_3d_red_sphere_with_white_light(window: Rc<Window>, render: Box<dyn R
     let mut entity = Entity::default();
     entity.add_component(Component::Geometry(Box::new(sphere)));
     entity.add_component(Component::Color(Color::from_hex(0xFF_00_00_FF)));
+    entity.add_component(Component::Material(Material::new_shininess(32.0)));
     entity.add_component(Component::Transformer(
         Builder::new()
             .with_translation(vec3(0.0, 0.0, -2.0))
@@ -91,10 +88,9 @@ pub fn test_3d_red_sphere_with_white_light(window: Rc<Window>, render: Box<dyn R
     ));
 
     let cube_two = Cube::new(0.1, [0.7, 0.3, -1.5]);
-    let light = Light {};
+    let light = Light::default();
     let lamp = Entity::new(vec![
         Component::Geometry(Box::new(cube_two)),
-        Component::Color(Color::from_hex(0xFF_FF_FF_00)),
         Component::Light(light),
     ]);
 
@@ -107,13 +103,12 @@ pub fn test_3d_red_sphere_with_white_light(window: Rc<Window>, render: Box<dyn R
     scene.start_one_frame().unwrap();
 }
 
-//NIE DZIAŁA
 pub fn test_3d_orange_cube_with_green_light_source_light_translation(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
     let cube = Cube::new(1.0, [0.0, 0.0, 0.0]);
     let mut entity = Entity::default();
     entity.add_component(Component::Geometry(Box::new(cube)));
-    entity.add_component(Component::Color(Color::from_hex(0xFF_aa_00_FF)));
+    entity.add_component(Component::Color(Color::from_hex(0xFF_AA_00_FF)));
     entity.add_component(Component::Transformer(
         Builder::new()
             .with_translation(vec3(0.0, 0.0, -6.0))
@@ -121,10 +116,9 @@ pub fn test_3d_orange_cube_with_green_light_source_light_translation(window: Rc<
             .build(),
     ));
     let cube_two = Cube::new(0.15, [-0.7, 0.3, -3.0]);
-    let light = Light {};
+    let light = Light { ambient: Vector3::new(0.0, 0.2, 0.0), diffuse: Vector3::new(0.0, 1.0, 0.0), specular: Vector3::new(0.0, 1.0, 0.0) };
     let lamp = Entity::new(vec![
         Component::Geometry(Box::new(cube_two)),
-        Component::Color(Color::from_hex(0x00_FF_00_00)),
         Component::Light(light),
         Component::Transformer(Builder::new().with_translation(vec3(0.0, 0.0, 0.0)).build()),
     ]);

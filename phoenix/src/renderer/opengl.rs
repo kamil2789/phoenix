@@ -2,22 +2,24 @@ use std::collections::HashMap;
 use std::ffi::{c_void, CString};
 use std::rc::Rc;
 
-use cgmath::Matrix4;
+use cgmath::{Matrix4, Vector3};
 use common::{
-    set_uniform_bool, set_uniform_color, set_uniform_matrix4f, set_uniform_vec3, unset_uniform_bool,
+    set_uniform_bool, set_uniform_color, set_uniform_float, set_uniform_matrix4f, set_uniform_vec3,
+    unset_uniform_bool,
 };
 use glfw_sys::glfw_bindings;
 
 use super::{Api, Error, Render, ID};
 use crate::common::calculate_normal_vec_for_shape;
 use crate::components::color::{Color, RGBA};
+use crate::components::light::Light;
+use crate::components::material::Material;
 use crate::components::shaders::ShaderSource;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
 use crate::components::{FillMode, Shape, ShapeType};
 use crate::entities::entity::View;
 use crate::renderer::Result;
-use crate::systems::lighting::LightConfig;
 use crate::window::Window;
 
 mod common;
@@ -203,18 +205,43 @@ impl Render for OpenGL {
         }
     }
 
-    fn update_light_uniform_variables(
+    fn update_light_uniform_struct(
         &self,
         entity_id: u32,
-        light_config: &LightConfig,
+        light: &Light,
+        light_position: &Vector3<f32>,
     ) -> Result<()> {
-        let light_color_vec = light_config.light_color.clone().into();
         if let Some(shader_id) = self.shaders_id.get(&entity_id) {
             set_uniform_bool("is_light", *shader_id)?;
-            set_uniform_vec3("view_pos", &light_config.camera_pos, *shader_id)?;
-            set_uniform_vec3("light_pos", &light_config.light_pos, *shader_id)?;
-            set_uniform_vec3("light_color", &light_color_vec, *shader_id)?;
+            set_uniform_vec3("light.position", light_position, *shader_id)?;
+            set_uniform_vec3("light.ambient", &light.ambient, *shader_id)?;
+            set_uniform_vec3("light.diffuse", &light.diffuse, *shader_id)?;
+            set_uniform_vec3("light.specular", &light.specular, *shader_id)?;
             return Ok(());
+        }
+
+        Err(Error::RenderingError("No existing shader id".to_string()))
+    }
+
+    fn update_material_uniform_struct(&self, entity_id: ID, material: &Material) -> Result<()> {
+        if let Some(shader_id) = self.shaders_id.get(&entity_id) {
+            set_uniform_vec3("material.ambient", &material.ambient, *shader_id)?;
+            set_uniform_vec3("material.diffuse", &material.diffuse, *shader_id)?;
+            set_uniform_vec3("material.specular", &material.specular, *shader_id)?;
+            set_uniform_float("material.shininess", material.shininess, *shader_id)?;
+            Ok(())
+        } else {
+            Err(Error::RenderingError("No existing shader id".to_string()))
+        }
+    }
+
+    fn update_camera_position_vec(
+        &self,
+        entity_id: ID,
+        camera_position: &Vector3<f32>,
+    ) -> Result<()> {
+        if let Some(shader_id) = self.shaders_id.get(&entity_id) {
+            return set_uniform_vec3("view_pos", camera_position, *shader_id);
         }
 
         Err(Error::RenderingError("No existing shader id".to_string()))
@@ -369,6 +396,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
 
         let mut renderer = OpenGL::new(&window).unwrap();
@@ -399,9 +427,10 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
 
-        let second_entity = View::new(1, None, None, None, None, None, None);
+        let second_entity = View::new(1, None, None, None, None, None, None, None);
 
         let mut renderer = OpenGL::new(&window).unwrap();
 
@@ -433,6 +462,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
 
         let mut renderer = OpenGL::new(&window).unwrap();
@@ -443,6 +473,7 @@ mod tests {
             Some(&color),
             Some(&vertices),
             Some(shader),
+            None,
             None,
             None,
             None,

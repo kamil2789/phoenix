@@ -4,6 +4,7 @@ use std::{collections::HashMap, rc::Rc};
 use crate::common::IdGarbageCollector;
 use crate::components::color::Color;
 use crate::components::light::Light;
+use crate::components::material::Material;
 use crate::components::shaders::ShaderBase;
 use crate::components::texture::Texture;
 use crate::components::transformer::Transformer;
@@ -25,8 +26,8 @@ pub struct Manager {
     shapes: HashMap<ID, Box<dyn Shape>>,
     textures: HashMap<ID, Texture>,
     transformers: HashMap<ID, Transformer>,
-    #[allow(clippy::zero_sized_map_values)]
     lights: HashMap<ID, Light>,
+    materials: HashMap<ID, Material>,
     id_gc: IdGarbageCollector,
     shader_base: ShaderBase,
 }
@@ -40,6 +41,7 @@ pub struct View<'a> {
     pub texture: Option<&'a Texture>,
     pub transformer: Option<&'a Transformer>,
     pub light: Option<&'a Light>,
+    pub material: Option<&'a Material>,
 }
 
 impl Entity {
@@ -78,6 +80,16 @@ impl Entity {
                 _ => None,
             })
     }
+
+    #[must_use]
+    pub fn get_light(&self) -> Option<&Light> {
+        self.components
+            .iter()
+            .find_map(|component| match component {
+                Component::Light(light) => Some(light),
+                _ => None,
+            })
+    }
 }
 
 impl Manager {
@@ -110,6 +122,10 @@ impl Manager {
                 }
                 Component::Light(light) => {
                     self.lights.insert(id, light);
+                }
+
+                Component::Material(material) => {
+                    self.materials.insert(id, material);
                 }
             }
         }
@@ -164,6 +180,7 @@ impl Manager {
             self.textures.get(&key),
             self.transformers.get(&key),
             self.lights.get(&key),
+            self.materials.get(&key),
         )
     }
 
@@ -175,6 +192,7 @@ impl Manager {
 
 impl<'a> View<'a> {
     #[must_use]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         entity_id: ID,
         color: Option<&'a Color>,
@@ -183,6 +201,7 @@ impl<'a> View<'a> {
         texture: Option<&'a Texture>,
         transformer: Option<&'a Transformer>,
         light: Option<&'a Light>,
+        material: Option<&'a Material>,
     ) -> Self {
         Self {
             entity_id,
@@ -192,6 +211,7 @@ impl<'a> View<'a> {
             texture,
             transformer,
             light,
+            material,
         }
     }
 }

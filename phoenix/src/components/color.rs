@@ -1,5 +1,7 @@
 use cgmath::Vector3;
 
+use super::light::Light;
+
 #[derive(PartialEq, Debug)]
 pub struct Color {
     color: Type,
@@ -173,6 +175,25 @@ impl RGBA {
     }
 }
 
+impl From<&Light> for RGBA {
+    fn from(light: &Light) -> Self {
+        light.diffuse.into()
+    }
+}
+
+#[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::cast_sign_loss)]
+impl From<Vector3<f32>> for RGBA {
+    fn from(color: Vector3<f32>) -> Self {
+        RGBA::new(
+            (color.x * 255_f32) as u8,
+            (color.y * 255_f32) as u8,
+            (color.z * 255_f32) as u8,
+            1_f32,
+        )
+    }
+}
+
 impl From<RGBA> for Vector3<f32> {
     fn from(color: RGBA) -> Self {
         let rgba = color.get_as_normalized_f32();
@@ -268,5 +289,12 @@ mod tests {
         assert!(color_from_vertices.as_ref_vertices().is_some());
         assert!(color_from_vertices.is_vertices());
         assert!(!color_from_vertices.is_uniform());
+    }
+
+    #[test]
+    fn test_rgba_from_vector() {
+        let vec3 = Vector3::new(0.8, 0.8, 0.8);
+        let rgba: RGBA = vec3.into();
+        assert_eq!(rgba, RGBA::new(204, 204, 204, 1_f32));
     }
 }

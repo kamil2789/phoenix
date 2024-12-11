@@ -1,10 +1,5 @@
 use crate::{
-    components::{
-        color::{Color, RGBA},
-        light::Light,
-        shaders::ShaderSource,
-        Component,
-    },
+    components::{color::{Color, RGBA}, light::Light, shaders::ShaderSource, Component},
     renderer::shaders::{
         BASIC_SHAPES_FRAG, BASIC_SHAPES_VERT, LIGHT_SOURCE_FRAG, LIGHT_SOURCE_VERT,
     },
@@ -18,24 +13,37 @@ pub fn preprocessing(mut entity: Entity) -> Entity {
         return entity;
     }
 
-    if is_light_source(&entity) {
-        insert_light_source_shader(&mut entity);
-        if !entity.contains_component(&Component::Color(Color::default())) {
-            entity.add_component(Component::Color(Color::from_rgba(RGBA::new_white())));
+    if let Some(light_source) = entity.get_light() {
+        let light_color: RGBA = light_source.diffuse.into();
+        if !is_color(&entity) {
+            insert_color_from_light_source(&mut entity, light_color);
         }
-        return entity;
     }
 
-    insert_basic_shapers_shader(&mut entity);
+    if is_light_source(&entity) {
+        insert_light_source_shader(&mut entity);
+    } else {
+        insert_basic_shapes_shader(&mut entity);
+    }
+
     entity
+}
+
+fn insert_color_from_light_source(entity: &mut Entity, light_color: RGBA) {
+    entity.add_component(Component::Color(Color::from_rgba(
+        light_color)));
 }
 
 fn is_shader(entity: &Entity) -> bool {
     entity.contains_component(&Component::ShaderProgram(ShaderSource::default()))
 }
 
+fn is_color(entity: &Entity) -> bool {
+    entity.contains_component(&Component::Color(Color::default()))
+}
+
 fn is_light_source(entity: &Entity) -> bool {
-    entity.contains_component(&Component::Light(Light {}))
+    entity.contains_component(&Component::Light(Light::default()))
 }
 
 fn insert_light_source_shader(entity: &mut Entity) {
@@ -44,7 +52,7 @@ fn insert_light_source_shader(entity: &mut Entity) {
     ));
 }
 
-fn insert_basic_shapers_shader(entity: &mut Entity) {
+fn insert_basic_shapes_shader(entity: &mut Entity) {
     entity.add_component(Component::ShaderProgram(create_default_basic_shader()));
 }
 
@@ -131,11 +139,10 @@ mod tests {
 
         let entity = Entity::new(vec![
             Component::Geometry(Box::new(Triangle::new(vertices))),
-            Component::Color(Color::new(255, 255, 0, 255_f32)),
-            Component::Light(Light {}),
+            Component::Light(Light::default()),
         ]);
 
-        assert_eq!(3, entity.len());
+        assert_eq!(2, entity.len());
         let result = preprocessing(entity);
         assert!(result.contains_component(&Component::ShaderProgram(ShaderSource::default())));
         assert_eq!(4, result.len());

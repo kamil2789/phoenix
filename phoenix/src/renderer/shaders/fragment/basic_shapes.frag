@@ -12,12 +12,26 @@ uniform int is_texture_vert = 0;
 uniform int is_color_vert = 0;
 uniform vec4 color = vec4(1.0);
 
-//light
-uniform vec3 light_color = vec3(1.0);
-uniform vec3 light_pos = vec3(0.0);
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;    
+    float shininess;
+}; 
+
+struct Light {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
 //view == camera
 uniform vec3 view_pos = vec3(0.0);
+
 uniform int is_light = 0;
+uniform Material material;
+uniform Light light;
 
 vec3 calculate_light();
 
@@ -41,21 +55,19 @@ void main()
 }
 
 vec3 calculate_light() {
-    float ambient_strength = 0.05;
-    vec3 ambient = ambient_strength * light_color;
+    vec3 ambient = light.ambient * material.ambient;
 
     // diffuse
     vec3 norm = normalize(normal);
-    vec3 light_dir = normalize(light_pos - frag_pos);
+    vec3 light_dir = normalize(light.position - frag_pos);
     float diff = max(dot(norm, light_dir), 0.0);
-    vec3 diffuse = diff * light_color;
+    vec3 diffuse = light.diffuse * (diff * material.diffuse);
 
     // specular
-    float specular_strength = 0.5;
     vec3 view_dir = normalize(view_pos - frag_pos);
     vec3 reflect_dir = reflect(-light_dir, norm);
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 120);
-    vec3 specular = specular_strength * spec * light_color;
+    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), material.shininess);
+    vec3 specular = light.specular * (spec * material.specular);
 
     return ambient + diffuse + specular;
 }
