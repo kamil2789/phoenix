@@ -75,6 +75,14 @@ impl Camera {
         }
     }
 
+    pub fn move_down(&mut self, delta_time: f32) {
+        self.movement.position -= CAMERA_UP * self.movement.speed * delta_time;
+    }
+
+    pub fn move_up(&mut self, delta_time: f32) {
+        self.movement.position += CAMERA_UP * self.movement.speed * delta_time;
+    }
+
     pub fn move_forward(&mut self, delta_time: f32) {
         self.movement.position += self.movement.speed * self.orientation.front * delta_time;
     }

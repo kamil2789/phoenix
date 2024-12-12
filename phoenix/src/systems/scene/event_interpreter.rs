@@ -6,6 +6,8 @@ pub fn process_actions(mut actions: Vec<Action>, scene: &mut Scene) -> bool {
         match action {
             Action::PrintFPS() => println!("FPS: {}", scene.fps_counter.get_fps()),
             Action::ChangeBackgroundColor(color) => scene.set_background_color(color),
+            Action::CameraUpdateDown => scene.camera.as_mut().unwrap().move_down(time),
+            Action::CameraUpdateUp => scene.camera.as_mut().unwrap().move_up(time),
             Action::CameraUpdateForward => scene.camera.as_mut().unwrap().move_forward(time),
             Action::CameraUpdateBackward => scene.camera.as_mut().unwrap().move_backward(time),
             Action::CameraUpdateLeft => scene.camera.as_mut().unwrap().move_left(time),

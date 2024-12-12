@@ -2,6 +2,8 @@ use crate::components::color::RGBA;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Action {
+    CameraUpdateUp,
+    CameraUpdateDown,
     CameraUpdateForward,
     CameraUpdateBackward,
     CameraUpdateLeft,

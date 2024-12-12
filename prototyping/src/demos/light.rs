@@ -13,7 +13,7 @@ use phoenix::{
     entities::entity::Entity,
     events::{
         action::Action,
-        keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W},
+        keys_binding::{KEY_A, KEY_D, KEY_E, KEY_Q, KEY_S, KEY_W},
         user_input::{KeyboardInput, MouseInput},
     },
     renderer::opengl::OpenGL,
@@ -60,6 +60,16 @@ pub fn start_demo() {
     scene.event_manager.bind_key(
         KeyboardInput::new_key(KEY_S.into()),
         Action::CameraUpdateBackward,
+    );
+
+    scene.event_manager.bind_key(
+        KeyboardInput::new_key(KEY_Q.into()),
+        Action::CameraUpdateUp,
+    );
+
+    scene.event_manager.bind_key(
+        KeyboardInput::new_key(KEY_E.into()),
+        Action::CameraUpdateDown,
     );
 
     scene
