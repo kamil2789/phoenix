@@ -1,3 +1,5 @@
+use crate::components::material::Material;
+
 use super::{Api, Render};
 
 #[derive(Clone)]
@@ -74,10 +76,27 @@ impl Render for Vulkan {
         todo!()
     }
 
-    fn update_light_uniform_variables(
+    fn update_light_uniform_struct(
+        &self,
+        _entity_id: u32,
+        _light: &crate::components::light::Light,
+        _light_position: &cgmath::Vector3<f32>,
+    ) -> super::Result<()> {
+        todo!()
+    }
+
+    fn update_camera_position_vec(
         &self,
         _entity_id: super::ID,
-        _light_config: &crate::systems::lighting::LightConfig,
+        _camera_position: &cgmath::Vector3<f32>,
+    ) -> super::Result<()> {
+        todo!()
+    }
+
+    fn update_material_uniform_struct(
+        &self,
+        _entity_id: super::ID,
+        _material: &Material,
     ) -> super::Result<()> {
         todo!()
     }

@@ -2,9 +2,10 @@ mod event_interpreter;
 use std::rc::Rc;
 
 use super::camera::{Camera, Config};
-use super::lighting::{calculate_light, LightConfig};
+use super::lighting::calculate_light_pos;
 use super::performance::{FpsCounter, GlfwTimer};
 use crate::components::color::RGBA;
+use crate::components::material::Material;
 use crate::components::transformer::Transformer;
 use crate::entities::entity::{Entity, Manager, View};
 use crate::renderer::{self, Render};
@@ -121,8 +122,6 @@ impl Scene {
 
         self.handle_user_input_callbacks();
 
-        let light_config = self.handle_light_source();
-
         let keys = self.entity_manager.get_keys();
         for key in keys {
             let entity_view = self.entity_manager.as_ref_entity(key);
@@ -130,16 +129,12 @@ impl Scene {
 
             //shader part
             self.handle_entity_transformation(&entity_view)?;
-            self.handle_camera(key)?;
+            self.handle_camera(&entity_view)?;
             self.renderer
                 .update_default_shader_uniform_variables(&self.entity_manager.as_ref_entity(key))?;
 
-            if let Some(light_config) = light_config.as_ref() {
-                if entity_view.light.is_none() {
-                    self.renderer
-                        .update_light_uniform_variables(entity_view.entity_id, light_config)?;
-                }
-            }
+            self.handle_light_source(&entity_view)?;
+            self.handle_material(&entity_view)?;
 
             //final step to draw the entity
             self.renderer.draw_entity(id);
@@ -150,14 +145,29 @@ impl Scene {
         Ok(())
     }
 
-    fn handle_light_source(&self) -> Option<LightConfig> {
-        if let Some(entity) = self.entity_manager.get_light_entity() {
-            if let Some(camera) = self.camera.as_ref() {
-                return calculate_light(&entity, camera.get_camera_vec_pos()).ok();
-            }
+    fn handle_material(&self, entity: &View) -> Result<()> {
+        if let Some(material) = entity.material {
+            self.renderer
+                .update_material_uniform_struct(entity.entity_id, material)?;
+        } else if entity.light.is_none() {
+            self.renderer
+                .update_material_uniform_struct(entity.entity_id, &Material::default())?;
         }
 
-        None
+        Ok(())
+    }
+
+    fn handle_light_source(&self, entity: &View) -> Result<()> {
+        if let Some(light_source) = self.entity_manager.get_light_entity() {
+            if entity.light.is_none() {
+                self.renderer.update_light_uniform_struct(
+                    entity.entity_id,
+                    light_source.light.unwrap(),
+                    &calculate_light_pos(light_source.shape.unwrap(), light_source.transformer),
+                )?;
+            }
+        }
+        Ok(())
     }
 
     fn handle_user_input_callbacks(&mut self) {
@@ -176,12 +186,20 @@ impl Scene {
         Ok(())
     }
 
-    fn handle_camera(&self, entity_id: u32) -> Result<()> {
+    fn handle_camera(&self, entity: &View) -> Result<()> {
         if let Some(cam) = &self.camera {
-            self.renderer
-                .perform_camera_position_transformation(entity_id, &cam.get_camera_position())?;
-            self.renderer
-                .perform_camera_projection_transformation(entity_id, &cam.get_projection())?;
+            self.renderer.perform_camera_position_transformation(
+                entity.entity_id,
+                &cam.get_camera_position(),
+            )?;
+            self.renderer.perform_camera_projection_transformation(
+                entity.entity_id,
+                &cam.get_projection(),
+            )?;
+            if entity.light.is_none() {
+                self.renderer
+                    .update_camera_position_vec(entity.entity_id, &cam.get_camera_vec_pos())?;
+            }
         }
 
         Ok(())

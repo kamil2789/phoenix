@@ -59,6 +59,13 @@ pub fn set_uniform_color(variable_name: &str, rgba: &RGBA, shader_id: u32) -> Re
     Ok(())
 }
 
+pub fn set_uniform_float(variable_name: &str, value: f32, shader_id: u32) -> Result<()> {
+    let location = get_uniform_variable_location(shader_id, variable_name)?;
+    unsafe { gl::UseProgram(shader_id) };
+    unsafe { gl::Uniform1f(location, value) };
+    Ok(())
+}
+
 fn get_uniform_variable_location(shader_id: u32, variable_name: &str) -> Result<i32> {
     if let Ok(name) = CString::new(variable_name) {
         let location = unsafe { gl::GetUniformLocation(shader_id, name.as_ptr()) };
