@@ -18,16 +18,16 @@ use super::TestFunction;
 pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
     let mut tests: HashMap<String, TestFunction> = HashMap::new();
     tests.insert(
-        "test_3d_gold_cube_with_basic_light".to_string(),
-        test_3d_gold_cube_with_basic_light,
+        "test_3d_light_gold_cube_with_basic_light".to_string(),
+        test_3d_light_gold_cube_with_basic_light,
     );
     tests.insert(
-        "test_3d_red_sphere_with_white_light".to_string(),
-        test_3d_red_sphere_with_white_light,
+        "test_3d_light_red_sphere_with_white_light".to_string(),
+        test_3d_light_red_sphere_with_white_light,
     );
     tests.insert(
-        "test_3d_orange_cube_with_green_light_source_light_translation".to_string(),
-        test_3d_orange_cube_with_green_light_source_light_translation,
+        "test_3d_light_orange_cube_with_green_light_source_light_translation".to_string(),
+        test_3d_light_orange_cube_with_green_light_source_light_translation,
     );
     tests
 });
@@ -36,13 +36,13 @@ pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new)
 
 pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
-        "test_3d_gold_cube_with_basic_light".into(),
-        "test_3d_red_sphere_with_white_light".into(),
-        "test_3d_orange_cube_with_green_light_source_light_translation".into(),
+        "test_3d_light_gold_cube_with_basic_light".into(),
+        "test_3d_light_red_sphere_with_white_light".into(),
+        "test_3d_light_orange_cube_with_green_light_source_light_translation".into(),
     ]
 });
 
-pub fn test_3d_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_3d_light_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
     let cube = Cube::new(1.0, [0.0, 0.0, 0.0]);
     let mut entity = Entity::default();
@@ -70,7 +70,7 @@ pub fn test_3d_gold_cube_with_basic_light(window: Rc<Window>, render: Box<dyn Re
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_3d_red_sphere_with_white_light(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_3d_light_red_sphere_with_white_light(window: Rc<Window>, render: Box<dyn Render>) {
     let scaler = Scaler::new(window.get_resolution());
     let mut scene = Scene::new(window, render);
 
@@ -103,7 +103,7 @@ pub fn test_3d_red_sphere_with_white_light(window: Rc<Window>, render: Box<dyn R
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_3d_orange_cube_with_green_light_source_light_translation(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_3d_light_orange_cube_with_green_light_source_light_translation(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
     let cube = Cube::new(1.0, [0.0, 0.0, 0.0]);
     let mut entity = Entity::default();
