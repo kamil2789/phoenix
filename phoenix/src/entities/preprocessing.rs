@@ -1,5 +1,10 @@
 use crate::{
-    components::{color::{Color, RGBA}, light::Light, shaders::ShaderSource, Component},
+    components::{
+        color::{Color, RGBA},
+        light::Light,
+        shaders::ShaderSource,
+        Component,
+    },
     renderer::shaders::{
         BASIC_SHAPES_FRAG, BASIC_SHAPES_VERT, LIGHT_SOURCE_FRAG, LIGHT_SOURCE_VERT,
     },
@@ -30,8 +35,7 @@ pub fn preprocessing(mut entity: Entity) -> Entity {
 }
 
 fn insert_color_from_light_source(entity: &mut Entity, light_color: RGBA) {
-    entity.add_component(Component::Color(Color::from_rgba(
-        light_color)));
+    entity.add_component(Component::Color(Color::from_rgba(light_color)));
 }
 
 fn is_shader(entity: &Entity) -> bool {

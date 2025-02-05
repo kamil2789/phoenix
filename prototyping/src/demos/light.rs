@@ -62,10 +62,9 @@ pub fn start_demo() {
         Action::CameraUpdateBackward,
     );
 
-    scene.event_manager.bind_key(
-        KeyboardInput::new_key(KEY_Q.into()),
-        Action::CameraUpdateUp,
-    );
+    scene
+        .event_manager
+        .bind_key(KeyboardInput::new_key(KEY_Q.into()), Action::CameraUpdateUp);
 
     scene.event_manager.bind_key(
         KeyboardInput::new_key(KEY_E.into()),

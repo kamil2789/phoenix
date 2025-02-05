@@ -1,7 +1,6 @@
 use crate::components::{transformer::Transformer, Shape};
 use cgmath::{Vector3, Vector4};
 
-
 pub fn calculate_light_pos(
     shape: &dyn Shape,
     transformation: Option<&Transformer>,

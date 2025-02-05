@@ -12,7 +12,11 @@ use phoenix::{
     },
     entities::entity::Entity,
     events::{
-        action::Action, condition::Condition, keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W}, user_input::{KeyboardInput, MouseInput}, Event, EventLifetime
+        action::Action,
+        condition::Condition,
+        keys_binding::{KEY_A, KEY_D, KEY_S, KEY_W},
+        user_input::{KeyboardInput, MouseInput},
+        Event, EventLifetime,
     },
     renderer::opengl::OpenGL,
     systems::{camera, scaler::Scaler, scene::Scene},
@@ -69,10 +73,10 @@ pub fn start_demo() {
         .bind_mouse(MouseInput::CursorPos, Action::CameraOrientation(0.0, 0.0));
 
     scene.event_manager.add_event(Event::new(
-            EventLifetime::PerFrame,
-            Condition::None,
-            Action::ChangeBackgroundColor(RGBA::from_hex(0x00_FF_00_FF)),
-        ));
+        EventLifetime::PerFrame,
+        Condition::None,
+        Action::ChangeBackgroundColor(RGBA::from_hex(0x00_FF_00_FF)),
+    ));
 
     let cube = Cube::new(1.0, [0.0, 0.0, 0.0]);
     let mut entity = Entity::default();

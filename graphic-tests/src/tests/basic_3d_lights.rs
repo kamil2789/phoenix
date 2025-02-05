@@ -1,10 +1,15 @@
 use cgmath::{vec3, Vector3};
 use phoenix::{
     components::{
-        color::{Color, RGBA}, geometry::{
+        color::{Color, RGBA},
+        geometry::{
             solid::{Cube, Sphere},
             Point,
-        }, light::Light, material::Material, transformer::Builder, Component
+        },
+        light::Light,
+        material::Material,
+        transformer::Builder,
+        Component,
     },
     entities::entity::Entity,
     renderer::Render,
@@ -103,7 +108,10 @@ pub fn test_3d_light_red_sphere_with_white_light(window: Rc<Window>, render: Box
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_3d_light_orange_cube_with_green_light_source_light_translation(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_3d_light_orange_cube_with_green_light_source_light_translation(
+    window: Rc<Window>,
+    render: Box<dyn Render>,
+) {
     let mut scene = Scene::new(window, render);
     let cube = Cube::new(1.0, [0.0, 0.0, 0.0]);
     let mut entity = Entity::default();
@@ -116,7 +124,11 @@ pub fn test_3d_light_orange_cube_with_green_light_source_light_translation(windo
             .build(),
     ));
     let cube_two = Cube::new(0.15, [-0.7, 0.3, -3.0]);
-    let light = Light { ambient: Vector3::new(0.0, 0.2, 0.0), diffuse: Vector3::new(0.0, 1.0, 0.0), specular: Vector3::new(0.0, 1.0, 0.0) };
+    let light = Light {
+        ambient: Vector3::new(0.0, 0.2, 0.0),
+        diffuse: Vector3::new(0.0, 1.0, 0.0),
+        specular: Vector3::new(0.0, 1.0, 0.0),
+    };
     let lamp = Entity::new(vec![
         Component::Geometry(Box::new(cube_two)),
         Component::Light(light),
