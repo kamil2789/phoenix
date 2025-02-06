@@ -28,12 +28,12 @@ use super::TestFunction;
 pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
     let mut tests: HashMap<String, TestFunction> = HashMap::new();
     tests.insert(
-        "test_3d_gold_cube_on_green_background".to_string(),
-        test_3d_gold_cube_on_green_background,
+        "test_3d_basic_gold_cube_on_green_background".to_string(),
+        test_3d_basic_gold_cube_on_green_background,
     );
     tests.insert(
-        "test_3d_red_sphere_on_green_screen".to_string(),
-        test_3d_red_sphere_on_green_screen,
+        "test_3d_basic_red_sphere_on_green_screen".to_string(),
+        test_3d_basic_red_sphere_on_green_screen,
     );
     tests
 });
@@ -42,12 +42,12 @@ pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new)
 
 pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
-        "test_3d_gold_cube_on_green_background".into(),
-        "test_3d_red_sphere_on_green_screen".into(),
+        "test_3d_basic_gold_cube_on_green_background".into(),
+        "test_3d_basic_red_sphere_on_green_screen".into(),
     ]
 });
 
-pub fn test_3d_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_3d_basic_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
 
     let cube = Cube::new(0.5, [0.0, 0.0, 0.0]);
@@ -87,7 +87,7 @@ pub fn test_3d_gold_cube_on_green_background(window: Rc<Window>, render: Box<dyn
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_3d_red_sphere_on_green_screen(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_3d_basic_red_sphere_on_green_screen(window: Rc<Window>, render: Box<dyn Render>) {
     let scaler = Scaler::new(window.get_resolution());
     let mut scene = Scene::new(window, render);
 

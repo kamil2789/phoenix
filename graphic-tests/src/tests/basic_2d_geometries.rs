@@ -21,28 +21,28 @@ use super::TestFunction;
 pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
     let mut tests: HashMap<String, TestFunction> = HashMap::new();
     tests.insert(
-        "test_2d_red_triangle_on_green_background".to_string(),
-        test_2d_red_triangle_on_green_background,
+        "test_2d_basic_red_triangle_on_green_background".to_string(),
+        test_2d_basic_red_triangle_on_green_background,
     );
     tests.insert(
-        "test_2d_default_color_on_default_background".to_string(),
-        test_2d_default_color_on_default_background,
+        "test_2d_basic_default_color_on_default_background".to_string(),
+        test_2d_basic_default_color_on_default_background,
     );
     tests.insert(
-        "test_2d_two_triangles_green_blue".to_string(),
-        test_2d_two_triangles_green_blue,
+        "test_2d_basic_two_triangles_green_blue".to_string(),
+        test_2d_basic_two_triangles_green_blue,
     );
     tests.insert(
-        "test_2d_triangle_with_colored_vertices".to_string(),
-        test_2d_triangle_with_colored_vertices,
+        "test_2d_basic_triangle_with_colored_vertices".to_string(),
+        test_2d_basic_triangle_with_colored_vertices,
     );
     tests.insert(
-        "test_2d_three_triangles_colors_uniform_vertex".to_string(),
-        test_2d_three_triangles_colors_uniform_vertex,
+        "test_2d_basic_three_triangles_colors_uniform_vertex".to_string(),
+        test_2d_basic_three_triangles_colors_uniform_vertex,
     );
     tests.insert(
-        "test_2d_blue_circle_on_green_background".to_string(),
-        test_2d_blue_circle_on_green_background,
+        "test_2d_basic_blue_circle_on_green_background".to_string(),
+        test_2d_basic_blue_circle_on_green_background,
     );
     tests
 });
@@ -51,16 +51,16 @@ pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new)
 
 pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
-        "test_2d_red_triangle_on_green_background".into(),
-        "test_2d_default_color_on_default_background".into(),
-        "test_2d_two_triangles_green_blue".into(),
-        "test_2d_triangle_with_colored_vertices".into(),
-        "test_2d_three_triangles_colors_uniform_vertex".into(),
-        "test_2d_blue_circle_on_green_background".into(),
+        "test_2d_basic_red_triangle_on_green_background".into(),
+        "test_2d_basic_default_color_on_default_background".into(),
+        "test_2d_basic_two_triangles_green_blue".into(),
+        "test_2d_basic_triangle_with_colored_vertices".into(),
+        "test_2d_basic_three_triangles_colors_uniform_vertex".into(),
+        "test_2d_basic_blue_circle_on_green_background".into(),
     ]
 });
 
-pub fn test_2d_red_triangle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_basic_red_triangle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
@@ -80,7 +80,10 @@ pub fn test_2d_red_triangle_on_green_background(window: Rc<Window>, render: Box<
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_default_color_on_default_background(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_basic_default_color_on_default_background(
+    window: Rc<Window>,
+    render: Box<dyn Render>,
+) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
@@ -97,7 +100,7 @@ pub fn test_2d_default_color_on_default_background(window: Rc<Window>, render: B
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_two_triangles_green_blue(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_basic_two_triangles_green_blue(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
@@ -128,7 +131,7 @@ pub fn test_2d_two_triangles_green_blue(window: Rc<Window>, render: Box<dyn Rend
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_triangle_with_colored_vertices(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_basic_triangle_with_colored_vertices(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
@@ -154,7 +157,10 @@ pub fn test_2d_triangle_with_colored_vertices(window: Rc<Window>, render: Box<dy
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_three_triangles_colors_uniform_vertex(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_basic_three_triangles_colors_uniform_vertex(
+    window: Rc<Window>,
+    render: Box<dyn Render>,
+) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [-0.2, -0.2, 0.0, 0.0, -0.0, 0.0, 0.3, 0.0, 0.0];
@@ -187,7 +193,7 @@ pub fn test_2d_three_triangles_colors_uniform_vertex(window: Rc<Window>, render:
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_blue_circle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_basic_blue_circle_on_green_background(window: Rc<Window>, render: Box<dyn Render>) {
     let scaler = Scaler::new(window.get_resolution());
     let mut scene = Scene::new(window, render);
 

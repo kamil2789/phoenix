@@ -23,20 +23,20 @@ use super::TestFunction;
 pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(|| {
     let mut tests: HashMap<String, TestFunction> = HashMap::new();
     tests.insert(
-        "test_2d_triangle_translation".to_string(),
-        test_2d_triangle_translation,
+        "test_2d_transformation_triangle_translation".to_string(),
+        test_2d_transformation_triangle_translation,
     );
     tests.insert(
-        "test_2d_multiple_triangle_translation".to_string(),
-        test_2d_multiple_triangle_translation,
+        "test_2d_transformation_multiple_triangle_translation".to_string(),
+        test_2d_transformation_multiple_triangle_translation,
     );
     tests.insert(
-        "test_2d_triangle_rotation_and_scale".to_string(),
-        test_2d_triangle_rotation_and_scale,
+        "test_2d_transformation_triangle_rotation_and_scale".to_string(),
+        test_2d_transformation_triangle_rotation_and_scale,
     );
     tests.insert(
-        "test_2d_triangle_rotation_scale_perspective".to_string(),
-        test_2d_triangle_rotation_scale_perspective,
+        "test_2d_transformation_triangle_rotation_scale_perspective".to_string(),
+        test_2d_transformation_triangle_rotation_scale_perspective,
     );
     tests
 });
@@ -45,14 +45,14 @@ pub static OPENGL_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(Vec::new)
 
 pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
-        "test_2d_triangle_translation".into(),
-        "test_2d_multiple_triangle_translation".into(),
-        "test_2d_triangle_rotation_and_scale".into(),
-        "test_2d_triangle_rotation_scale_perspective".into(),
+        "test_2d_transformation_triangle_translation".into(),
+        "test_2d_transformation_multiple_triangle_translation".into(),
+        "test_2d_transformation_triangle_rotation_and_scale".into(),
+        "test_2d_transformation_triangle_rotation_scale_perspective".into(),
     ]
 });
 
-pub fn test_2d_triangle_translation(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_transformation_triangle_translation(window: Rc<Window>, render: Box<dyn Render>) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
@@ -79,7 +79,10 @@ pub fn test_2d_triangle_translation(window: Rc<Window>, render: Box<dyn Render>)
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_multiple_triangle_translation(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_transformation_multiple_triangle_translation(
+    window: Rc<Window>,
+    render: Box<dyn Render>,
+) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
@@ -137,7 +140,10 @@ pub fn test_2d_multiple_triangle_translation(window: Rc<Window>, render: Box<dyn
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_triangle_rotation_and_scale(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_transformation_triangle_rotation_and_scale(
+    window: Rc<Window>,
+    render: Box<dyn Render>,
+) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
@@ -169,7 +175,10 @@ pub fn test_2d_triangle_rotation_and_scale(window: Rc<Window>, render: Box<dyn R
     scene.start_one_frame().unwrap();
 }
 
-pub fn test_2d_triangle_rotation_scale_perspective(window: Rc<Window>, render: Box<dyn Render>) {
+pub fn test_2d_transformation_triangle_rotation_scale_perspective(
+    window: Rc<Window>,
+    render: Box<dyn Render>,
+) {
     let mut scene = Scene::new(window, render);
 
     let vertices: [f32; 9] = [
