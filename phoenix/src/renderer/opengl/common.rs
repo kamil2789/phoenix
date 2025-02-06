@@ -33,6 +33,13 @@ pub fn set_uniform_bool(variable_name: &str, shader_id: u32) -> Result<()> {
     Ok(())
 }
 
+pub fn set_uniform_int(variable_name: &str, value: i32, shader_id: u32) -> Result<()> {
+    let location = get_uniform_variable_location(shader_id, variable_name)?;
+    unsafe { gl::UseProgram(shader_id) };
+    unsafe { gl::Uniform1i(location, value) };
+    Ok(())
+}
+
 pub fn set_uniform_vec3(variable_name: &str, vector: &Vector3<f32>, shader_id: u32) -> Result<()> {
     let location = get_uniform_variable_location(shader_id, variable_name)?;
     unsafe { gl::UseProgram(shader_id) };

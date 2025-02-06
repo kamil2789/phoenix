@@ -4,8 +4,8 @@ use std::rc::Rc;
 
 use cgmath::{Matrix4, Vector3};
 use common::{
-    set_uniform_bool, set_uniform_color, set_uniform_float, set_uniform_matrix4f, set_uniform_vec3,
-    unset_uniform_bool,
+    set_uniform_bool, set_uniform_color, set_uniform_float, set_uniform_int, set_uniform_matrix4f,
+    set_uniform_vec3, unset_uniform_bool,
 };
 use glfw_sys::glfw_bindings;
 
@@ -37,7 +37,7 @@ pub struct OpenGL {
     compiled_shaders: HashMap<Rc<ShaderSource>, ShaderID>,
     buffers: HashMap<EntityID, Buffers>,
     shapes_type: HashMap<EntityID, ShapeType>,
-    textures: HashMap<EntityID, TextureID>,
+    textures: HashMap<EntityID, Vec<TextureID>>,
     shape_fill_mode: HashMap<EntityID, u32>,
 }
 
@@ -101,9 +101,15 @@ impl Render for OpenGL {
             );
         }
 
-        if let Some(texture) = entity.texture {
-            let texture_id = self.init_texture(texture)?;
-            self.textures.insert(entity.entity_id, texture_id);
+        if let Some(textures) = entity.texture {
+            for texture in textures {
+                let texture_id = self.init_texture(texture)?;
+                if let Some(data) = self.textures.get_mut(&entity.entity_id) {
+                    data.push(texture_id);
+                } else {
+                    self.textures.insert(entity.entity_id, vec![texture_id]);
+                }
+            }
         }
 
         Ok(entity.entity_id)
@@ -113,10 +119,20 @@ impl Render for OpenGL {
         unsafe {
             if let Some(shader) = self.shaders_id.get(&entity_id) {
                 gl::UseProgram(*shader);
-            }
 
-            if let Some(texture) = self.textures.get(&entity_id) {
-                gl::BindTexture(gl::TEXTURE_2D, *texture);
+                if let Some(textures) = self.textures.get(&entity_id) {
+                    if !textures.is_empty(){
+                        set_uniform_int("texture_one", 0, *shader).unwrap();
+                        gl::ActiveTexture(gl::TEXTURE0);
+                        gl::BindTexture(gl::TEXTURE_2D, textures[0]);
+                    }
+
+                    if textures.len() > 1 {
+                        set_uniform_int("texture_two", 1, *shader).unwrap();
+                        gl::ActiveTexture(gl::TEXTURE1);
+                        gl::BindTexture(gl::TEXTURE_2D, textures[1]);
+                    }
+                }
             }
 
             if let Some(buffer) = self.buffers.get(&entity_id) {
@@ -290,7 +306,7 @@ impl OpenGL {
     fn handle_shape(
         shape: &dyn Shape,
         color: Option<&Color>,
-        texture: Option<&Texture>,
+        texture: Option<&Vec<Texture>>,
     ) -> Result<Buffers> {
         //TODO move it to the data logic in the future
         let normal_vectors = calculate_normal_vec_for_shape(shape);
@@ -318,8 +334,11 @@ impl OpenGL {
             set_uniform_color("color", &RGBA::new_white(), shader_id)?;
         }
 
-        if entity.texture.is_some() {
+        if let Some(textures) = entity.texture {
             set_uniform_bool("is_texture_vert", shader_id)?;
+            if textures.len() > 1 {
+                set_uniform_bool("is_multi_texture", shader_id)?;
+            }
         }
 
         Ok(())
@@ -329,6 +348,7 @@ impl OpenGL {
         unset_uniform_bool("is_light", shader_id)?;
         unset_uniform_bool("is_color_vert", shader_id)?;
         unset_uniform_bool("is_texture_vert", shader_id)?;
+        unset_uniform_bool("is_multi_texture", shader_id)?;
         Ok(())
     }
 

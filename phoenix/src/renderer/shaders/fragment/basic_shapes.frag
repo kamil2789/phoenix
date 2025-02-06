@@ -7,8 +7,11 @@ in vec3 frag_pos;
 
 out vec4 frag_color;
 
-uniform sampler2D ourTexture;
+uniform sampler2D texture_one;
+uniform sampler2D texture_two;
+
 uniform int is_texture_vert = 0;
+uniform int is_multi_texture = 0;
 uniform int is_color_vert = 0;
 uniform vec4 color = vec4(1.0);
 
@@ -43,7 +46,11 @@ void main()
     }
 
     if (is_texture_vert == 1) {
-        frag_color = texture(ourTexture, text_coord) * our_color;
+        if (is_multi_texture == 1) {
+            frag_color = mix(texture(texture_one, text_coord), texture(texture_two, text_coord), 0.2) * our_color;
+        } else {
+            frag_color = texture(texture_one, text_coord) * our_color;
+        }
     } else {
         frag_color = our_color;
     }
