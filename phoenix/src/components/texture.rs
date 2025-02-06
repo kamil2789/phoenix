@@ -125,9 +125,13 @@ impl Texture {
     }
 
     #[must_use]
-    pub fn unpack_vertices(texture: Option<&Texture>) -> Option<&[f32]> {
+    pub fn unpack_vertices(texture: Option<&Vec<Texture>>) -> Option<&[f32]> {
         if let Some(val) = texture {
-            Some(val.get_vertices())
+            if val.is_empty() {
+                return None;
+            }
+
+            Some(val[0].get_vertices())
         } else {
             None
         }

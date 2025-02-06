@@ -24,7 +24,7 @@ pub struct Manager {
     colors: HashMap<ID, Color>,
     shaders_source: HashMap<ID, Rc<ShaderSource>>,
     shapes: HashMap<ID, Box<dyn Shape>>,
-    textures: HashMap<ID, Texture>,
+    textures: HashMap<ID, Vec<Texture>>,
     transformers: HashMap<ID, Transformer>,
     lights: HashMap<ID, Light>,
     materials: HashMap<ID, Material>,
@@ -38,7 +38,7 @@ pub struct View<'a> {
     pub color: Option<&'a Color>,
     pub shape: Option<&'a dyn Shape>,
     pub shader_src: Option<Rc<ShaderSource>>,
-    pub texture: Option<&'a Texture>,
+    pub texture: Option<&'a Vec<Texture>>,
     pub transformer: Option<&'a Transformer>,
     pub light: Option<&'a Light>,
     pub material: Option<&'a Material>,
@@ -114,7 +114,11 @@ impl Manager {
                     self.shaders_source.insert(id, tmp);
                 }
                 Component::Texture(texture) => {
-                    self.textures.insert(id, texture);
+                    if let Some(data) = self.textures.get_mut(&id) {
+                        data.push(texture);
+                    } else {
+                        self.textures.insert(id, vec![texture]);
+                    }
                 }
 
                 Component::Transformer(transformer) => {
@@ -198,7 +202,7 @@ impl<'a> View<'a> {
         color: Option<&'a Color>,
         shape: Option<&'a dyn Shape>,
         shader_src: Option<Rc<ShaderSource>>,
-        texture: Option<&'a Texture>,
+        texture: Option<&'a Vec<Texture>>,
         transformer: Option<&'a Transformer>,
         light: Option<&'a Light>,
         material: Option<&'a Material>,

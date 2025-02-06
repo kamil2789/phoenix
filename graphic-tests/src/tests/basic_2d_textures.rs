@@ -43,6 +43,10 @@ pub static TEST_LIST: LazyLock<HashMap<String, TestFunction>> = LazyLock::new(||
         "test_2d_texture_two_triangle_two_textures".to_string(),
         test_2d_texture_two_triangle_two_textures,
     );
+    tests.insert(
+        "test_2d_texture_one_triangle_two_textures".to_string(),
+        test_2d_texture_one_triangle_two_textures,
+    );
     tests
 });
 
@@ -56,6 +60,7 @@ pub static VULKAN_NOT_SUPPORTED: LazyLock<Vec<String>> = LazyLock::new(|| {
         "test_2d_texture_brick_wall_disco_triangle".into(),
         "test_2d_texture_happy_face_linear_texture".into(),
         "test_2d_texture_two_triangle_two_textures".into(),
+        "test_2d_texture_one_triangle_two_textures".into(),
     ]
 });
 
@@ -285,6 +290,43 @@ pub fn test_2d_texture_two_triangle_two_textures(window: Rc<Window>, render: Box
     entity_second.add_component(Component::Geometry(Box::new(triangle_second)));
 
     scene.add_entity(entity_second);
+
+    scene.set_background_color(RGBA::from_hex(0xC1_B1_A1_FF));
+    if let Err(err) = scene.start_one_frame() {
+        println!("{err}");
+    }
+}
+
+pub fn test_2d_texture_one_triangle_two_textures(window: Rc<Window>, render: Box<dyn Render>) {
+    let mut scene = Scene::new(window, render);
+
+    let vertices: [f32; 9] = [
+        -0.9, -0.9, 0.0, // left
+        0.9, -0.9, 0.0, // right
+        0.0, 0.9, 0.0, // top
+    ];
+
+    let triangle = Triangle::new(vertices);
+    let mut entity = Entity::default();
+    let texture_config = Config {
+        wrapping_horizontal: Wrapping::Repeat,
+        wrapping_vertical: Wrapping::Repeat,
+        min_filtering: MinFiltering::Filtering(Filtering::Linear),
+        max_filtering: Filtering::Linear,
+    };
+
+    let path = TEST_TEXTURE_DIR.to_owned() + "background.png";
+    let texture_data = load(Path::new(&path)).unwrap();
+    let texture = Texture::new(texture_data, texture_config.clone());
+    entity.add_component(Component::Geometry(Box::new(triangle)));
+
+    let path_second = TEST_TEXTURE_DIR.to_owned() + "overlay.png";
+    let texture_data_second = load(Path::new(&path_second)).unwrap();
+    let texture_second = Texture::new(texture_data_second, texture_config);
+    entity.add_component(Component::Texture(texture));
+    entity.add_component(Component::Texture(texture_second));
+
+    scene.add_entity(entity);
 
     scene.set_background_color(RGBA::from_hex(0xC1_B1_A1_FF));
     if let Err(err) = scene.start_one_frame() {
