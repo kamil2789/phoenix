@@ -121,7 +121,7 @@ impl Render for OpenGL {
                 gl::UseProgram(*shader);
 
                 if let Some(textures) = self.textures.get(&entity_id) {
-                    if !textures.is_empty(){
+                    if !textures.is_empty() {
                         set_uniform_int("texture_one", 0, *shader).unwrap();
                         gl::ActiveTexture(gl::TEXTURE0);
                         gl::BindTexture(gl::TEXTURE_2D, textures[0]);

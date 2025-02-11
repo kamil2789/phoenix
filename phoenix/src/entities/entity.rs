@@ -82,6 +82,13 @@ impl Entity {
     }
 
     #[must_use]
+    pub fn has_material(&self) -> bool {
+        self.components
+            .iter()
+            .any(|component| matches!(component, Component::Material(_)))
+    }
+
+    #[must_use]
     pub fn get_light(&self) -> Option<&Light> {
         self.components
             .iter()
@@ -416,5 +423,13 @@ mod tests {
         let shader = view.shader_src.unwrap();
         assert_eq!(shader.get_vertex_shader(), "aa");
         assert_eq!(shader.get_fragment_shader(), "bb");
+    }
+
+    #[test]
+    fn test_entity_has_material() {
+        let mut entity = Entity::new(vec![]);
+        assert!(!entity.has_material());
+        entity.add_component(Component::Material(Material::default()));
+        assert!(entity.has_material());
     }
 }
