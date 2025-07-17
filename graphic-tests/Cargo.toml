@@ -9,7 +9,7 @@ phoenix = { path = "../phoenix" }
 gl = "0.14.0"
 image = "0.25.1"
 thiserror = "2.0.3"
-colored = "2.1.0"
+colored = "3.0.0"
 cgmath = "0.18.0"
 clap ={ version = "4.2.7", features = ["derive"] }
 
