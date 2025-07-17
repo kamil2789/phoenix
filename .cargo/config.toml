@@ -1,0 +1,2 @@
+[alias]
+run-gt = "run -p graphic-tests --release"
